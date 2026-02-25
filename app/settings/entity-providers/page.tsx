@@ -147,6 +147,8 @@ export default function EntityProvidersPage() {
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Provider name</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">NPI</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Primary specialty</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Secondary specialty</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Active</th>
                     <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">Actions</th>
                   </tr>
@@ -158,6 +160,8 @@ export default function EntityProvidersPage() {
                       <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-slate-900">{row.providerName}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.npi}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">{providerTypeLabel(row.providerType)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.primarySpecialty ?? "—"}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.secondarySpecialty ?? "—"}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">{row.isActive ? "Yes" : "No"}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
                         <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>Edit</Button>

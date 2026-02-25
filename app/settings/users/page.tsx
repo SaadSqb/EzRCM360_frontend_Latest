@@ -10,6 +10,7 @@ import { usersApi } from "@/lib/services/users";
 import { lookupsApi } from "@/lib/services/lookups";
 import { useToast } from "@/lib/contexts/ToastContext";
 import type { UserListItemDto, CreateUserRequest, UpdateUserRequest } from "@/lib/services/users";
+import { USER_STATUS_NAMES } from "@/lib/services/users";
 import type { LookupDto, ModuleLookupDto, ValueLabelDto } from "@/lib/services/lookups";
 import type { PaginatedList } from "@/lib/types";
 
@@ -109,13 +110,17 @@ export default function UsersPage() {
     setModalOpen(true);
     try {
       const detail = await api.getById(row.id);
+      const statusNum =
+        typeof detail.status === "number"
+          ? detail.status
+          : Math.max(0, USER_STATUS_NAMES.indexOf(detail.status as (typeof USER_STATUS_NAMES)[number]));
       setForm({
         userName: detail.userName,
         email: detail.email,
         organizationId: detail.organizationId ?? "",
         roleId: detail.roleId ?? "",
         moduleIds: detail.moduleIds ?? [],
-        status: detail.status,
+        status: statusNum,
       });
     } catch {
       setFormError("Failed to load user.");
@@ -137,7 +142,7 @@ export default function UsersPage() {
           organizationId: form.organizationId || undefined,
           roleId: form.roleId || undefined,
           moduleIds: form.moduleIds?.length ? form.moduleIds : undefined,
-          status: form.status ?? 1,
+          status: USER_STATUS_NAMES[form.status ?? 1] ?? "Active",
           newPassword: (form as { newPassword?: string }).newPassword || undefined,
         });
       } else {
@@ -148,7 +153,7 @@ export default function UsersPage() {
           organizationId: form.organizationId || undefined,
           roleId: form.roleId || undefined,
           moduleIds: form.moduleIds?.length ? form.moduleIds : undefined,
-          status: form.status,
+          status: form.status != null ? USER_STATUS_NAMES[form.status] ?? "Active" : undefined,
         });
       }
       setModalOpen(false);
@@ -181,13 +186,14 @@ export default function UsersPage() {
   const handleStatusChange = async (row: UserListItemDto, newStatus: number) => {
     setStatusUpdatingId(row.id);
     try {
+      // API uses JsonStringEnumConverter and expects status as enum name, not number
       await api.update(row.id, {
         userName: row.userName,
         email: row.email,
         organizationId: row.organizationId ?? undefined,
         roleId: row.roleId ?? undefined,
         moduleIds: row.moduleIds ?? [],
-        status: newStatus,
+        status: USER_STATUS_NAMES[newStatus] ?? "Pending",
       });
       loadList();
       toast.success("Status updated successfully.");
@@ -198,6 +204,12 @@ export default function UsersPage() {
     }
   };
 
+  /** API may return status as number or enum string; normalize to number for dropdown. */
+  const toStatusNumber = (s: number | string): number => {
+    if (typeof s === "number") return s;
+    const i = USER_STATUS_NAMES.indexOf(s as (typeof USER_STATUS_NAMES)[number]);
+    return i >= 0 ? i : 0;
+  };
   const statusLabel = (n: number) => STATUS_OPTIONS.find((o) => o.value === n)?.name ?? String(n);
   const moduleNames = (ids: string[]) =>
     ids.map((id) => moduleMap[id] ?? id).filter(Boolean).join(", ") || "—";
@@ -314,7 +326,7 @@ export default function UsersPage() {
                       </td>
                       <td className="whitespace-nowrap px-4 py-2 text-sm">
                         <select
-                          value={row.status}
+                          value={toStatusNumber(row.status)}
                           onChange={(e) => handleStatusChange(row, Number(e.target.value))}
                           disabled={statusUpdatingId === row.id}
                           className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:opacity-50"

@@ -11,13 +11,60 @@ export interface PayerListItemDto {
   organizationName?: string | null;
 }
 
+// Detail response (GET by id)
+export interface PayerAddressDto {
+  id: string;
+  addressLine1: string;
+  addressLine2?: string | null;
+  city: string;
+  state: string;
+  zip: string;
+  label?: string | null;
+}
+
+export interface PayerPhoneDto {
+  id: string;
+  phoneNumber: string;
+  label?: string | null;
+}
+
+export interface PayerEmailDto {
+  id: string;
+  emailAddress: string;
+  label?: string | null;
+}
+
 export interface PayerDetailDto {
   id: string;
+  organizationId?: string | null;
   payerName: string;
   aliases?: string | null;
   entityType: number;
   status: number;
-  organizationId: string;
+  addresses: PayerAddressDto[];
+  phoneNumbers: PayerPhoneDto[];
+  emails: PayerEmailDto[];
+  planIds: string[];
+}
+
+// Request shapes for create/update (API expects camelCase in JSON)
+export interface PayerAddressRequest {
+  addressLine1: string;
+  addressLine2?: string | null;
+  city: string;
+  state: string;
+  zip: string;
+  label?: string | null;
+}
+
+export interface PayerPhoneRequest {
+  phoneNumber: string;
+  label?: string | null;
+}
+
+export interface PayerEmailRequest {
+  emailAddress: string;
+  label?: string | null;
 }
 
 export interface CreatePayerRequest {
@@ -25,6 +72,10 @@ export interface CreatePayerRequest {
   aliases?: string | null;
   entityType: number;
   status?: number;
+  planIds?: string[] | null;
+  addresses?: PayerAddressRequest[] | null;
+  phoneNumbers?: PayerPhoneRequest[] | null;
+  emails?: PayerEmailRequest[] | null;
 }
 
 export interface UpdatePayerRequest {
@@ -32,6 +83,10 @@ export interface UpdatePayerRequest {
   aliases?: string | null;
   entityType: number;
   status: number;
+  planIds?: string[] | null;
+  addresses?: PayerAddressRequest[] | null;
+  phoneNumbers?: PayerPhoneRequest[] | null;
+  emails?: PayerEmailRequest[] | null;
 }
 
 export function payersApi() {

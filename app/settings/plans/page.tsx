@@ -285,6 +285,10 @@ export default function PlansPage() {
               <input type="text" value={form.planName} onChange={(e) => setForm((f) => ({ ...f, planName: e.target.value }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
             </div>
             <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Aliases</label>
+              <input type="text" value={form.aliases ?? ""} onChange={(e) => setForm((f) => ({ ...f, aliases: e.target.value }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="Optional" />
+            </div>
+            <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Plan ID prefix</label>
               <input type="text" value={form.planIdPrefix ?? ""} onChange={(e) => setForm((f) => ({ ...f, planIdPrefix: e.target.value }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
             </div>
@@ -337,8 +341,28 @@ export default function PlansPage() {
               </label>
             </div>
             <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Plan responsibility %</label>
+              <input type="number" step="any" value={form.planResponsibilityPct ?? ""} onChange={(e) => setForm((f) => ({ ...f, planResponsibilityPct: e.target.value === "" ? null : Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="—" />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Patient responsibility %</label>
+              <input type="number" step="any" value={form.patientResponsibilityPct ?? ""} onChange={(e) => setForm((f) => ({ ...f, patientResponsibilityPct: e.target.value === "" ? null : Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="—" />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Typical deductible</label>
+              <input type="number" step="any" value={form.typicalDeductible ?? ""} onChange={(e) => setForm((f) => ({ ...f, typicalDeductible: e.target.value === "" ? null : Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="—" />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">OOP max</label>
+              <input type="number" step="any" value={form.oopMax ?? ""} onChange={(e) => setForm((f) => ({ ...f, oopMax: e.target.value === "" ? null : Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="—" />
+            </div>
+            <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Timely filing initial (days)</label>
               <input type="number" value={form.timelyFilingInitialDays} onChange={(e) => setForm((f) => ({ ...f, timelyFilingInitialDays: Number(e.target.value) || 0 }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Timely filing resubmission (days)</label>
+              <input type="number" value={form.timelyFilingResubmissionDays ?? ""} onChange={(e) => setForm((f) => ({ ...f, timelyFilingResubmissionDays: e.target.value === "" ? null : Number(e.target.value) }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="—" />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Timely filing appeal (days)</label>

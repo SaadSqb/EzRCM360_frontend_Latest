@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/Table";
 import { Pagination } from "@/components/ui/Pagination";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Loader } from "@/components/ui/Loader";
 import { EntityLocationFormModal } from "./EntityLocationFormModal";
 import { entityLocationsApi } from "@/lib/services/entityLocations";
 import { lookupsApi } from "@/lib/services/lookups";
@@ -157,6 +158,8 @@ export default function EntityLocationsPage() {
                   <TableHeaderCell>Entity</TableHeaderCell>
                   <TableHeaderCell>Location name</TableHeaderCell>
                   <TableHeaderCell>Type</TableHeaderCell>
+                  <TableHeaderCell>Physical address</TableHeaderCell>
+                  <TableHeaderCell>POS code</TableHeaderCell>
                   <TableHeaderCell>Active</TableHeaderCell>
                   {(canUpdate || canDelete) && <TableHeaderCell align="right">Actions</TableHeaderCell>}
                 </TableRow>
@@ -169,6 +172,8 @@ export default function EntityLocationsPage() {
                       {row.locationName}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">{row.locationType}</TableCell>
+                    <TableCell className="max-w-[200px] truncate">{row.physicalAddress ?? "—"}</TableCell>
+                    <TableCell className="whitespace-nowrap">{row.posCode ?? "—"}</TableCell>
                     <TableCell className="whitespace-nowrap">{row.isActive ? "Yes" : "No"}</TableCell>
                     {(canUpdate || canDelete) && (
                       <TableCell align="right" className="whitespace-nowrap">
@@ -199,9 +204,7 @@ export default function EntityLocationsPage() {
             />
           </>
         )}
-        {loading && !data && !error && (
-          <div className="py-8 text-center text-sm text-slate-500">Loading…</div>
-        )}
+        {loading && !data && !error && <Loader variant="inline" />}
       </Card>
 
       <EntityLocationFormModal

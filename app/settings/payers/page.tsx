@@ -15,13 +15,21 @@ import {
 } from "@/components/ui/Table";
 import { Pagination } from "@/components/ui/Pagination";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Loader } from "@/components/ui/Loader";
 import { PayerFormModal } from "./PayerFormModal";
 import { payersApi } from "@/lib/services/payers";
 import { lookupsApi } from "@/lib/services/lookups";
 import { usePaginatedList } from "@/lib/hooks";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { useModulePermission } from "@/lib/contexts/PermissionsContext";
-import type { PayerListItemDto, CreatePayerRequest, UpdatePayerRequest } from "@/lib/services/payers";
+import type {
+  PayerListItemDto,
+  CreatePayerRequest,
+  UpdatePayerRequest,
+  PayerAddressRequest,
+  PayerPhoneRequest,
+  PayerEmailRequest,
+} from "@/lib/services/payers";
 
 const MODULE_NAME = "Payers";
 const defaultForm: CreatePayerRequest = {
@@ -29,10 +37,15 @@ const defaultForm: CreatePayerRequest = {
   aliases: "",
   entityType: 0,
   status: 1,
+  planIds: [],
+  addresses: [],
+  phoneNumbers: [],
+  emails: [],
 };
 
 export default function PayersPage() {
   const [entityTypes, setEntityTypes] = useState<{ value: string; label: string }[]>([]);
+  const [planOptions, setPlanOptions] = useState<{ id: string; displayName: string }[]>([]);
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -54,25 +67,54 @@ export default function PayersPage() {
 
   useEffect(() => {
     lookupsApi().getPayerEntityTypes().then(setEntityTypes).catch(() => setEntityTypes([]));
+    lookupsApi().getPlans().then(setPlanOptions).catch(() => setPlanOptions([]));
   }, []);
 
   const openCreate = () => {
     setEditId(null);
-    setForm(defaultForm);
+    setForm({ ...defaultForm });
     setFormError(null);
     setModalOpen(true);
   };
 
   const openEdit = (row: PayerListItemDto) => {
     setEditId(row.id);
-    setForm({
-      payerName: row.payerName,
-      aliases: row.aliases ?? "",
-      entityType: row.entityType,
-      status: row.status,
-    });
     setFormError(null);
     setModalOpen(true);
+    api
+      .getById(row.id)
+      .then((detail) => {
+        const mapAddresses = (): PayerAddressRequest[] =>
+          detail.addresses?.map((a) => ({
+            addressLine1: a.addressLine1,
+            addressLine2: a.addressLine2 ?? "",
+            city: a.city,
+            state: a.state,
+            zip: a.zip,
+            label: a.label ?? "",
+          })) ?? [];
+        const mapPhones = (): PayerPhoneRequest[] =>
+          detail.phoneNumbers?.map((p) => ({
+            phoneNumber: p.phoneNumber,
+            label: p.label ?? "",
+          })) ?? [];
+        const mapEmails = (): PayerEmailRequest[] =>
+          detail.emails?.map((e) => ({
+            emailAddress: e.emailAddress,
+            label: e.label ?? "",
+          })) ?? [];
+        setForm({
+          payerName: detail.payerName,
+          aliases: detail.aliases ?? "",
+          entityType: detail.entityType,
+          status: detail.status,
+          planIds: detail.planIds ?? [],
+          addresses: mapAddresses(),
+          phoneNumbers: mapPhones(),
+          emails: mapEmails(),
+        });
+      })
+      .catch(() => setFormError("Failed to load payer."));
   };
 
   const handleSubmit = useCallback(async () => {
@@ -81,12 +123,24 @@ export default function PayersPage() {
       setFormError("Payer name is required.");
       return;
     }
+    // Send only non-empty contact rows so backend receives valid data
+    const addresses = (form.addresses ?? []).filter((a) => (a.addressLine1 ?? "").trim() !== "");
+    const phoneNumbers = (form.phoneNumbers ?? []).filter((p) => (p.phoneNumber ?? "").trim() !== "");
+    const emails = (form.emails ?? []).filter((e) => (e.emailAddress ?? "").trim() !== "");
+    const planIds = form.planIds ?? [];
+    const payload = {
+      ...form,
+      addresses: addresses.length ? addresses : undefined,
+      phoneNumbers: phoneNumbers.length ? phoneNumbers : undefined,
+      emails: emails.length ? emails : undefined,
+      planIds: planIds.length ? planIds : undefined,
+    };
     setSubmitLoading(true);
     try {
       if (editId) {
-        await api.update(editId, form as UpdatePayerRequest);
+        await api.update(editId, { ...payload, status: form.status } as UpdatePayerRequest);
       } else {
-        await api.create(form);
+        await api.create(payload);
       }
       setModalOpen(false);
       reload();
@@ -149,6 +203,7 @@ export default function PayersPage() {
               <TableHead>
                 <TableRow>
                   <TableHeaderCell>Payer name</TableHeaderCell>
+                  <TableHeaderCell>Aliases</TableHeaderCell>
                   <TableHeaderCell>Entity type</TableHeaderCell>
                   <TableHeaderCell>Status</TableHeaderCell>
                   {(canUpdate || canDelete) && <TableHeaderCell align="right">Actions</TableHeaderCell>}
@@ -158,6 +213,7 @@ export default function PayersPage() {
                 {data.items.map((row) => (
                   <TableRow key={row.id}>
                     <TableCell className="font-medium text-slate-900">{row.payerName}</TableCell>
+                    <TableCell className="max-w-[180px] truncate text-slate-600">{row.aliases ?? "—"}</TableCell>
                     <TableCell className="whitespace-nowrap">
                       {entityTypeLabel(row.entityType)}
                     </TableCell>
@@ -191,9 +247,7 @@ export default function PayersPage() {
             />
           </>
         )}
-        {loading && !data && !error && (
-          <div className="py-8 text-center text-sm text-slate-500">Loading…</div>
-        )}
+        {loading && !data && !error && <Loader variant="inline" />}
       </Card>
 
       <PayerFormModal
@@ -203,6 +257,7 @@ export default function PayersPage() {
         form={form}
         onFormChange={setForm}
         entityTypeOptions={entityTypes}
+        planOptions={planOptions}
         onSubmit={handleSubmit}
         loading={submitLoading}
         error={formError}

@@ -10,7 +10,8 @@ export interface UserListItemDto {
   roleId?: string | null;
   roleName?: string | null;
   moduleIds: string[];
-  status: number;
+  /** API may return enum string ("Active") or number depending on serialization */
+  status: number | string;
 }
 
 export interface UserDetailDto {
@@ -20,8 +21,13 @@ export interface UserDetailDto {
   organizationId?: string | null;
   roleId?: string | null;
   moduleIds: string[];
-  status: number;
+  /** API may return enum string or number */
+  status: number | string;
 }
+
+/** API expects enum names (e.g. "Active"). Map numeric status to string for requests. */
+export const USER_STATUS_NAMES = ["Pending", "Active", "Suspended", "Terminated"] as const;
+export type UserStatusName = (typeof USER_STATUS_NAMES)[number];
 
 export interface CreateUserRequest {
   userName: string;
@@ -39,7 +45,8 @@ export interface UpdateUserRequest {
   organizationId?: string | null;
   roleId?: string | null;
   moduleIds?: string[] | null;
-  status: number;
+  /** Backend expects enum string: "Pending" | "Active" | "Suspended" | "Terminated" */
+  status: number | UserStatusName;
   newPassword?: string | null;
 }
 

@@ -8,6 +8,7 @@ export interface FacilityListItemDto {
   physicalAddress?: string | null;
   entityId: string;
   entityDisplayName?: string | null;
+  posCode?: string | null;
   isActive: boolean;
 }
 

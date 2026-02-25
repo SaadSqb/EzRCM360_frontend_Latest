@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/Table";
 import { Pagination } from "@/components/ui/Pagination";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Loader } from "@/components/ui/Loader";
 import { EntityFormModal } from "./EntityFormModal";
 import { entitiesApi } from "@/lib/services/entities";
 import { usePaginatedList } from "@/lib/hooks";
@@ -150,6 +151,7 @@ export default function EntitiesPage() {
               <TableHead>
                 <TableRow>
                   <TableHeaderCell>Legal / Display name</TableHeaderCell>
+                  <TableHeaderCell>Organization</TableHeaderCell>
                   <TableHeaderCell>Group NPI</TableHeaderCell>
                   <TableHeaderCell>Tax ID</TableHeaderCell>
                   <TableHeaderCell>Status</TableHeaderCell>
@@ -162,6 +164,7 @@ export default function EntitiesPage() {
                     <TableCell>
                       <span className="font-medium text-slate-900">{row.legalName}</span> / {row.displayName}
                     </TableCell>
+                    <TableCell className="whitespace-nowrap text-slate-600">{row.organizationName ?? "—"}</TableCell>
                     <TableCell className="whitespace-nowrap">{row.groupNpi}</TableCell>
                     <TableCell className="whitespace-nowrap">{row.taxId}</TableCell>
                     <TableCell className="whitespace-nowrap">{statusLabel(row.status)}</TableCell>
@@ -194,9 +197,7 @@ export default function EntitiesPage() {
             />
           </>
         )}
-        {loading && !data && !error && (
-          <div className="py-8 text-center text-sm text-slate-500">Loading…</div>
-        )}
+        {loading && !data && !error && <Loader variant="inline" />}
       </Card>
 
       <EntityFormModal

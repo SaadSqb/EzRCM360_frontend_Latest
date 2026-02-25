@@ -158,6 +158,8 @@ export default function FacilitiesPage() {
                   <TableHeaderCell>Name</TableHeaderCell>
                   <TableHeaderCell>Type</TableHeaderCell>
                   <TableHeaderCell>Entity</TableHeaderCell>
+                  <TableHeaderCell>Physical address</TableHeaderCell>
+                  <TableHeaderCell>POS code</TableHeaderCell>
                   <TableHeaderCell>Active</TableHeaderCell>
                   {(canUpdate || canDelete) && <TableHeaderCell align="right">Actions</TableHeaderCell>}
                 </TableRow>
@@ -172,6 +174,8 @@ export default function FacilitiesPage() {
                     <TableCell className="whitespace-nowrap">
                       {row.entityDisplayName ?? "—"}
                     </TableCell>
+                    <TableCell className="max-w-[200px] truncate">{row.physicalAddress ?? "—"}</TableCell>
+                    <TableCell className="whitespace-nowrap">{row.posCode ?? "—"}</TableCell>
                     <TableCell className="whitespace-nowrap">{row.isActive ? "Yes" : "No"}</TableCell>
                     {(canUpdate || canDelete) && (
                       <TableCell align="right" className="whitespace-nowrap">

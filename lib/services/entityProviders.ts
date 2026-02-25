@@ -9,6 +9,7 @@ export interface EntityProviderListItemDto {
   npi: string;
   providerType: number;
   primarySpecialty?: string | null;
+  secondarySpecialty?: string | null;
   isActive: boolean;
 }
 
