@@ -55,13 +55,16 @@ export function TableCell({
   children,
   align = "left",
   className = "",
+  colSpan,
 }: {
   children: React.ReactNode;
   align?: "left" | "right";
   className?: string;
+  colSpan?: number;
 }) {
   return (
     <td
+      colSpan={colSpan}
       className={`px-4 py-3 text-sm text-slate-600 ${align === "right" ? "text-right" : "text-left"} ${className}`}
     >
       {children}

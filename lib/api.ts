@@ -2,8 +2,7 @@
  * API client for EzRCM360 backend. All requests use Bearer token when available.
  */
 
-const getBaseUrl = () =>
-  process.env.NEXT_PUBLIC_API_URL || "https://localhost:5001";
+import { API_URL, AUTH_TOKEN_KEY } from "@/lib/env";
 
 export type ApiResponse<T> = {
   success: boolean;
@@ -15,10 +14,10 @@ export async function apiRequest<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const base = getBaseUrl().replace(/\/$/, "");
+  const base = API_URL.replace(/\/$/, "");
   const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
   const token =
-    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    typeof window !== "undefined" ? localStorage.getItem(AUTH_TOKEN_KEY) : null;
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
@@ -49,7 +48,7 @@ export async function apiRequest<T>(
 }
 
 export function getApiUrl(path: string): string {
-  const base = getBaseUrl().replace(/\/$/, "");
+  const base = API_URL.replace(/\/$/, "");
   return `${base}${path.startsWith("/") ? "" : "/"}${path}`;
 }
 
@@ -59,10 +58,10 @@ export async function apiRequestForm(
   formData: FormData,
   method: string = "PUT"
 ): Promise<void> {
-  const base = getBaseUrl().replace(/\/$/, "");
+  const base = API_URL.replace(/\/$/, "");
   const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
   const token =
-    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+    typeof window !== "undefined" ? localStorage.getItem(AUTH_TOKEN_KEY) : null;
   const headers: HeadersInit = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };

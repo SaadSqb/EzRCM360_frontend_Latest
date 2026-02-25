@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { usePermissionsOptional } from "@/lib/contexts/PermissionsContext";
+import { LogoutButton } from "@/components/auth/LogoutButton";
+import { profileApi } from "@/lib/services/profile";
 
 const mainNav: { href: string; label: string; moduleName: string }[] = [
   { href: "/dashboard", label: "Dashboard", moduleName: "Dashboard" },
@@ -14,7 +17,22 @@ const mainNav: { href: string; label: string; moduleName: string }[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const permissions = usePermissionsOptional();
+  const [userName, setUserName] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const isSettings = pathname?.startsWith("/settings");
+
+  useEffect(() => {
+    profileApi()
+      .getMe()
+      .then((p) => {
+        setUserName(p.userName);
+        setUserEmail(p.email);
+      })
+      .catch(() => {
+        setUserName(null);
+        setUserEmail(null);
+      });
+  }, []);
   // Show full nav when no provider, still loading, or no permissions (e.g. API failed) so the page is never blank
   const visibleNav =
     !permissions || permissions.loading || permissions.permissions.length === 0
@@ -47,20 +65,15 @@ export function Sidebar() {
         </nav>
         <div className="border-t border-slate-200 p-3">
           <div className="flex items-center gap-3 rounded-lg px-3 py-2">
-            <div className="h-9 w-9 rounded-full bg-slate-200 flex items-center justify-center text-sm font-medium text-slate-600">
-              A
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-medium text-slate-600">
+              {(userName || userEmail || "U")[0].toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-slate-800">User</p>
-              <p className="truncate text-xs text-slate-500">user@example.com</p>
+              <p className="truncate text-sm font-medium text-slate-800">{userName ?? "User"}</p>
+              <p className="truncate text-xs text-slate-500">{userEmail ?? "—"}</p>
             </div>
           </div>
-          <Link
-            href="/login"
-            className="mt-2 flex items-center justify-center rounded-lg bg-primary-50 px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-100"
-          >
-            Logout
-          </Link>
+          <LogoutButton className="mt-2 flex w-full items-center justify-center rounded-lg bg-primary-50 px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-100" />
         </div>
       </div>
     </aside>

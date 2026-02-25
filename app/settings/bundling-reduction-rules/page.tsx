@@ -8,6 +8,7 @@ import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { bundlingReductionRulesApi } from "@/lib/services/bundlingReductionRules";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { useModulePermission } from "@/lib/contexts/PermissionsContext";
 import type { BundlingReductionRuleDto, CreateBundlingReductionRuleCommand } from "@/lib/services/bundlingReductionRules";
 import type { PaginatedList } from "@/lib/types";
 import { toDateInput } from "@/lib/utils";
@@ -43,6 +44,7 @@ export default function BundlingReductionRulesPage() {
 
   const api = bundlingReductionRulesApi();
   const toast = useToast();
+  const { canView, canCreate, canUpdate, canDelete } = useModulePermission("Bundling/Reduction Rules");
 
   const loadList = useCallback(() => {
     setError(null);
@@ -119,13 +121,26 @@ export default function BundlingReductionRulesPage() {
 
   const ruleTypeLabel = (n: number) => RULE_TYPE_OPTIONS.find((o) => o.value === n)?.label ?? String(n);
 
+  if (!canView) {
+    return (
+      <div>
+        <PageHeader title="Bundling / Reduction Rules" description="Bundling and multiple procedure reduction rules." />
+        <Card>
+          <p className="text-sm text-slate-600">You do not have permission to view this page.</p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader title="Bundling / Reduction Rules" description="Bundling and multiple procedure reduction rules." />
       <Card>
-        <div className="mb-4 flex justify-end">
-          <Button onClick={openCreate}>Add rule</Button>
-        </div>
+        {canCreate && (
+          <div className="mb-4 flex justify-end">
+            <Button onClick={openCreate}>Add rule</Button>
+          </div>
+        )}
         {error && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
         {data && (
           <>
@@ -138,7 +153,9 @@ export default function BundlingReductionRulesPage() {
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Reduction factor</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Rule type</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Active</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">Actions</th>
+                    {(canUpdate || canDelete) && (
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">Actions</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -149,10 +166,12 @@ export default function BundlingReductionRulesPage() {
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.reductionFactor}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">{ruleTypeLabel(row.ruleType)}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">{row.isActive ? "Yes" : "No"}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
-                        <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>Edit</Button>
-                        <Button variant="danger" onClick={() => setDeleteId(row.id)}>Delete</Button>
-                      </td>
+                      {(canUpdate || canDelete) && (
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
+                          {canUpdate && <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>Edit</Button>}
+                          {canDelete && <Button variant="danger" onClick={() => setDeleteId(row.id)}>Delete</Button>}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

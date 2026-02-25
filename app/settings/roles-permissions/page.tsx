@@ -51,6 +51,7 @@ const SETTINGS_CHILDREN_ORDER = [
   "Rendering Provider Plan Participations",
   "Roles",
   "Users",
+  "Security Access",
 ];
 
 const SETTINGS_CHILDREN_NAMES = new Set(SETTINGS_CHILDREN_ORDER);

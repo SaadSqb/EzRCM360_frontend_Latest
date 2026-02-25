@@ -30,6 +30,7 @@ frontend/
 │   └── settings/            # SettingsCard, PageHeader
 ├── lib/
 │   ├── api.ts               # API client (Bearer token, envelope unwrap)
+│   ├── env.ts               # Centralized env config (API URL, tokens, etc.)
 │   └── types.ts             # Shared types / DTOs
 ├── hooks/
 └── .env.local.example
@@ -44,9 +45,9 @@ frontend/
    npm install
    ```
 
-2. **Configure API URL**
+2. **Configure environment**
 
-   Copy `.env.local.example` to `.env.local` and set the backend base URL:
+   Copy `.env.local.example` to `.env.local` and set values:
 
    ```bash
    cp .env.local.example .env.local
@@ -55,10 +56,14 @@ frontend/
    Edit `.env.local`:
 
    ```
+   # Local development
    NEXT_PUBLIC_API_URL=https://localhost:5001
    ```
 
-   Use the URL where your EzRCM360 API runs (no trailing slash).
+   For production, set `NEXT_PUBLIC_API_URL` to your production API. See `.env.example` for all options (API URL, app name, token keys, etc.). Environment detection:
+   - `npm run dev` → local defaults (NODE_ENV=development)
+   - `npm run build && npm run start` → production defaults (NODE_ENV=production)
+   - Set `NEXT_PUBLIC_APP_ENV=production` or `=local` to override.
 
 3. **Run the app**
 

@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
+import { AUTH_TOKEN_KEY } from "@/lib/env";
 import { permissionsApi } from "@/lib/services/permissions";
 import type { PermissionDto } from "@/lib/services/permissions";
 
@@ -34,7 +35,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
 
   const load = useCallback(() => {
     const token =
-      typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+      typeof window !== "undefined" ? localStorage.getItem(AUTH_TOKEN_KEY) : null;
     if (!token) {
       setPermissions([]);
       setLoading(false);

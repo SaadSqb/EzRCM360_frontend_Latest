@@ -8,6 +8,7 @@ import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { geographyApi } from "@/lib/services/geography";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { useModulePermission } from "@/lib/contexts/PermissionsContext";
 import type {
   ZipGeoMappingDto,
   ZipGeoMappingLookupsDto,
@@ -47,6 +48,7 @@ export default function GeographyResolutionPage() {
 
   const api = geographyApi();
   const toast = useToast();
+  const { canView, canCreate, canUpdate, canDelete } = useModulePermission("Zip Geo Mappings");
 
   const loadList = useCallback(() => {
     setError(null);
@@ -142,6 +144,17 @@ export default function GeographyResolutionPage() {
   const sourceLabel = (n: number) =>
     lookups?.sources?.find((s) => s.value === n)?.name ?? String(n);
 
+  if (!canView) {
+    return (
+      <div>
+        <PageHeader title="Geography Resolution" description="Zip-to-geography mappings for fee schedule resolution." />
+        <Card>
+          <p className="text-sm text-slate-600">You do not have permission to view this page.</p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader
@@ -150,9 +163,11 @@ export default function GeographyResolutionPage() {
       />
 
       <Card>
-        <div className="mb-4 flex justify-end">
-          <Button onClick={openCreate}>Add mapping</Button>
-        </div>
+        {canCreate && (
+          <div className="mb-4 flex justify-end">
+            <Button onClick={openCreate}>Add mapping</Button>
+          </div>
+        )}
         {error && (
           <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
@@ -182,9 +197,11 @@ export default function GeographyResolutionPage() {
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">
                       Active
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">
-                      Actions
-                    </th>
+                    {(canUpdate || canDelete) && (
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">
+                        Actions
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -212,21 +229,20 @@ export default function GeographyResolutionPage() {
                           <span className="text-slate-400">No</span>
                         )}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
-                        <Button
-                          variant="ghost"
-                          className="mr-1"
-                          onClick={() => openEdit(row)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="danger"
-                          onClick={() => setDeleteId(row.id)}
-                        >
-                          Delete
-                        </Button>
-                      </td>
+                      {(canUpdate || canDelete) && (
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
+                          {canUpdate && (
+                            <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>
+                              Edit
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button variant="danger" onClick={() => setDeleteId(row.id)}>
+                              Delete
+                            </Button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

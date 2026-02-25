@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { renderingParticipationsApi } from "@/lib/services/renderingParticipations";
+import { useModulePermission } from "@/lib/contexts/PermissionsContext";
 import { lookupsApi } from "@/lib/services/lookups";
 import { useToast } from "@/lib/contexts/ToastContext";
 import type {
@@ -47,6 +48,7 @@ export default function RenderingParticipationPage() {
 
   const api = renderingParticipationsApi();
   const toast = useToast();
+  const { canView, canCreate, canUpdate, canDelete } = useModulePermission("Rendering Provider Plan Participations");
 
   const loadList = useCallback(() => {
     setError(null);
@@ -139,13 +141,26 @@ export default function RenderingParticipationPage() {
 
   const statusLabel = (n: number) => participationStatuses.find((o) => Number(o.value) === n)?.label ?? String(n);
 
+  if (!canView) {
+    return (
+      <div>
+        <PageHeader title="Rendering Provider-Plan Participation" description="Network participation status." />
+        <Card>
+          <p className="text-sm text-slate-600">You do not have permission to view this page.</p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader title="Rendering Provider-Plan Participation" description="Network participation status." />
       <Card>
-        <div className="mb-4 flex justify-end">
-          <Button onClick={openCreate}>Add participation</Button>
-        </div>
+        {canCreate && (
+          <div className="mb-4 flex justify-end">
+            <Button onClick={openCreate}>Add participation</Button>
+          </div>
+        )}
         {error && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
         {data && (
           <>
@@ -159,7 +174,9 @@ export default function RenderingParticipationPage() {
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Effective from</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Effective to</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Active</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">Actions</th>
+                    {(canUpdate || canDelete) && (
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">Actions</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -171,10 +188,12 @@ export default function RenderingParticipationPage() {
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.effectiveFrom ? toDateInput(row.effectiveFrom) : "—"}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.effectiveTo ? toDateInput(row.effectiveTo) : "—"}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">{row.isActive ? "Yes" : "No"}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
-                        <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>Edit</Button>
-                        <Button variant="danger" onClick={() => setDeleteId(row.id)}>Delete</Button>
-                      </td>
+                      {(canUpdate || canDelete) && (
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
+                          {canUpdate && <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>Edit</Button>}
+                          {canDelete && <Button variant="danger" onClick={() => setDeleteId(row.id)}>Delete</Button>}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

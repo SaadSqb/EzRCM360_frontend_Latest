@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { getApiUrl } from "@/lib/api";
+import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY, MFA_USER_ID_KEY, MFA_SETUP_USER_ID_KEY } from "@/lib/env";
 import { useToast } from "@/lib/contexts/ToastContext";
 
 export default function LoginPage() {
@@ -27,11 +28,35 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || data.title || "Login failed");
-      const token = data.data?.accessToken ?? data.accessToken;
-      const refresh = data.data?.refreshToken ?? data.refreshToken;
+
+      const payload = data.data ?? data;
+      const requiresMfa = payload.requiresMfa === true || payload.RequiresMfa === true;
+      const requiresMfaSetup = payload.requiresMfaSetup === true || payload.RequiresMfaSetup === true;
+      const userId = payload.userId ?? payload.UserId;
+
+      if (requiresMfa && userId && typeof window !== "undefined") {
+        sessionStorage.setItem(MFA_USER_ID_KEY, userId);
+        router.push("/authentication/verify");
+        router.refresh();
+        return;
+      }
+
+      const token = payload.accessToken ?? payload.AccessToken ?? data.accessToken;
+      const refresh = payload.refreshToken ?? payload.RefreshToken ?? data.refreshToken;
+
+      if (requiresMfaSetup && userId && token && typeof window !== "undefined") {
+        localStorage.setItem(AUTH_TOKEN_KEY, token);
+        if (refresh) localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+        sessionStorage.setItem(MFA_SETUP_USER_ID_KEY, userId);
+        toast.success("Please set up Multi-Factor Authentication.");
+        router.push("/authentication/setup");
+        router.refresh();
+        return;
+      }
+
       if (token && typeof window !== "undefined") {
-        localStorage.setItem("accessToken", token);
-        if (refresh) localStorage.setItem("refreshToken", refresh);
+        localStorage.setItem(AUTH_TOKEN_KEY, token);
+        if (refresh) localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
       }
       toast.success("Signed in successfully.");
       router.push("/settings");

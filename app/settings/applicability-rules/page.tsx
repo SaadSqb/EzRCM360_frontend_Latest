@@ -8,6 +8,7 @@ import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { applicabilityRulesApi } from "@/lib/services/applicabilityRules";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { useModulePermission } from "@/lib/contexts/PermissionsContext";
 import type {
   ApplicabilityRuleDto,
   CreateApplicabilityRuleCommand,
@@ -91,6 +92,7 @@ export default function ApplicabilityRulesPage() {
 
   const api = applicabilityRulesApi();
   const toast = useToast();
+  const { canView, canCreate, canUpdate, canDelete } = useModulePermission("Applicability Rules");
 
   const loadList = useCallback(() => {
     setError(null);
@@ -189,6 +191,17 @@ export default function ApplicabilityRulesPage() {
   const payerCategoryLabel = (n: number) =>
     PAYER_CATEGORY.find((c) => c.value === n)?.name ?? String(n);
 
+  if (!canView) {
+    return (
+      <div>
+        <PageHeader title="Applicability Rules" description="Fee schedule applicability rules." />
+        <Card>
+          <p className="text-sm text-slate-600">You do not have permission to view this page.</p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader
@@ -196,9 +209,11 @@ export default function ApplicabilityRulesPage() {
         description="Fee schedule applicability rules."
       />
       <Card>
-        <div className="mb-4 flex justify-end">
-          <Button onClick={openCreate}>Add rule</Button>
-        </div>
+        {canCreate && (
+          <div className="mb-4 flex justify-end">
+            <Button onClick={openCreate}>Add rule</Button>
+          </div>
+        )}
         {error && (
           <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
             {error}
@@ -222,9 +237,11 @@ export default function ApplicabilityRulesPage() {
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">
                       Active
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">
-                      Actions
-                    </th>
+                    {(canUpdate || canDelete) && (
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">
+                        Actions
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -245,21 +262,20 @@ export default function ApplicabilityRulesPage() {
                       <td className="whitespace-nowrap px-4 py-3 text-sm">
                         {row.isActive ? "Yes" : "No"}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
-                        <Button
-                          variant="ghost"
-                          className="mr-1"
-                          onClick={() => openEdit(row)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="danger"
-                          onClick={() => setDeleteId(row.id)}
-                        >
-                          Delete
-                        </Button>
-                      </td>
+                      {(canUpdate || canDelete) && (
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
+                          {canUpdate && (
+                            <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>
+                              Edit
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button variant="danger" onClick={() => setDeleteId(row.id)}>
+                              Delete
+                            </Button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

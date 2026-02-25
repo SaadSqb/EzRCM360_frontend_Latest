@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { entityProvidersApi } from "@/lib/services/entityProviders";
 import { lookupsApi } from "@/lib/services/lookups";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { useModulePermission } from "@/lib/contexts/PermissionsContext";
 import type { EntityProviderListItemDto, CreateEntityProviderRequest, UpdateEntityProviderRequest } from "@/lib/services/entityProviders";
 import type { EntityLookupDto } from "@/lib/services/lookups";
 import type { PaginatedList } from "@/lib/types";
@@ -41,6 +42,7 @@ export default function EntityProvidersPage() {
 
   const api = entityProvidersApi();
   const toast = useToast();
+  const { canView, canCreate, canUpdate, canDelete } = useModulePermission("Entity Providers");
 
   const loadList = useCallback(() => {
     setError(null);
@@ -129,13 +131,26 @@ export default function EntityProvidersPage() {
 
   const providerTypeLabel = (n: number) => PROVIDER_TYPES.find((p) => p.value === n)?.name ?? String(n);
 
+  if (!canView) {
+    return (
+      <div>
+        <PageHeader title="Entity Providers" description="Manage entity providers." />
+        <Card>
+          <p className="text-sm text-slate-600">You do not have permission to view this page.</p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader title="Entity Providers" description="Manage entity providers." />
       <Card>
-        <div className="mb-4 flex justify-end">
-          <Button onClick={openCreate}>Add provider</Button>
-        </div>
+        {canCreate && (
+          <div className="mb-4 flex justify-end">
+            <Button onClick={openCreate}>Add provider</Button>
+          </div>
+        )}
         {error && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
         {data && (
           <>
@@ -150,7 +165,9 @@ export default function EntityProvidersPage() {
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Primary specialty</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Secondary specialty</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Active</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">Actions</th>
+                    {(canUpdate || canDelete) && (
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">Actions</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -163,10 +180,12 @@ export default function EntityProvidersPage() {
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.primarySpecialty ?? "—"}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.secondarySpecialty ?? "—"}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">{row.isActive ? "Yes" : "No"}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
-                        <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>Edit</Button>
-                        <Button variant="danger" onClick={() => setDeleteId(row.id)}>Delete</Button>
-                      </td>
+                      {(canUpdate || canDelete) && (
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
+                          {canUpdate && <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>Edit</Button>}
+                          {canDelete && <Button variant="danger" onClick={() => setDeleteId(row.id)}>Delete</Button>}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

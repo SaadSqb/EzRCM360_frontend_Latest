@@ -8,6 +8,7 @@ import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { procedureGroupingRulesApi } from "@/lib/services/procedureGroupingRules";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { useModulePermission } from "@/lib/contexts/PermissionsContext";
 import type { ProcedureGroupingRuleDto, CreateProcedureGroupingRuleCommand } from "@/lib/services/procedureGroupingRules";
 import type { PaginatedList } from "@/lib/types";
 import { toDateInput } from "@/lib/utils";
@@ -36,6 +37,7 @@ export default function ProcedureGroupingRulesPage() {
 
   const api = procedureGroupingRulesApi();
   const toast = useToast();
+  const { canView, canCreate, canUpdate, canDelete } = useModulePermission("Procedure Grouping Rules");
 
   const loadList = useCallback(() => {
     setError(null);
@@ -108,13 +110,26 @@ export default function ProcedureGroupingRulesPage() {
     }
   };
 
+  if (!canView) {
+    return (
+      <div>
+        <PageHeader title="Procedure Grouping Rules" description="Procedure grouping for ranking and reporting." />
+        <Card>
+          <p className="text-sm text-slate-600">You do not have permission to view this page.</p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageHeader title="Procedure Grouping Rules" description="Procedure grouping for ranking and reporting." />
       <Card>
-        <div className="mb-4 flex justify-end">
-          <Button onClick={openCreate}>Add rule</Button>
-        </div>
+        {canCreate && (
+          <div className="mb-4 flex justify-end">
+            <Button onClick={openCreate}>Add rule</Button>
+          </div>
+        )}
         {error && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
         {data && (
           <>
@@ -127,7 +142,9 @@ export default function ProcedureGroupingRulesPage() {
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">CPT/HCPCS code</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Sort order</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Active</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">Actions</th>
+                    {(canUpdate || canDelete) && (
+                      <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">Actions</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -138,10 +155,12 @@ export default function ProcedureGroupingRulesPage() {
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.cptHcpcsCode}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.sortOrder}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">{row.isActive ? "Yes" : "No"}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
-                        <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>Edit</Button>
-                        <Button variant="danger" onClick={() => setDeleteId(row.id)}>Delete</Button>
-                      </td>
+                      {(canUpdate || canDelete) && (
+                        <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
+                          {canUpdate && <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>Edit</Button>}
+                          {canDelete && <Button variant="danger" onClick={() => setDeleteId(row.id)}>Delete</Button>}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
