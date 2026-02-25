@@ -36,7 +36,8 @@ export interface CreateUserRequest {
   organizationId?: string | null;
   roleId?: string | null;
   moduleIds?: string[] | null;
-  status?: number;
+  /** Backend expects enum string; UI uses number. Both accepted for API calls. */
+  status?: number | UserStatusName;
 }
 
 export interface UpdateUserRequest {

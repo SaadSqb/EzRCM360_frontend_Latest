@@ -142,7 +142,7 @@ export default function UsersPage() {
           organizationId: form.organizationId || undefined,
           roleId: form.roleId || undefined,
           moduleIds: form.moduleIds?.length ? form.moduleIds : undefined,
-          status: USER_STATUS_NAMES[form.status ?? 1] ?? "Active",
+          status: (typeof form.status === "number" ? USER_STATUS_NAMES[form.status] : form.status) ?? "Active",
           newPassword: (form as { newPassword?: string }).newPassword || undefined,
         });
       } else {
@@ -153,7 +153,7 @@ export default function UsersPage() {
           organizationId: form.organizationId || undefined,
           roleId: form.roleId || undefined,
           moduleIds: form.moduleIds?.length ? form.moduleIds : undefined,
-          status: form.status != null ? USER_STATUS_NAMES[form.status] ?? "Active" : undefined,
+          status: form.status != null ? (typeof form.status === "number" ? USER_STATUS_NAMES[form.status] : form.status) ?? "Active" : undefined,
         });
       }
       setModalOpen(false);
