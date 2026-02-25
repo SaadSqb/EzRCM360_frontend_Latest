@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { getApiUrl } from "@/lib/api";
+import { LogoIcon } from "@/lib/icons/LogoIcon";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { RightArrow } from "@/lib/icons/RightArrow";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,25 +51,20 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface p-4">
       <Card className="w-full max-w-md">
-        <div className="mb-6 flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600 text-white font-semibold">
-            E
-          </div>
-          <span className="text-xl font-semibold text-slate-800">EzRCM360</span>
+        <div className="mb-6">
+          <LogoIcon size={140} />
         </div>
-        <h2 className="text-lg font-semibold text-slate-900">Sign in</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Use your credentials to access the settings portal.
-        </p>
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <h1 className="text-2xl font-semibold text-slate-900">Login to your account</h1>
+
+        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {error && (
             <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
             </div>
           )}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-              Email
+            <label htmlFor="email" className="block text-sm font-semibold text-[#202830]">
+              Email <span className="text-red-500">*</span>
             </label>
             <input
               id="email"
@@ -78,8 +76,8 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-              Password
+            <label htmlFor="password" className="block text-sm font-semibold text-[#202830]">
+              Password <span className="text-red-500">*</span>
             </label>
             <input
               id="password"
@@ -91,7 +89,7 @@ export default function LoginPage() {
             />
           </div>
           <Button type="submit" disabled={loading}>
-            {loading ? "Signing in…" : "Sign in"}
+            <span className="mr-1">{loading ? "Logging in…" : "Login"}</span> <RightArrow size={16} />
           </Button>
         </form>
       </Card>
