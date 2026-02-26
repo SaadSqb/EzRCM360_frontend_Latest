@@ -26,11 +26,17 @@ export function TableBody({ children }: { children: React.ReactNode }) {
 export function TableRow({
   children,
   className = "",
+  style,
 }: {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }) {
-  return <tr className={`hover:bg-slate-50 ${className}`}>{children}</tr>;
+  return (
+    <tr className={`hover:bg-slate-50 transition-colors duration-150 ${className}`} style={style}>
+      {children}
+    </tr>
+  );
 }
 
 export function TableHeaderCell({

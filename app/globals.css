@@ -3,21 +3,86 @@
 @tailwind utilities;
 
 :root {
-  --foreground: #0f172a;
-  --background: #f8fafc;
+  --foreground: #171717;
+  --background: #f5f5f5;
   --card: #ffffff;
-  --primary: #2563eb;
+  --primary: #0078d4;
+  --primary-hover: #106ebe;
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e5e7eb;
   --sidebar-active-bg: #eff6ff;
-  --sidebar-active-border: #2563eb;
+  --sidebar-active-border: #0078d4;
+  --header-bg: #ffffff;
+  --header-border: #e5e7eb;
+  --surface-neutral: #fafafa;
+  --text-primary: #171717;
+  --text-secondary: #525252;
+  --text-muted: #737373;
+  --border-default: #e5e7eb;
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-elevated: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Enterprise-style focus rings */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Clean scrollbar (subtle) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d4;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a3a3a3;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* Stagger delay utilities for list animations */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+.stagger-7 { animation-delay: 0.35s; }
+.stagger-8 { animation-delay: 0.4s; }
+
+/* Shimmer skeleton for loading states */
+@keyframes shimmer-bg {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer-bg {
+  background: linear-gradient(
+    90deg,
+    theme("colors.neutral.100") 25%,
+    theme("colors.neutral.50") 50%,
+    theme("colors.neutral.100") 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-bg 1.5s ease-in-out infinite;
 }

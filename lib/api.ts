@@ -1,56 +1,16 @@
 /**
- * API client for EzRCM360 backend. All requests use Bearer token when available.
+ * API client for EzRCM360 backend. Re-exports from modular API layer.
+ * Uses IHttpClient abstraction for testability (Dependency Inversion).
  */
 
-import { API_URL, AUTH_TOKEN_KEY } from "@/lib/env";
-
-export type ApiResponse<T> = {
-  success: boolean;
-  message?: string;
-  data?: T;
-};
-
-export async function apiRequest<T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const base = API_URL.replace(/\/$/, "");
-  const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem(AUTH_TOKEN_KEY) : null;
-  const headers: HeadersInit = {
-    "Content-Type": "application/json",
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-
-  const res = await fetch(url, { ...options, headers });
-  if (!res.ok) {
-    const text = await res.text();
-    let message = text;
-    try {
-      const json = JSON.parse(text) as { message?: string; title?: string };
-      message = json.message || json.title || text;
-    } catch {
-      // use text as-is
-    }
-    throw new Error(message || `HTTP ${res.status}`);
-  }
-  if (res.status === 204) return undefined as T;
-  const contentType = res.headers.get("content-type");
-  if (contentType?.includes("application/json")) {
-    const json = (await res.json()) as ApiResponse<T> | T;
-    if (json && typeof json === "object" && "data" in json && "success" in json)
-      return (json as ApiResponse<T>).data as T;
-    return json as T;
-  }
-  return res.text() as Promise<T>;
-}
-
-export function getApiUrl(path: string): string {
-  const base = API_URL.replace(/\/$/, "");
-  return `${base}${path.startsWith("/") ? "" : "/"}${path}`;
-}
+export {
+  apiRequest,
+  getApiUrl,
+  setHttpClient,
+  getHttpClient,
+} from "./api/index";
+export type { IHttpClient } from "./api/interfaces";
+export type { ApiResponse } from "./api/httpClient";
 
 /** Send multipart/form-data. Do not set Content-Type so the browser sets the boundary. */
 export async function apiRequestForm(
@@ -58,6 +18,7 @@ export async function apiRequestForm(
   formData: FormData,
   method: string = "PUT"
 ): Promise<void> {
+  const { API_URL, AUTH_TOKEN_KEY } = await import("@/lib/env");
   const base = API_URL.replace(/\/$/, "");
   const url = path.startsWith("http") ? path : `${base}${path.startsWith("/") ? "" : "/"}${path}`;
   const token =
@@ -65,7 +26,6 @@ export async function apiRequestForm(
   const headers: HeadersInit = {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
-
   const res = await fetch(url, { method, headers, body: formData });
   if (!res.ok) {
     const text = await res.text();
@@ -74,7 +34,7 @@ export async function apiRequestForm(
       const json = JSON.parse(text) as { message?: string; title?: string };
       message = json.message || json.title || text;
     } catch {
-      // use text as-is
+      /* use text as-is */
     }
     throw new Error(message || `HTTP ${res.status}`);
   }

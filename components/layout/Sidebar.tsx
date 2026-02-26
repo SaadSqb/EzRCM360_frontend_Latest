@@ -7,11 +7,63 @@ import { usePermissionsOptional } from "@/lib/contexts/PermissionsContext";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { profileApi } from "@/lib/services/profile";
 
-const mainNav: { href: string; label: string; moduleName: string }[] = [
-  { href: "/dashboard", label: "Dashboard", moduleName: "Dashboard" },
-  { href: "/patients", label: "Patients", moduleName: "Patients" },
-  { href: "/claims", label: "Claims", moduleName: "Claims" },
-  { href: "/settings", label: "Settings & Configurations", moduleName: "Settings & Configurations" },
+const DashboardIcon = () => (
+  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+  </svg>
+);
+
+const PatientsIcon = () => (
+  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+  </svg>
+);
+
+const ClaimsIcon = () => (
+  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+
+const ChartIcon = () => (
+  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>
+);
+
+const SettingsIcon = () => (
+  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
+const HelpIcon = () => (
+  <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+const ChevronDown = ({ open }: { open: boolean }) => (
+  <svg
+    className={`h-4 w-4 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+  </svg>
+);
+
+const mainNav: { href: string; label: string; moduleName: string; icon: React.ReactNode }[] = [
+  { href: "/dashboard", label: "Dashboard", moduleName: "Dashboard", icon: <DashboardIcon /> },
+  { href: "/patients", label: "Patients", moduleName: "Patients", icon: <PatientsIcon /> },
+  { href: "/claims", label: "Claims", moduleName: "Claims", icon: <ClaimsIcon /> },
+];
+
+const rcmSubItems: { href: string; label: string; moduleName: string }[] = [
+  { href: "/rcm/insurance-ar-analysis", label: "Insurance AR Analysis", moduleName: "Insurance AR Analysis" },
 ];
 
 export function Sidebar() {
@@ -19,8 +71,9 @@ export function Sidebar() {
   const permissions = usePermissionsOptional();
   const [userName, setUserName] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [rcmOpen, setRcmOpen] = useState(true);
   const isSettings = pathname?.startsWith("/settings");
-
+  const isRcm = pathname?.startsWith("/rcm");
   useEffect(() => {
     profileApi()
       .getMe()
@@ -33,48 +86,118 @@ export function Sidebar() {
         setUserEmail(null);
       });
   }, []);
-  // Show full nav when no provider, still loading, or no permissions (e.g. API failed) so the page is never blank
-  const visibleNav =
+
+  const canView = (moduleName: string) =>
     !permissions || permissions.loading || permissions.permissions.length === 0
-      ? mainNav
-      : mainNav.filter((item) => permissions.canView(item.moduleName));
+      ? true
+      : permissions.canView(moduleName);
+
+  const visibleMain = mainNav.filter((item) => canView(item.moduleName));
+  const visibleRcm = rcmSubItems.filter((item) => canView(item.moduleName));
+
+  const navLinkClass = (active: boolean) =>
+    `flex items-center gap-3 rounded-md py-2.5 pl-3 pr-3 text-sm font-medium transition-colors duration-150 border-l-4 ${
+      active
+        ? "border-primary-600 bg-primary-100 text-primary-700"
+        : "border-transparent text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800"
+    }`;
+
+  const subLinkClass = (active: boolean) =>
+    `flex items-center gap-3 rounded-md py-2.5 pl-9 pr-3 text-sm font-medium transition-colors duration-150 border-l-4 ${
+      active
+        ? "border-primary-600 bg-primary-100 text-primary-700"
+        : "border-transparent text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800"
+    }`;
 
   return (
-    <aside className="fixed left-0 top-0 z-30 h-full w-64 border-r border-slate-200 bg-white">
-      <div className="flex h-full flex-col">
-        <div className="flex h-14 items-center gap-2 border-b border-slate-200 px-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-primary-600 text-white font-semibold">
-            E
-          </div>
-          <span className="font-semibold text-slate-800">EzRCM360</span>
+    <aside className="fixed left-0 top-0 z-30 flex h-full w-64 flex-col border-r border-neutral-200 bg-white">
+      {/* Logo / Brand */}
+      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-neutral-200 px-4">
+        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary-100 text-primary-600 font-semibold text-sm">
+          E
         </div>
-        <nav className="flex-1 space-y-0.5 p-3">
-          {visibleNav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
-                (item.href === "/settings" && isSettings) || pathname === item.href
-                  ? "bg-primary-50 text-primary-700 border-l-4 border-primary-600 font-medium"
-                  : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              <span>{item.label}</span>
+        <span className="font-semibold text-neutral-800">EzRCM360</span>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-3">
+        <ul className="space-y-0.5 px-3">
+          {visibleMain.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <li key={item.href}>
+                <Link href={item.href} className={navLinkClass(isActive)}>
+                  {item.icon}
+                  <span>{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+
+          {/* RCM Intelligence - expandable */}
+          {visibleRcm.length > 0 && (
+            <li>
+              <button
+                type="button"
+                onClick={() => setRcmOpen(!rcmOpen)}
+                className={`w-full ${navLinkClass(false)}`}
+              >
+                <ChartIcon />
+                <span className="flex-1 text-left">RCM Intelligence</span>
+                <ChevronDown open={rcmOpen} />
+              </button>
+              {rcmOpen && (
+                <ul className="mt-1 space-y-0.5">
+                  {visibleRcm.map((item) => {
+                    const isActive = pathname?.startsWith(item.href);
+                    return (
+                      <li key={item.href}>
+                        <Link href={item.href} className={subLinkClass(isActive)}>
+                          {item.label}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </li>
+          )}
+
+          {/* Settings & Configurations */}
+          {canView("Settings & Configurations") && (
+            <li>
+              <Link
+                href="/settings"
+                className={navLinkClass(isSettings)}
+              >
+                <SettingsIcon />
+                <span>Settings & Configurations</span>
+              </Link>
+            </li>
+          )}
+
+          {/* Help & Support */}
+          <li>
+            <Link href="/help" className={navLinkClass(pathname === "/help")}>
+              <HelpIcon />
+              <span>Help & Support</span>
             </Link>
-          ))}
-        </nav>
-        <div className="border-t border-slate-200 p-3">
-          <div className="flex items-center gap-3 rounded-lg px-3 py-2">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-medium text-slate-600">
-              {(userName || userEmail || "U")[0].toUpperCase()}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-slate-800">{userName ?? "User"}</p>
-              <p className="truncate text-xs text-slate-500">{userEmail ?? "—"}</p>
-            </div>
+          </li>
+        </ul>
+      </nav>
+
+      {/* User section */}
+      <div className="shrink-0 border-t border-neutral-200 p-3">
+        <div className="flex items-center gap-3 rounded-md px-3 py-2">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-700">
+            {(userName || userEmail || "U")[0].toUpperCase()}
           </div>
-          <LogoutButton className="mt-2 flex w-full items-center justify-center rounded-lg bg-primary-50 px-3 py-2 text-sm font-medium text-primary-700 hover:bg-primary-100" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-neutral-800">{userName ?? "User"}</p>
+            <p className="truncate text-xs text-neutral-500">{userEmail ?? "—"}</p>
+          </div>
         </div>
+        <LogoutButton className="mt-2 flex w-full items-center justify-center rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100" />
       </div>
     </aside>
   );

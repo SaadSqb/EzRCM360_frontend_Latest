@@ -1,0 +1,68 @@
+"use client";
+
+export interface StepperStep {
+  id: number;
+  label: string;
+  completed?: boolean;
+  active?: boolean;
+}
+
+export function Stepper({ steps }: { steps: StepperStep[] }) {
+  return (
+    <div className="mb-8 animate-fade-in">
+      <div className="flex items-center justify-between gap-1">
+        {steps.map((step, i) => (
+          <div key={step.id} className="flex flex-1 items-center">
+            <div className="flex flex-col items-center">
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition-all duration-300 ease-out ${
+                  step.completed
+                    ? "border-primary-600 bg-primary-600 text-white shadow-md shadow-primary-600/25"
+                    : step.active
+                      ? "border-primary-600 bg-primary-50 text-primary-600 ring-4 ring-primary-100"
+                      : "border-neutral-200 bg-white text-neutral-400"
+                } ${step.active ? "scale-105" : ""}`}
+              >
+                {step.completed ? (
+                  <svg
+                    className="h-5 w-5 animate-scale-in"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                ) : (
+                  <span>{step.id}</span>
+                )}
+              </div>
+              <span
+                className={`mt-2 text-center text-xs font-medium sm:text-sm ${
+                  step.active
+                    ? "text-neutral-900"
+                    : step.completed
+                      ? "text-neutral-600"
+                      : "text-neutral-400"
+                }`}
+              >
+                {step.label}
+              </span>
+            </div>
+            {i < steps.length - 1 && (
+              <div
+                className={`mx-1 h-1 flex-1 rounded-full transition-all duration-500 sm:mx-3 ${
+                  step.completed
+                    ? "bg-primary-600"
+                    : "bg-neutral-200"
+                }`}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

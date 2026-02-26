@@ -34,6 +34,7 @@ export const ROUTE_TO_MODULE_NAME: Record<string, string> = {
   "/settings/nsa-federal": "NSA Federal",
   "/settings/nsa-state": "NSA State",
   "/settings/nsa-emergency": "NSA Emergency",
+  "/rcm/insurance-ar-analysis": "Insurance AR Analysis",
 };
 
 /** Settings page link href to module name (for filtering which cards/links to show). */
