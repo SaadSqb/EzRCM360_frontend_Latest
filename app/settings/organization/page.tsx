@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal, ModalFooter } from "@/components/ui/Modal";
@@ -13,6 +12,7 @@ import type {
   OrganizationProfileDto,
   UpdateCurrentOrganizationRequest,
 } from "@/lib/services/organizations";
+import { PageShell } from "@/components/layout/PageShell";
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -20,6 +20,12 @@ function getInitials(name: string): string {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
   return name.slice(0, 2).toUpperCase() || "—";
+}
+
+function formatId(id: string | null | undefined): string {
+  if (!id || !id.trim()) return "—";
+  if (id.length <= 20) return id;
+  return `${id.slice(0, 8)}…`;
 }
 
 const DATE_FORMAT_OPTIONS: { value: string; label: string }[] = [
@@ -158,182 +164,135 @@ export default function OrganizationPage() {
 
   if (loading) {
     return (
-      <div>
-        <div className="mb-6 text-sm text-slate-500">
-          <Link href="/settings" className="text-primary-600 hover:text-primary-700">
-            Settings & Configurations
-          </Link>
-          <span className="mx-1">/</span>
-          <span className="text-slate-700">Organization</span>
-        </div>
-        <div className="py-12 text-center text-sm text-slate-500">Loading…</div>
-      </div>
+      <PageShell title="Organization">
+        <div className="h-80 animate-shimmer-bg rounded-xl" />
+      </PageShell>
     );
   }
 
   if (!canView) {
     return (
-      <div>
-        <div className="mb-6 text-sm text-slate-500">
-          <Link href="/settings" className="text-primary-600 hover:text-primary-700">
-            Settings & Configurations
-          </Link>
-          <span className="mx-1">/</span>
-          <span className="text-slate-700">Organization</span>
-        </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-6">
+      <PageShell breadcrumbs={[{ label: "Settings & Configurations", href: "/settings" }, { label: "Organization" }]} title="Organization">
+        <Card className="p-6">
           <p className="text-sm text-slate-600">You do not have permission to view this page.</p>
-        </div>
-      </div>
+        </Card>
+      </PageShell>
     );
   }
 
   if (error || !profile) {
     return (
-      <div>
-        <div className="mb-6 text-sm text-slate-500">
-          <Link href="/settings" className="text-primary-600 hover:text-primary-700">
-            Settings & Configurations
-          </Link>
-          <span className="mx-1">/</span>
-          <span className="text-slate-700">Organization</span>
-        </div>
+      <PageShell breadcrumbs={[{ label: "Settings & Configurations", href: "/settings" }, { label: "Organization" }]} title="Organization">
         <Card>
           <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
             {error ?? "Organization not found."}
           </div>
         </Card>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div>
-      {/* Breadcrumbs */}
-      <div className="mb-6 text-sm text-slate-500">
-        <Link href="/settings" className="text-primary-600 hover:text-primary-700">
-          Settings & Configurations
-        </Link>
-        <span className="mx-1">/</span>
-        <span className="text-slate-700">Organization</span>
-      </div>
-
-      <h1 className="mb-6 text-2xl font-semibold text-slate-900">Organization</h1>
-
-      {/* Summary card: avatar + name + contact */}
-      <Card className="mb-6">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary-600 text-lg font-semibold text-white">
-            {profile.logoUrl ? (
-              <img
-                src={
-                  profile.logoUrl.startsWith("http")
-                    ? profile.logoUrl
-                    : getApiUrl(`/api/files/${profile.logoUrl}`)
-                }
-                alt=""
-                className="h-full w-full rounded-full object-cover"
-              />
-            ) : (
-              getInitials(profile.name)
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-semibold text-slate-900">{profile.name}</h2>
-            <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-600">
-              <svg
-                className="h-4 w-4 shrink-0 text-slate-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+    <PageShell
+      breadcrumbs={[{ label: "Settings & Configurations", href: "/settings" }, { label: "Organization" }]}
+      title="Organization"
+      description="Manage organization profile and preferences."
+    >
+      {/* Summary card - Microsoft-style with icon header */}
+      <Card className="mb-8 overflow-hidden animate-fade-in-up">
+        <div className="flex flex-col sm:flex-row">
+          <div className="flex min-h-[120px] min-w-[140px] items-center justify-center bg-gradient-to-br from-primary-50/80 to-primary-100/40 p-6">
+            <div className="flex h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-primary-600 text-2xl font-semibold text-white shadow-lg shadow-primary-600/20">
+              {profile.logoUrl ? (
+                <img
+                  src={
+                    profile.logoUrl.startsWith("http")
+                      ? profile.logoUrl
+                      : getApiUrl(`/api/files/${profile.logoUrl}`)
+                  }
+                  alt=""
+                  className="h-full w-full object-cover"
                 />
-              </svg>
-              <span>—</span>
+              ) : (
+                <span className="flex h-full w-full items-center justify-center">{getInitials(profile.name)}</span>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-1 flex-col justify-center px-6 py-5">
+            <h2 className="text-xl font-semibold text-slate-900">{profile.name}</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Organization profile and settings
             </p>
           </div>
         </div>
       </Card>
 
-      {/* Organization Information */}
-      <Card>
-        <div className="mb-4 flex items-center gap-2">
-          <svg
-            className="h-5 w-5 text-slate-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <h3 className="text-base font-semibold text-slate-900">
-            Organization Information
-          </h3>
+      {/* Organization Information - Microsoft-style card */}
+      <Card className="overflow-hidden animate-fade-in-up stagger-1">
+        <div className="flex min-h-[80px] items-center gap-3 bg-gradient-to-r from-slate-50 to-slate-50/50 px-6 py-5">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100">
+            <svg className="h-5 w-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-slate-900">Organization Information</h3>
         </div>
-        <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-x-10 gap-y-6 p-6 sm:grid-cols-2 lg:grid-cols-3">
           <div>
             <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
               Organization Name
             </dt>
-            <dd className="mt-0.5 text-sm font-medium text-slate-900">{profile.name}</dd>
+            <dd className="mt-1 text-sm font-medium text-slate-900">{profile.name}</dd>
           </div>
           <div>
             <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
               Primary Administrator
             </dt>
-            <dd className="mt-0.5 text-sm text-slate-900">
-              {profile.primaryAdministratorUserId ?? "—"}
+            <dd className="mt-1 text-sm font-medium text-slate-900" title={profile.primaryAdministratorUserId ?? undefined}>
+              {formatId(profile.primaryAdministratorUserId)}
             </dd>
           </div>
           <div>
             <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
               Default Time Zone
             </dt>
-            <dd className="mt-0.5 text-sm text-slate-900">
-              {profile.defaultTimeZone ?? "—"}
+            <dd className="mt-1 text-sm text-slate-900">
+              {profile.defaultTimeZone ?? "Not set"}
             </dd>
           </div>
           <div>
             <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
               System Date Format
             </dt>
-            <dd className="mt-0.5 text-sm text-slate-900">
+            <dd className="mt-1 text-sm text-slate-900">
               {profile.systemDateFormat
-                ? `${profile.systemDateFormat} – ${formatDateExample(profile.systemDateFormat)}`
-                : "—"}
+                ? `${profile.systemDateFormat} (e.g. ${formatDateExample(profile.systemDateFormat)})`
+                : "Not set"}
             </dd>
           </div>
           <div>
             <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
               System Time Format
             </dt>
-            <dd className="mt-0.5 text-sm text-slate-900">
+            <dd className="mt-1 text-sm text-slate-900">
               {profile.systemTimeFormat
-                ? `${profile.systemTimeFormat} – ${formatTimeExample(profile.systemTimeFormat)}`
-                : "—"}
+                ? `${profile.systemTimeFormat} (e.g. ${formatTimeExample(profile.systemTimeFormat)})`
+                : "Not set"}
             </dd>
           </div>
           <div>
             <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
               Organization Status
             </dt>
-            <dd className="mt-0.5 text-sm font-medium text-slate-900">
-              {profile.isActive ? "Active" : "Inactive"}
+            <dd className="mt-1">
+              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${profile.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+                {profile.isActive ? "Active" : "Inactive"}
+              </span>
             </dd>
           </div>
         </div>
         {canUpdate && (
-          <div className="mt-6">
+          <div className="border-t border-slate-100 px-6 py-5">
             <Button onClick={openEdit} className="inline-flex items-center gap-2">
               Edit Organization
               <svg
@@ -376,7 +335,7 @@ export default function OrganizationPage() {
                 type="text"
                 value={form.name ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="input-enterprise"
                 placeholder="e.g. PrimeCare Billing Solutions"
               />
             </div>
@@ -393,7 +352,7 @@ export default function OrganizationPage() {
                     primaryAdministratorUserId: e.target.value || undefined,
                   }))
                 }
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="input-enterprise"
                 placeholder="User ID (e.g. RCM-12453 or Guid)"
               />
             </div>
@@ -409,7 +368,7 @@ export default function OrganizationPage() {
                     defaultTimeZone: e.target.value || undefined,
                   }))
                 }
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="input-enterprise"
               >
                 {TIME_ZONE_OPTIONS.map((opt) => (
                   <option key={opt.value || "empty"} value={opt.value}>
@@ -435,7 +394,7 @@ export default function OrganizationPage() {
                       systemDateFormat: e.target.value || undefined,
                     }))
                   }
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="input-enterprise"
                 >
                   <option value="">—</option>
                   {DATE_FORMAT_OPTIONS.map((opt) => (
@@ -462,7 +421,7 @@ export default function OrganizationPage() {
                       systemTimeFormat: e.target.value || undefined,
                     }))
                   }
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="input-enterprise"
                 >
                   <option value="">—</option>
                   {TIME_FORMAT_OPTIONS.map((opt) => (
@@ -510,6 +469,6 @@ export default function OrganizationPage() {
           />
         </form>
       </Modal>
-    </div>
+    </PageShell>
   );
 }

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useModulePermission } from "@/lib/contexts/PermissionsContext";
+import { AccessDenied } from "@/components/auth/AccessDenied";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Stepper } from "@/components/rcm/Stepper";
@@ -26,10 +28,30 @@ import {
 
 type Step = 1 | 2 | 3;
 
+const MODULE_NAME = "Insurance AR Analysis";
+
 export default function InsuranceArAnalysisUploadPage() {
   const router = useRouter();
   const toast = useToast();
   const api = insuranceArAnalysisApi();
+  const { canCreate, loading: permLoading } = useModulePermission(MODULE_NAME);
+
+  if (permLoading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Loader />
+      </div>
+    );
+  }
+  if (!canCreate) {
+    return (
+      <AccessDenied
+        moduleName="Insurance AR Analysis Upload"
+        message="You don't have permission to upload data. Contact your administrator."
+        backHref="/rcm/insurance-ar-analysis"
+      />
+    );
+  }
 
   const [step, setStep] = useState<Step>(1);
   const [practiceName, setPracticeName] = useState("");

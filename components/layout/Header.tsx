@@ -11,6 +11,7 @@ function getHeaderTitle(pathname: string | null): string {
   if (pathname.startsWith("/patients")) return "Patients";
   if (pathname.startsWith("/claims")) return "Claims";
   if (pathname.startsWith("/help")) return "Help & Support";
+  if (pathname.startsWith("/profile")) return "Edit Profile";
   return "Dashboard";
 }
 
@@ -19,7 +20,7 @@ export function Header() {
   const title = getHeaderTitle(pathname);
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between border-b border-neutral-200 bg-white px-6">
+    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between border-b border-slate-200/80 bg-white/95 backdrop-blur-sm px-6 lg:px-8">
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-neutral-600">{title}</span>
       </div>

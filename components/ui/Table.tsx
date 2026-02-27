@@ -8,7 +8,7 @@ export interface TableProps {
 export function Table({ children, className = "" }: TableProps) {
   return (
     <div className="overflow-x-auto">
-      <table className={`min-w-full divide-y divide-slate-200 ${className}`}>
+      <table className={`min-w-full divide-y divide-slate-200/60 ${className}`}>
         {children}
       </table>
     </div>
@@ -16,11 +16,11 @@ export function Table({ children, className = "" }: TableProps) {
 }
 
 export function TableHead({ children }: { children: React.ReactNode }) {
-  return <thead>{children}</thead>;
+  return <thead className="bg-slate-50/80">{children}</thead>;
 }
 
 export function TableBody({ children }: { children: React.ReactNode }) {
-  return <tbody className="divide-y divide-slate-200">{children}</tbody>;
+  return <tbody className="divide-y divide-slate-100 bg-white">{children}</tbody>;
 }
 
 export function TableRow({
@@ -33,7 +33,7 @@ export function TableRow({
   style?: React.CSSProperties;
 }) {
   return (
-    <tr className={`hover:bg-slate-50 transition-colors duration-150 ${className}`} style={style}>
+    <tr className={`transition-colors duration-150 hover:bg-primary-50/30 ${className}`} style={style}>
       {children}
     </tr>
   );
@@ -50,7 +50,7 @@ export function TableHeaderCell({
 }) {
   return (
     <th
-      className={`px-4 py-3 text-xs font-medium uppercase text-slate-500 ${align === "right" ? "text-right" : "text-left"} ${className}`}
+      className={`px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-600 ${align === "right" ? "text-right" : "text-left"} ${className}`}
     >
       {children}
     </th>
@@ -71,7 +71,7 @@ export function TableCell({
   return (
     <td
       colSpan={colSpan}
-      className={`px-4 py-3 text-sm text-slate-600 ${align === "right" ? "text-right" : "text-left"} ${className}`}
+      className={`px-6 py-4 text-sm text-slate-700 ${align === "right" ? "text-right" : "text-left"} ${className}`}
     >
       {children}
     </td>

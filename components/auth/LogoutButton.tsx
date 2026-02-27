@@ -8,6 +8,7 @@ import {
   MFA_USER_ID_KEY,
   MFA_SETUP_USER_ID_KEY,
   MFA_VERIFIED_KEY,
+  AUTH_COOKIE,
 } from "@/lib/env";
 import { getApiUrl } from "@/lib/api";
 
@@ -40,6 +41,7 @@ export function LogoutButton({ className }: { className?: string }) {
       sessionStorage.removeItem(MFA_USER_ID_KEY);
       sessionStorage.removeItem(MFA_SETUP_USER_ID_KEY);
       sessionStorage.removeItem(MFA_VERIFIED_KEY);
+      document.cookie = `${AUTH_COOKIE}=; path=/; max-age=0`;
     }
     router.replace("/login");
     router.refresh();

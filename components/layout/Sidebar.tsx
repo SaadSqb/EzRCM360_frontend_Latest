@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { usePermissionsOptional } from "@/lib/contexts/PermissionsContext";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { getApiUrl } from "@/lib/api";
 import { profileApi } from "@/lib/services/profile";
 
 const DashboardIcon = () => (
@@ -71,6 +72,7 @@ export function Sidebar() {
   const permissions = usePermissionsOptional();
   const [userName, setUserName] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
   const [rcmOpen, setRcmOpen] = useState(true);
   const isSettings = pathname?.startsWith("/settings");
   const isRcm = pathname?.startsWith("/rcm");
@@ -80,39 +82,40 @@ export function Sidebar() {
       .then((p) => {
         setUserName(p.userName);
         setUserEmail(p.email);
+        setProfilePictureUrl(p.profilePictureUrl ?? null);
       })
       .catch(() => {
         setUserName(null);
         setUserEmail(null);
+        setProfilePictureUrl(null);
       });
-  }, []);
+  }, [pathname]);
 
+  /** Fail-secure: only show nav items user explicitly has canView for. */
   const canView = (moduleName: string) =>
-    !permissions || permissions.loading || permissions.permissions.length === 0
-      ? true
-      : permissions.canView(moduleName);
+    permissions && !permissions.loading && permissions.canView(moduleName);
 
   const visibleMain = mainNav.filter((item) => canView(item.moduleName));
   const visibleRcm = rcmSubItems.filter((item) => canView(item.moduleName));
 
   const navLinkClass = (active: boolean) =>
-    `flex items-center gap-3 rounded-md py-2.5 pl-3 pr-3 text-sm font-medium transition-colors duration-150 border-l-4 ${
+    `flex items-center gap-3 rounded-lg py-2.5 pl-3 pr-3 text-sm font-medium transition-all duration-200 border-l-4 ${
       active
-        ? "border-primary-600 bg-primary-100 text-primary-700"
-        : "border-transparent text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800"
+        ? "border-primary-600 bg-primary-50/80 text-primary-700 shadow-sm"
+        : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
     }`;
 
   const subLinkClass = (active: boolean) =>
-    `flex items-center gap-3 rounded-md py-2.5 pl-9 pr-3 text-sm font-medium transition-colors duration-150 border-l-4 ${
+    `flex items-center gap-3 rounded-lg py-2.5 pl-9 pr-3 text-sm font-medium transition-all duration-200 border-l-4 ${
       active
-        ? "border-primary-600 bg-primary-100 text-primary-700"
-        : "border-transparent text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800"
+        ? "border-primary-600 bg-primary-50/80 text-primary-700"
+        : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
     }`;
 
   return (
-    <aside className="fixed left-0 top-0 z-30 flex h-full w-64 flex-col border-r border-neutral-200 bg-white">
+    <aside className="fixed left-0 top-0 z-30 flex h-full w-64 flex-col border-r border-slate-200/80 bg-white shadow-sm">
       {/* Logo / Brand */}
-      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-neutral-200 px-4">
+      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-slate-200/80 px-4">
         <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary-100 text-primary-600 font-semibold text-sm">
           E
         </div>
@@ -187,17 +190,28 @@ export function Sidebar() {
       </nav>
 
       {/* User section */}
-      <div className="shrink-0 border-t border-neutral-200 p-3">
-        <div className="flex items-center gap-3 rounded-md px-3 py-2">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-700">
-            {(userName || userEmail || "U")[0].toUpperCase()}
+      <div className="shrink-0 border-t border-slate-200/80 p-3">
+        <Link
+          href="/profile/edit"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-50"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-sm font-medium text-primary-700">
+            {profilePictureUrl ? (
+              <img
+                src={profilePictureUrl.startsWith("http") ? profilePictureUrl : getApiUrl("/api/files/" + profilePictureUrl)}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              (userName || userEmail || "U")[0].toUpperCase()
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-neutral-800">{userName ?? "User"}</p>
             <p className="truncate text-xs text-neutral-500">{userEmail ?? "—"}</p>
           </div>
-        </div>
-        <LogoutButton className="mt-2 flex w-full items-center justify-center rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100" />
+        </Link>
+        <LogoutButton className="mt-2 flex w-full items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100" />
       </div>
     </aside>
   );

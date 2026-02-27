@@ -117,7 +117,10 @@ export function usePermissionsOptional(): PermissionsContextValue | null {
   return useContext(PermissionsContext);
 }
 
-/** Convenience hook for a single module: canView, canCreate, canUpdate, canDelete. When permissions are not loaded yet (loading) or no provider, allows all to avoid flashing "no access". */
+/**
+ * Fail-secure: when loading or no provider, denies all permissions.
+ * Enterprise pattern: either user has access or they don't.
+ */
 export function useModulePermission(moduleName: string): {
   canView: boolean;
   canCreate: boolean;
@@ -126,10 +129,8 @@ export function useModulePermission(moduleName: string): {
   loading: boolean;
 } {
   const ctx = usePermissionsOptional();
-  if (!ctx)
-    return { canView: true, canCreate: true, canUpdate: true, canDelete: true, loading: false };
-  if (ctx.loading)
-    return { canView: true, canCreate: true, canUpdate: true, canDelete: true, loading: true };
+  if (!ctx) return { canView: false, canCreate: false, canUpdate: false, canDelete: false, loading: false };
+  if (ctx.loading) return { canView: false, canCreate: false, canUpdate: false, canDelete: false, loading: true };
   return {
     canView: ctx.canView(moduleName),
     canCreate: ctx.canCreate(moduleName),

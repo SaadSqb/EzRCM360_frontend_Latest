@@ -28,10 +28,10 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
   const sizeClass = size === "sm" ? "max-w-md" : size === "lg" ? "max-w-2xl" : "max-w-lg";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-slate-900/60" aria-hidden onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" aria-hidden onClick={onClose} />
       <div
-        className={`relative w-full ${sizeClass} max-h-[90vh] flex flex-col rounded-xl bg-white shadow-xl`}
+        className={`relative w-full ${sizeClass} max-h-[90vh] flex flex-col rounded-xl bg-white shadow-lg animate-scale-in`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"

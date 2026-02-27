@@ -11,7 +11,7 @@ export interface InputProps
 }
 
 const inputBaseClass =
-  "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500";
+  "input-enterprise";
 
 export function Input({
   label,
@@ -32,7 +32,7 @@ export function Input({
       )}
       <input
         id={inputId}
-        className={`${inputBaseClass} ${error ? "border-red-500" : ""} ${inputClassName}`}
+        className={`${inputBaseClass} ${error ? "input-enterprise-error" : ""} ${inputClassName}`}
         required={required}
         aria-invalid={!!error}
         aria-describedby={error ? `${inputId}-error` : undefined}

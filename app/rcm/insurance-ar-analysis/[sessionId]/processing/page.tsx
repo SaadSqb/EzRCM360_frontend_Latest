@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
@@ -101,7 +101,8 @@ export default function InsuranceArAnalysisProcessingPage() {
   const router = useRouter();
   const sessionId = params.sessionId as string;
   const toast = useToast();
-  const api = insuranceArAnalysisApi();
+  const apiRef = useRef(insuranceArAnalysisApi());
+  const api = apiRef.current;
 
   const [status, setStatus] = useState<ArAnalysisProcessingStatusDto | null>(null);
   const [session, setSession] = useState<ArAnalysisSessionDetailDto | null>(null);
@@ -120,7 +121,7 @@ export default function InsuranceArAnalysisProcessingPage() {
     } catch {
       /* ignore */
     }
-  }, [sessionId, api, router]);
+  }, [sessionId, router]);
 
   const loadSession = useCallback(async () => {
     if (!sessionId) return;
@@ -130,7 +131,7 @@ export default function InsuranceArAnalysisProcessingPage() {
     } catch {
       /* ignore */
     }
-  }, [sessionId, api]);
+  }, [sessionId]);
 
   useEffect(() => {
     loadStatus();

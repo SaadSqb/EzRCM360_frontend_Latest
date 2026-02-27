@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { useModulePermission } from "@/lib/contexts/PermissionsContext";
+import { AccessDenied } from "@/components/auth/AccessDenied";
+import { PageShell } from "@/components/layout/PageShell";
 import {
   Table,
   TableHead,
@@ -34,10 +37,13 @@ function formatDate(s: string) {
   }
 }
 
+const MODULE_NAME = "Insurance AR Analysis";
+
 export default function InsuranceArAnalysisListPage() {
   const router = useRouter();
   const toast = useToast();
   const api = insuranceArAnalysisApi();
+  const { canView, canCreate, loading: permLoading } = useModulePermission(MODULE_NAME);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
@@ -51,9 +57,23 @@ export default function InsuranceArAnalysisListPage() {
   });
 
   const uniqueUploadedBy = data
-    ? [...new Set(data.items.map((r) => r.uploadedBy))].filter(Boolean).sort()
+    ? Array.from(new Set(data.items.map((r) => r.uploadedBy))).filter(Boolean).sort()
     : [];
-  const displayedItems = uploadedBy ? data?.items.filter((r) => r.uploadedBy === uploadedBy) ?? [] : data?.items ?? [];
+
+  const displayedItems = (() => {
+    let items = uploadedBy ? data?.items.filter((r) => r.uploadedBy === uploadedBy) ?? [] : data?.items ?? [];
+    if (search.trim()) {
+      const term = search.trim().toLowerCase();
+      items = items.filter(
+        (r) =>
+          r.sessionName?.toLowerCase().includes(term) ||
+          r.practiceName?.toLowerCase().includes(term) ||
+          r.uploadedBy?.toLowerCase().includes(term) ||
+          r.sourceType?.toLowerCase().includes(term)
+      );
+    }
+    return items;
+  })();
 
   useEffect(() => {
     setPage(1);
@@ -82,78 +102,78 @@ export default function InsuranceArAnalysisListPage() {
     router.push("/rcm/insurance-ar-analysis/upload");
   };
 
-  return (
-    <div className="animate-fade-in">
-      <div className="mb-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-          <Link href="/rcm/insurance-ar-analysis" className="hover:text-neutral-700">
-            INSURANCE AR ANALYSIS
-          </Link>
-        </p>
-        <h1 className="mt-2 text-xl font-semibold text-neutral-900">Insurance AR Analysis</h1>
-      </div>
+  if (permLoading) {
+    return (
+      <PageShell title="Insurance AR Analysis">
+        <div className="h-72 animate-shimmer-bg rounded-xl" />
+      </PageShell>
+    );
+  }
+  if (!canView) {
+    return <AccessDenied moduleName="Insurance AR Analysis" backHref="/dashboard" />;
+  }
 
-      <Card className="animate-fade-in-up">
-        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-1 flex-wrap items-center gap-3">
-            <select
-              value={uploadedBy}
-              onChange={(e) => {
-                setUploadedBy(e.target.value);
-                setPage(1);
-              }}
-              className="rounded-md border border-neutral-200 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-            >
-              <option value="">Uploaded By: All</option>
-              {uniqueUploadedBy.map((u) => (
-                <option key={u} value={u}>
-                  {u}
-                </option>
-              ))}
-            </select>
-            <div className="relative max-w-xs flex-1">
-              <svg
-                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+  return (
+    <PageShell
+      breadcrumbs={[{ label: "RCM Intelligence", href: "/rcm" }, { label: "Insurance AR Analysis" }]}
+      title="Insurance AR Analysis"
+      description="Manage AR intake sessions and analyze insurance receivables."
+    >
+      <Card className="overflow-hidden animate-fade-in-up">
+        {/* Toolbar with gradient header */}
+        <div className="border-b border-slate-200/80 bg-gradient-to-r from-slate-50 to-white px-6 py-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-1 flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <label htmlFor="uploaded-by" className="text-sm font-medium text-slate-600">Uploaded by</label>
+                <select
+                  id="uploaded-by"
+                  value={uploadedBy}
+                  onChange={(e) => {
+                    setUploadedBy(e.target.value);
+                    setPage(1);
+                  }}
+                  className="input-enterprise w-auto min-w-[11rem]"
+                >
+                  <option value="">All</option>
+                  {uniqueUploadedBy.map((u) => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="relative flex-1 min-w-[12rem] max-w-xs">
+                <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search sessions…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="input-enterprise pl-10"
                 />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-md border border-neutral-200 py-2 pl-9 pr-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              />
+              </div>
             </div>
-          </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <Button
-              variant="secondary"
-              onClick={handleDownloadTemplate}
-              disabled={downloading}
-            >
-              {downloading ? "Downloading…" : "Download AR Intake Template →"}
-            </Button>
-            <Button onClick={handleUploadData}>Upload Data →</Button>
+            {canCreate && (
+              <div className="flex shrink-0 items-center gap-3">
+                <Button variant="secondary" onClick={handleDownloadTemplate} disabled={downloading}>
+                  {downloading ? "Downloading…" : "Download Template"}
+                </Button>
+                <Button onClick={handleUploadData}>Upload Data</Button>
+              </div>
+            )}
           </div>
         </div>
 
         {error && (
-          <div className="mb-4">
+          <div className="mx-6 mt-4">
             <Alert variant="error">{error}</Alert>
           </div>
         )}
 
         {data && (
           <>
+            <div className="overflow-hidden px-6 py-2">
             <Table>
               <TableHead>
                 <TableRow>
@@ -167,8 +187,10 @@ export default function InsuranceArAnalysisListPage() {
               <TableBody>
                 {displayedItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-sm text-neutral-500">
-                      No sessions found. Click &quot;Upload Data&quot; to create one.
+                    <TableCell colSpan={5} className="py-16 text-center text-sm text-slate-500">
+                      {canCreate
+                        ? "No sessions found. Click \"Upload Data\" to create one."
+                        : "No sessions found."}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -181,7 +203,7 @@ export default function InsuranceArAnalysisListPage() {
                         animationFillMode: "forwards",
                       }}
                     >
-                      <TableCell className="font-medium text-primary-600">
+                      <TableCell className="font-medium text-slate-900">
                         {row.sessionName}
                       </TableCell>
                       <TableCell>{row.uploadedBy}</TableCell>
@@ -191,21 +213,25 @@ export default function InsuranceArAnalysisListPage() {
                         {row.sessionStatus === "Completed" ? (
                           <Link
                             href={`/rcm/insurance-ar-analysis/${row.id}/report`}
-                            className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-700"
+                            prefetch={false}
+                            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50 hover:text-primary-700"
                           >
                             View Report
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                           </Link>
                         ) : ["Processing", "ConflictResolution", "EnrichmentPending", "PmUploaded", "ValidationCompleted"].includes(
                             row.sessionStatus
                           ) ? (
                           <Link
                             href={`/rcm/insurance-ar-analysis/${row.id}/processing`}
-                            className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-700"
+                            prefetch={false}
+                            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50 hover:text-primary-700"
                           >
                             View Progress
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                           </Link>
                         ) : (
-                          <span className="text-sm text-neutral-400">—</span>
+                          <span className="text-sm text-slate-400">—</span>
                         )}
                       </TableCell>
                     </TableRow>
@@ -213,24 +239,31 @@ export default function InsuranceArAnalysisListPage() {
                 )}
               </TableBody>
             </Table>
+            </div>
 
-            <div className="mt-4 flex flex-col items-center justify-between gap-2 border-t border-neutral-200 pt-4 sm:flex-row">
-              <div className="flex items-center gap-3">
-                <p className="text-sm text-neutral-600">
-                  Result(s): {String(displayedItems.length).padStart(2, "0")}/{String(data.totalCount).padStart(2, "0")}
+            <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-200/80 bg-slate-50/50 px-6 py-4 sm:flex-row">
+              <div className="flex flex-wrap items-center gap-4">
+                <p className="text-sm text-slate-600">
+                  <span className="font-medium text-slate-700">{displayedItems.length}</span>
+                  <span className="text-slate-500"> of </span>
+                  <span className="font-medium text-slate-700">{data.totalCount}</span>
+                  <span className="text-slate-500"> result{data.totalCount !== 1 ? "s" : ""}</span>
                 </p>
-                <span className="text-sm text-neutral-500">Show per page</span>
-                <select
-                  value={pageSize}
-                  onChange={(e) => setPageSize(Number(e.target.value))}
-                  className="rounded-md border border-neutral-200 px-2 py-1 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                >
+                <div className="flex items-center gap-2">
+                  <label htmlFor="per-page" className="text-sm text-slate-500">Per page</label>
+                  <select
+                    id="per-page"
+                    value={pageSize}
+                    onChange={(e) => setPageSize(Number(e.target.value))}
+                    className="input-enterprise w-auto min-w-[4.5rem] px-3 py-1.5 text-sm"
+                  >
                   {[5, 10, 25, 50].map((n) => (
                     <option key={n} value={n}>
                       {n}
                     </option>
                   ))}
                 </select>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -269,6 +302,6 @@ export default function InsuranceArAnalysisListPage() {
           </div>
         )}
       </Card>
-    </div>
+    </PageShell>
   );
 }

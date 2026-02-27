@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { getApiUrl } from "@/lib/api";
-import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY, MFA_SETUP_USER_ID_KEY, MFA_VERIFIED_KEY, APP_NAME } from "@/lib/env";
+import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY, MFA_SETUP_USER_ID_KEY, MFA_VERIFIED_KEY, APP_NAME, AUTH_COOKIE } from "@/lib/env";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { authenticator } from "@otplib/preset-default";
 import QRCode from "qrcode";
@@ -117,11 +117,14 @@ export default function MfaSetupPage() {
         if (token && typeof window !== "undefined") {
           localStorage.setItem(AUTH_TOKEN_KEY, token);
           if (refresh) localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+          document.cookie = `${AUTH_COOKIE}=1; path=/; max-age=86400; SameSite=Lax`;
         }
         sessionStorage.removeItem(MFA_SETUP_USER_ID_KEY);
         sessionStorage.setItem(MFA_VERIFIED_KEY, "true");
         toast.success("MFA set up successfully with email verification.");
-        router.push("/settings");
+        const redirect = typeof window !== "undefined" ? sessionStorage.getItem("mfa_redirect") : null;
+        if (typeof window !== "undefined") sessionStorage.removeItem("mfa_redirect");
+        router.push(redirect?.startsWith("/") ? redirect : "/settings");
         router.refresh();
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Verification failed");
@@ -161,10 +164,15 @@ export default function MfaSetupPage() {
         throw new Error(errData.message || errData.title || "Failed to save authenticator");
       }
 
+      if (typeof window !== "undefined") {
+        document.cookie = `${AUTH_COOKIE}=1; path=/; max-age=86400; SameSite=Lax`;
+      }
       sessionStorage.removeItem(MFA_SETUP_USER_ID_KEY);
       sessionStorage.setItem(MFA_VERIFIED_KEY, "true");
       toast.success("MFA set up successfully. You will be asked to verify on your next login.");
-      router.push("/settings");
+      const redirect = typeof window !== "undefined" ? sessionStorage.getItem("mfa_redirect") : null;
+      if (typeof window !== "undefined") sessionStorage.removeItem("mfa_redirect");
+      router.push(redirect?.startsWith("/") ? redirect : "/settings");
       router.refresh();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Setup failed";

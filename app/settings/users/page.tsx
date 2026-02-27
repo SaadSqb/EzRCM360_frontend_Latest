@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal, ModalFooter } from "@/components/ui/Modal";
@@ -10,6 +9,8 @@ import { usersApi } from "@/lib/services/users";
 import { lookupsApi } from "@/lib/services/lookups";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { useModulePermission } from "@/lib/contexts/PermissionsContext";
+import { AccessDenied } from "@/components/auth/AccessDenied";
+import { PageShell } from "@/components/layout/PageShell";
 import type { UserListItemDto, CreateUserRequest, UpdateUserRequest } from "@/lib/services/users";
 import { USER_STATUS_NAMES } from "@/lib/services/users";
 import type { LookupDto, ModuleLookupDto, ValueLabelDto } from "@/lib/services/lookups";
@@ -58,7 +59,7 @@ export default function UsersPage() {
 
   const api = usersApi();
   const toast = useToast();
-  const { canView, canCreate, canUpdate, canDelete } = useModulePermission("Users");
+  const { canView, canCreate, canUpdate, canDelete, loading } = useModulePermission("Users");
   const moduleMap = Object.fromEntries(modules.map((m) => [m.id, m.name]));
 
   useEffect(() => {
@@ -218,42 +219,44 @@ export default function UsersPage() {
   const moduleNames = (ids: string[]) =>
     ids.map((id) => moduleMap[id] ?? id).filter(Boolean).join(", ") || "—";
 
-  if (!canView) {
+  if (loading) {
     return (
-      <div>
-        <div className="mb-2 text-sm text-slate-500">
-          <Link href="/settings" className="text-primary-600 hover:text-primary-700">Settings & Configurations</Link>
-          <span className="mx-1">/</span>
-          <span className="text-slate-700">Users Access</span>
+      <PageShell title="Users Access">
+        <div className="space-y-4">
+          <div className="h-12 w-full animate-shimmer-bg rounded-lg" />
+          <div className="h-72 animate-shimmer-bg rounded-xl" />
         </div>
-        <h1 className="mb-6 text-2xl font-semibold text-slate-900">Users Access</h1>
-        <Card>
-          <p className="text-sm text-slate-600">You do not have permission to view this page.</p>
-        </Card>
-      </div>
+      </PageShell>
     );
+  }
+  if (!canView) {
+    return <AccessDenied moduleName="Users Access" />;
   }
 
   return (
-    <div>
-      {/* Breadcrumbs */}
-      <div className="mb-2 text-sm text-slate-500">
-        <Link href="/settings" className="text-primary-600 hover:text-primary-700">
-          Settings & Configurations
-        </Link>
-        <span className="mx-1">/</span>
-        <span className="text-slate-700">Users Access</span>
-      </div>
-      <h1 className="mb-6 text-2xl font-semibold text-slate-900">Users Access</h1>
-
-      <Card className="overflow-hidden p-0">
+    <PageShell
+      breadcrumbs={[{ label: "Settings & Configurations", href: "/settings" }, { label: "Users Access" }]}
+      title="Users Access"
+      description="Manage user accounts, roles, and module access."
+      actions={
+        canCreate && (
+          <Button onClick={openCreate} className="inline-flex items-center gap-2">
+            Add New User
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </Button>
+        )
+      }
+    >
+      <Card className="overflow-hidden p-0 animate-fade-in-up">
         {/* Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-4 py-3">
           <div className="flex flex-wrap items-center gap-3">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="input-enterprise w-auto min-w-[10rem]"
             >
               <option value="">All Status</option>
               {statusOptions.map((o) => (
@@ -273,18 +276,10 @@ export default function UsersPage() {
                 placeholder="Search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-48 rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 sm:w-56"
+                className="input-enterprise w-48 pl-9 sm:w-56"
               />
             </div>
           </div>
-          {canCreate && (
-            <Button onClick={openCreate} className="inline-flex items-center gap-2">
-              Add New User
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Button>
-          )}
         </div>
 
         {error && (
@@ -353,7 +348,7 @@ export default function UsersPage() {
                           value={toStatusNumber(row.status)}
                           onChange={(e) => handleStatusChange(row, Number(e.target.value))}
                           disabled={!canUpdate || statusUpdatingId === row.id}
-                          className="rounded border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:opacity-50"
+                          className="input-enterprise w-auto min-w-[8rem] px-2 py-1.5 text-sm disabled:opacity-50"
                         >
                           {STATUS_OPTIONS.map((o) => (
                             <option key={o.value} value={o.value}>
@@ -440,7 +435,7 @@ export default function UsersPage() {
                 value={form.userName}
                 onChange={(e) => setForm((f) => ({ ...f, userName: e.target.value }))}
                 placeholder="e.g., Emily Carter"
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="input-enterprise"
               />
             </div>
             <div>
@@ -450,7 +445,7 @@ export default function UsersPage() {
                 value={form.email}
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                 placeholder="e.g., emily.carter@example.com"
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="input-enterprise"
               />
             </div>
             {!editId && (
@@ -460,7 +455,7 @@ export default function UsersPage() {
                   type="password"
                   value={form.password ?? ""}
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="input-enterprise"
                 />
               </div>
             )}
@@ -471,7 +466,7 @@ export default function UsersPage() {
                   type="password"
                   value={(form as { newPassword?: string }).newPassword ?? ""}
                   onChange={(e) => setForm((f) => ({ ...f, newPassword: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="input-enterprise"
                 />
               </div>
             )}
@@ -480,7 +475,7 @@ export default function UsersPage() {
               <select
                 value={form.organizationId ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, organizationId: e.target.value }))}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="input-enterprise"
               >
                 <option value="">Select Organization</option>
                 {organizations.map((o) => (
@@ -495,7 +490,7 @@ export default function UsersPage() {
               <select
                 value={form.roleId ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, roleId: e.target.value }))}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="input-enterprise"
               >
                 <option value="">Select Role</option>
                 {roles.map((r) => (
@@ -514,7 +509,7 @@ export default function UsersPage() {
                   const selected = Array.from(e.target.selectedOptions, (o) => o.value);
                   setForm((f) => ({ ...f, moduleIds: selected }));
                 }}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="input-enterprise"
                 size={5}
               >
                 {modules.map((m) => (
@@ -531,7 +526,7 @@ export default function UsersPage() {
                 <select
                   value={form.status}
                   onChange={(e) => setForm((f) => ({ ...f, status: Number(e.target.value) }))}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="input-enterprise"
                 >
                   {STATUS_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>
@@ -572,6 +567,6 @@ export default function UsersPage() {
         variant="danger"
         loading={deleteLoading}
       />
-    </div>
+    </PageShell>
   );
 }

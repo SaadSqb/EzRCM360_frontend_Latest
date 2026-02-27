@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { PageShell } from "@/components/layout/PageShell";
 import { SettingsCard } from "@/components/settings/SettingsCard";
 import { usePermissionsOptional } from "@/lib/contexts/PermissionsContext";
 import { SETTINGS_HREF_TO_MODULE_NAME } from "@/lib/constants/routeModuleMap";
@@ -25,7 +26,6 @@ const configSections = [
       { label: "Entity Information", href: "/settings/entities" },
       { label: "Entity Providers", href: "/settings/entity-providers" },
       { label: "Entity Locations", href: "/settings/entity-locations" },
-      { label: "Entity Billable Fee Schedules", href: "/settings/entity-fee-schedules" },
     ],
   },
   {
@@ -82,51 +82,64 @@ const configSections = [
       { label: "Procedure Grouping Rules", href: "/settings/procedure-grouping-rules" },
     ],
   },
-  {
-    title: "NSA Configuration",
-    description: "Centralized NSA eligibility and valuation governance.",
-    links: [
-      { label: "NSA Eligibility Rules", href: "/settings/nsa-eligibility" },
-      { label: "Federal NSA Rules", href: "/settings/nsa-federal" },
-      { label: "State NSA Rules", href: "/settings/nsa-state" },
-      { label: "Emergency Override Rules", href: "/settings/nsa-emergency" },
-    ],
-  },
 ];
 
 export default function SettingsPage() {
   const permissions = usePermissionsOptional();
   const filteredSections = useMemo(() => {
-    // Show full sections when no provider, still loading, or no permissions (e.g. API failed) so the page is never blank
-    if (!permissions || permissions.loading || permissions.permissions.length === 0)
-      return configSections;
+    /** Fail-secure: only show sections/links user has canView for. */
+    if (!permissions || permissions.loading) return null;
     return configSections
       .map((section) => ({
         ...section,
         links: section.links.filter((link) => {
           const moduleName = SETTINGS_HREF_TO_MODULE_NAME[link.href];
-          if (!moduleName) return true;
+          if (!moduleName) return false;
           return permissions.canView(moduleName);
         }),
       }))
       .filter((section) => section.links.length > 0);
   }, [permissions]);
 
+  const loading = !permissions || permissions.loading;
+
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-slate-900">
-        Settings & Configurations
-      </h1>
-      <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredSections.map((section) => (
-          <SettingsCard
-            key={section.title}
-            title={section.title}
-            description={section.description}
-            links={section.links}
-          />
-        ))}
-      </div>
-    </div>
+    <PageShell
+      title="Settings & Configurations"
+      description="Manage organization, users, payers, and configurations."
+    >
+      {loading ? (
+        <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-64 animate-shimmer-bg rounded-xl" />
+          ))}
+        </div>
+      ) : filteredSections && filteredSections.length > 0 ? (
+        <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
+          {filteredSections.map((section, i) => (
+            <div
+              key={section.title}
+              className="animate-fade-in-up opacity-0"
+              style={{
+                animationDelay: `${Math.min(i, 8) * 0.05}s`,
+                animationFillMode: "forwards",
+              }}
+            >
+              <SettingsCard
+                title={section.title}
+                description={section.description}
+                links={section.links}
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-12 text-center">
+          <p className="text-sm text-slate-600">
+            You don&apos;t have access to any settings. Contact your administrator.
+          </p>
+        </div>
+      )}
+    </PageShell>
   );
 }

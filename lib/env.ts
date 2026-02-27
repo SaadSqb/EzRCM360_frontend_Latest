@@ -42,6 +42,9 @@ export const MFA_SETUP_USER_ID_KEY = "mfaSetupUserId";
 /** Session storage key for 2FA verified flag. */
 export const MFA_VERIFIED_KEY = "is2FaVerified";
 
+/** Cookie name for middleware auth check (set on login, cleared on logout). */
+export const AUTH_COOKIE = "ezrcm_signed_in";
+
 /** Whether we're in production. */
 export const IS_PRODUCTION = isProduction;
 

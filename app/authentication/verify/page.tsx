@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { getApiUrl } from "@/lib/api";
-import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY, MFA_USER_ID_KEY, MFA_VERIFIED_KEY } from "@/lib/env";
+import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY, MFA_USER_ID_KEY, MFA_VERIFIED_KEY, AUTH_COOKIE } from "@/lib/env";
 import { useToast } from "@/lib/contexts/ToastContext";
 
 export default function MfaVerifyPage() {
@@ -85,12 +85,15 @@ export default function MfaVerifyPage() {
       if (token && typeof window !== "undefined") {
         localStorage.setItem(AUTH_TOKEN_KEY, token);
         if (refresh) localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
+        document.cookie = `${AUTH_COOKIE}=1; path=/; max-age=86400; SameSite=Lax`;
         sessionStorage.setItem(MFA_VERIFIED_KEY, "true");
         sessionStorage.removeItem(MFA_USER_ID_KEY);
       }
 
       toast.success("Verification successful.");
-      router.push("/settings");
+      const redirect = typeof window !== "undefined" ? sessionStorage.getItem("mfa_redirect") : null;
+      if (typeof window !== "undefined") sessionStorage.removeItem("mfa_redirect");
+      router.push(redirect?.startsWith("/") ? redirect : "/settings");
       router.refresh();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Verification failed";
@@ -105,49 +108,58 @@ export default function MfaVerifyPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-surface p-4">
-      <div className="mb-4 flex w-full max-w-md items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-600 text-white font-semibold">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary-50/20 p-6">
+      <div className="mb-8 flex w-full max-w-md items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-600 text-white font-semibold shadow-md shadow-primary-600/25">
             E
           </div>
-          <span className="text-xl font-semibold text-slate-800">EzRCM360</span>
+          <span className="text-xl font-semibold tracking-tight text-slate-800">EzRCM360</span>
         </div>
         <Button variant="secondary" onClick={handleBackToLogin}>
           Back to Login
         </Button>
       </div>
 
-      <Card className="w-full max-w-md">
-        <h1 className="text-xl font-semibold text-slate-900">
-          Multi-Factor Authentication Verification
+      <Card className="w-full max-w-md overflow-hidden p-8">
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+          Multi-Factor Authentication
         </h1>
-        <p className="mt-2 text-sm text-slate-600">
-          For security purposes, please verify your identity using your authenticator app.
-          Enter the 6-digit code from your app below.
+        <p className="mt-3 text-base leading-relaxed text-slate-600">
+          For security, verify your identity using your authenticator app.
         </p>
 
-        <div className="mt-6 rounded-lg bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800">
-          <ol className="list-decimal space-y-1 pl-4">
-            <li>Open your authenticator app (Google Authenticator, Authy, etc.)</li>
-            <li>Locate the code for EzRCM360</li>
-            <li>Enter the current 6-digit code below</li>
+        <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50/50 p-6">
+          <p className="text-sm font-medium text-slate-700">Steps to verify</p>
+          <ol className="mt-4 space-y-3 text-sm text-slate-600">
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-semibold text-primary-700">1</span>
+              Open your authenticator app (Google Authenticator, Authy, etc.)
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-semibold text-primary-700">2</span>
+              Locate the code for EzRCM360
+            </li>
+            <li className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-semibold text-primary-700">3</span>
+              Enter the 6-digit code below
+            </li>
           </ol>
         </div>
 
-        <div className="mt-4 flex items-center gap-2">
-          <span className="text-sm text-slate-500">Or</span>
+        <div className="mt-6 flex items-center gap-2">
+          <span className="text-sm text-slate-500">Prefer email?</span>
           <button
             type="button"
             onClick={handleSendEmailOtp}
             disabled={sendingOtp || loading}
-            className="text-sm font-medium text-primary-600 hover:text-primary-700 underline disabled:opacity-50"
+            className="text-sm font-medium text-primary-600 hover:text-primary-700 disabled:opacity-50"
           >
             {sendingOtp ? "Sending…" : "Send code to my email instead"}
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <div>
             <label htmlFor="code" className="block text-sm font-medium text-slate-700">
               Verification Code
@@ -161,12 +173,13 @@ export default function MfaVerifyPage() {
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
               placeholder="000000"
-              className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-center text-lg tracking-[0.5em] shadow-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+              className="input-enterprise mt-2 text-center text-lg tracking-[0.5em]"
               autoComplete="one-time-code"
             />
           </div>
           <Button
             type="submit"
+            className="w-full"
             disabled={loading || code.length !== 6}
           >
             {loading ? "Verifying…" : "Verify & Continue"}

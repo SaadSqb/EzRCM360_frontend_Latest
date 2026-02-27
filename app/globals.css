@@ -3,24 +3,31 @@
 @tailwind utilities;
 
 :root {
-  --foreground: #171717;
-  --background: #f5f5f5;
+  --foreground: #0f172a;
+  --background: #f8fafc;
   --card: #ffffff;
   --primary: #0078d4;
   --primary-hover: #106ebe;
+  --primary-light: #e6f2ff;
   --sidebar-bg: #ffffff;
-  --sidebar-border: #e5e7eb;
-  --sidebar-active-bg: #eff6ff;
+  --sidebar-border: #e2e8f0;
+  --sidebar-active-bg: #e6f2ff;
   --sidebar-active-border: #0078d4;
   --header-bg: #ffffff;
-  --header-border: #e5e7eb;
-  --surface-neutral: #fafafa;
-  --text-primary: #171717;
-  --text-secondary: #525252;
-  --text-muted: #737373;
-  --border-default: #e5e7eb;
-  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-elevated: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --header-border: #e2e8f0;
+  --surface-neutral: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --border-default: #e2e8f0;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -28,6 +35,7 @@ body {
   background: var(--background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 /* Enterprise-style focus rings */
@@ -36,42 +44,69 @@ body {
   outline-offset: 2px;
 }
 
-/* Clean scrollbar (subtle) */
+/* Enterprise scrollbar - sleeker */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #f1f5f9;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d4d4d4;
+  background: #cbd5e1;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a3a3a3;
+  background: #94a3b8;
+}
+
+/* Form input enterprise styling - refined */
+@layer components {
+  .input-enterprise {
+    @apply w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900
+           shadow-sm transition-all duration-200 placeholder:text-slate-400
+           focus:border-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500/25
+           hover:border-slate-300;
+  }
+  .input-enterprise-error {
+    @apply border-red-500 focus:border-red-500 focus:ring-red-500/20;
+  }
+  .btn-enterprise {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium
+           transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
+           disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98];
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+  .animate-in {
+    animation: animateIn 0.35s var(--transition-smooth) forwards;
+  }
 }
 
-/* Stagger delay utilities for list animations */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
-.stagger-6 { animation-delay: 0.3s; }
-.stagger-7 { animation-delay: 0.35s; }
-.stagger-8 { animation-delay: 0.4s; }
+/* Stagger delay utilities */
+.stagger-1 { animation-delay: 0.04s; }
+.stagger-2 { animation-delay: 0.08s; }
+.stagger-3 { animation-delay: 0.12s; }
+.stagger-4 { animation-delay: 0.16s; }
+.stagger-5 { animation-delay: 0.2s; }
+.stagger-6 { animation-delay: 0.24s; }
+.stagger-7 { animation-delay: 0.28s; }
+.stagger-8 { animation-delay: 0.32s; }
 
-/* Shimmer skeleton for loading states */
+@keyframes animateIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Shimmer skeleton */
 @keyframes shimmer-bg {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -79,10 +114,16 @@ body {
 .animate-shimmer-bg {
   background: linear-gradient(
     90deg,
-    theme("colors.neutral.100") 25%,
-    theme("colors.neutral.50") 50%,
-    theme("colors.neutral.100") 75%
+    #f1f5f9 25%,
+    #f8fafc 50%,
+    #f1f5f9 75%
   );
   background-size: 200% 100%;
   animation: shimmer-bg 1.5s ease-in-out infinite;
+}
+
+/* Route progress bar */
+@keyframes progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
 }

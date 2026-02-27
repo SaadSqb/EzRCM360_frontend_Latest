@@ -3,6 +3,7 @@
  */
 
 import { API_URL, AUTH_TOKEN_KEY } from "@/lib/env";
+import { handle401, handle403 } from "./authCallbacks";
 import type { IHttpClient } from "./interfaces";
 
 export type ApiResponse<T> = {
@@ -34,10 +35,18 @@ export class HttpClient implements IHttpClient {
       const text = await res.text();
       let message = text;
       try {
-        const json = JSON.parse(text) as { message?: string; title?: string };
-        message = json.message || json.title || text;
+        const json = JSON.parse(text) as { message?: string; title?: string; detail?: string };
+        message = json.message || json.title || json.detail || text;
       } catch {
         /* use text as-is */
+      }
+      if (res.status === 401) {
+        handle401();
+        throw new Error("Your session has expired. Please sign in again.");
+      }
+      if (res.status === 403) {
+        handle403(message);
+        throw new Error(message || "You don't have permission to perform this action.");
       }
       throw new Error(message || `HTTP ${res.status}`);
     }

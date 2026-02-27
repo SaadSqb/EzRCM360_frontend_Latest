@@ -10,14 +10,14 @@ const config: Config = {
       colors: {
         primary: {
           50: "#eff6ff",
-          100: "#dbeafe",
+          100: "#e6f2ff",
           200: "#bfdbfe",
           300: "#93c5fd",
           400: "#60a5fa",
           500: "#3b82f6",
           600: "#0078d4",
           700: "#106ebe",
-          800: "#1e40af",
+          800: "#0d5a9e",
           900: "#1e3a8a",
         },
         surface: {
@@ -58,12 +58,15 @@ const config: Config = {
         30: "7.5rem",
       },
       boxShadow: {
-        card: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-        "card-hover": "0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05)",
-        sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
-        DEFAULT: "0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06)",
-        md: "0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05)",
-        lg: "0 10px 15px -3px rgb(0 0 0 / 0.06), 0 4px 6px -4px rgb(0 0 0 / 0.05)",
+        card: "0 2px 8px rgba(0, 0, 0, 0.06)",
+        "card-hover": "0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04)",
+        "card-elevated": "0 4px 16px rgba(0, 0, 0, 0.08)",
+        "ms-card": "0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02)",
+        "ms-card-hover": "0 8px 24px rgba(0, 0, 0, 0.08)",
+        sm: "0 1px 2px 0 rgb(0 0 0 / 0.04)",
+        DEFAULT: "0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04)",
+        md: "0 4px 12px -2px rgb(0 0 0 / 0.06), 0 2px 6px -2px rgb(0 0 0 / 0.04)",
+        lg: "0 12px 24px -4px rgb(0 0 0 / 0.08), 0 4px 8px -4px rgb(0 0 0 / 0.04)",
       },
       borderColor: {
         DEFAULT: "#e5e7eb",
@@ -80,13 +83,15 @@ const config: Config = {
         500: "500ms",
       },
       animation: {
-        "fade-in": "fadeIn 0.4s ease-out forwards",
-        "fade-in-up": "fadeInUp 0.5s ease-out forwards",
-        "slide-in-right": "slideInRight 0.35s ease-out forwards",
-        "scale-in": "scaleIn 0.3s ease-out forwards",
+        "fade-in": "fadeIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "fade-in-up": "fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "slide-in-right": "slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "scale-in": "scaleIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "page-enter": "pageEnter 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards",
         "pulse-soft": "pulseSoft 2s ease-in-out infinite",
         "shimmer": "shimmer 2s linear infinite",
         "progress": "progress 1.5s ease-in-out forwards",
+        "progress-indeterminate": "progress-indeterminate 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards",
       },
       keyframes: {
         fadeIn: {
@@ -117,6 +122,18 @@ const config: Config = {
           "0%": { width: "0%" },
           "100%": { width: "var(--progress-width, 100%)" },
         },
+        pageEnter: {
+          "0%": { opacity: "0", transform: "translateY(6px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "progress-indeterminate": {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(400%)" },
+        },
+      },
+      transitionTimingFunction: {
+        smooth: "cubic-bezier(0.4, 0, 0.2, 1)",
+        "smooth-out": "cubic-bezier(0, 0, 0.2, 1)",
       },
     },
   },
