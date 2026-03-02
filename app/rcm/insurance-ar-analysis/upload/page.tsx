@@ -202,18 +202,21 @@ export default function InsuranceArAnalysisUploadPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="mb-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-          <Link href="/rcm/insurance-ar-analysis" className="hover:text-neutral-700">
-            INSURANCE AR ANALYSIS
+      <div className="mb-8">
+        <nav className="mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">
+          <Link href="/rcm/insurance-ar-analysis" className="transition-colors hover:text-primary-600 hover:underline">
+            Insurance AR Analysis
           </Link>
-          {" / UPLOAD AR INTAKE"}
-        </p>
-        <h1 className="mt-2 text-xl font-semibold text-neutral-900">
+          <span className="text-slate-300" aria-hidden>/</span>
+          <span className="text-slate-700">Upload AR Intake</span>
+        </nav>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
           Data Upload and AR Analysis Session Creation
         </h1>
+        <p className="mt-2 text-base text-slate-600">
+          Upload AR intake and PM reports to start an analysis session.
+        </p>
       </div>
-
       <Stepper steps={steps} />
 
       {step === 1 && (

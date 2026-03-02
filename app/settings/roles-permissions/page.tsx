@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { Card } from "@/components/ui/Card";
+import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/Button";
 import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -431,51 +431,55 @@ export default function RolesPermissionsPage() {
   };
 
   return (
-    <div>
-      {/* Breadcrumbs */}
-      <div className="mb-2 text-sm text-slate-500">
-        <Link href="/settings" className="text-primary-600 hover:text-primary-700">
-          Settings & Configurations
-        </Link>
-        <span className="mx-1">/</span>
-        <span className="text-slate-700">Roles & Permissions</span>
-      </div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Roles & Permissions</h1>
+    <PageShell
+      breadcrumbs={[{ label: "Settings & Configurations", href: "/settings" }, { label: "Roles & Permissions" }]}
+      title="Roles & Permissions"
+      description="Manage roles and assign module-level permissions."
+      actions={
         <Button onClick={openCreate} className="inline-flex items-center gap-2">
           Create New Role
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </Button>
-      </div>
-
+      }
+    >
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-800">
+          {error}
+        </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left: Role(s) list */}
-        <Card className="lg:col-span-1">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-700">
-            Role(s)
-          </h2>
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(280px,360px)_1fr]">
+        {/* Left: Roles list */}
+        <Card className="p-6" elevated>
+          <div className="mb-5 flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-primary-600">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <h2 className="text-base font-semibold text-slate-800">Roles</h2>
+          </div>
           {rolesLoading ? (
-            <div className="py-6 text-center text-sm text-slate-500">Loading…</div>
+            <div className="py-12 text-center text-sm text-slate-500">Loading…</div>
           ) : (
-            <ul className="space-y-0.5">
+            <ul className="space-y-1.5">
               {roles.map((role) => (
                 <li key={role.id}>
                   <button
                     type="button"
                     onClick={() => onSelectRole(role)}
-                    className={`w-full rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors ${
+                    className={`flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-sm font-medium transition-all duration-200 ${
                       selectedRole?.id === role.id
-                        ? "bg-primary-50 text-primary-700"
+                        ? "bg-primary-50 text-primary-700 shadow-sm ring-1 ring-primary-100"
                         : "text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    {role.name}
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-semibold text-slate-600">
+                      {role.name.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="truncate">{role.name}</span>
                   </button>
                 </li>
               ))}
@@ -484,13 +488,24 @@ export default function RolesPermissionsPage() {
         </Card>
 
         {/* Right: Permissions */}
-        <Card className="lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-700">
-            Permissions
-          </h2>
+        <Card className="min-h-[420px] p-6" elevated>
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <h2 className="text-base font-semibold text-slate-800">Permissions</h2>
+          </div>
           {!selectedRole ? (
-            <div className="py-12 text-center text-sm text-slate-500">
-              Select a role to view and edit permissions.
+            <div className="flex min-h-[320px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-16">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                </svg>
+              </div>
+              <p className="text-center text-sm font-medium text-slate-600">Select a role to view and edit permissions</p>
+              <p className="mt-1 text-center text-xs text-slate-500">Choose a role from the list on the left</p>
             </div>
           ) : permissionsLoading ? (
             <div className="py-12 text-center text-sm text-slate-500">Loading…</div>
@@ -744,6 +759,6 @@ export default function RolesPermissionsPage() {
         variant="danger"
         loading={deleteLoading}
       />
-    </div>
+    </PageShell>
   );
 }

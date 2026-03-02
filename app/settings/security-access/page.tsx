@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { PageShell } from "@/components/layout/PageShell";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import {
@@ -197,64 +198,38 @@ export default function SecurityAccessPage() {
 
   if (!canView) {
     return (
-      <div>
-        <div className="mb-6">
-          <p className="text-xs uppercase tracking-wide text-slate-500">
-            <Link href="/settings" className="hover:text-slate-700">
-              Settings & Configurations
-            </Link>
-            {" / Security Access"}
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold text-slate-900">Security Access</h1>
-          <p className="mt-1 text-sm text-slate-600">Manage security and MFA settings.</p>
-        </div>
-        <Card>
+      <PageShell
+        breadcrumbs={[{ label: "Settings & Configurations", href: "/settings" }, { label: "Security Access" }]}
+        title="Security Access"
+        description="Manage security and MFA settings."
+      >
+        <Card className="p-6">
           <p className="text-sm text-slate-600">You do not have permission to view this page.</p>
         </Card>
-      </div>
+      </PageShell>
     );
   }
 
   if (loading && !settings) {
     return (
-      <div>
-        <div className="mb-6">
-          <p className="text-xs uppercase tracking-wide text-slate-500">
-            <Link href="/settings" className="hover:text-slate-700">
-              Settings & Configurations
-            </Link>
-            {" / Security Access"}
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold text-slate-900">Security Access</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Security settings control how users authenticate and how long sessions remain active.
-          </p>
-        </div>
-        <div className="py-12 text-center">
+      <PageShell
+        breadcrumbs={[{ label: "Settings & Configurations", href: "/settings" }, { label: "Security Access" }]}
+        title="Security Access"
+        description="Security settings control how users authenticate and how long sessions remain active."
+      >
+        <div className="flex min-h-[20rem] items-center justify-center py-12">
           <Loader variant="inline" />
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div>
-      {/* Header with breadcrumbs */}
-      <div className="mb-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-          <Link href="/settings" className="hover:text-slate-700">
-            Settings & Configurations
-          </Link>
-          {" / Security Access"}
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold text-slate-900">Security Access</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Security settings control how users authenticate and how long sessions remain active.
-          These controls help protect your organization from unauthorized access while maintaining
-          usability for daily operations.
-        </p>
-      </div>
-
+    <PageShell
+      breadcrumbs={[{ label: "Settings & Configurations", href: "/settings" }, { label: "Security Access" }]}
+      title="Security Access"
+      description="Manage how users authenticate and how long sessions remain active. These controls help protect your organization while maintaining usability."
+    >
       {error && (
         <div className="mb-6">
           <Alert variant="error">{error}</Alert>
@@ -271,7 +246,7 @@ export default function SecurityAccessPage() {
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Left column: MFA for Account Administrator + MFA Frequency */}
               <div className="flex flex-col gap-6">
-                <Card>
+                <Card className="p-6">
                   <h3 className="text-base font-semibold text-slate-900">
                     MFA for Account Administrator
                   </h3>
@@ -286,7 +261,7 @@ export default function SecurityAccessPage() {
                   </p>
                 </Card>
 
-                <Card>
+                <Card className="p-6">
                   <h3 className="text-base font-semibold text-slate-900">MFA Frequency</h3>
                   <p className="mt-2 text-sm font-semibold text-primary-600">
                     Define how often users must re-confirm their identity using MFA
@@ -319,7 +294,7 @@ export default function SecurityAccessPage() {
               </div>
 
               {/* Right column: MFA for Users */}
-              <Card>
+              <Card className="p-6">
                 <h3 className="text-base font-semibold text-slate-900">MFA for Users</h3>
                 <p className="mt-2 text-sm font-semibold text-primary-600">
                   Control whether Multi-Factor Authentication is required for non-administrator
@@ -421,7 +396,7 @@ export default function SecurityAccessPage() {
           <section>
             <h2 className="mb-4 text-lg font-semibold text-slate-900">Session Management</h2>
             <div className="grid gap-6 lg:grid-cols-2">
-              <Card>
+              <Card className="p-6">
                 <h3 className="text-base font-semibold text-slate-900">Inactivity Timeout</h3>
                 <p className="mt-2 text-sm font-semibold text-primary-600">
                   Automatically log users out after a period of inactivity.
@@ -452,7 +427,7 @@ export default function SecurityAccessPage() {
                 </div>
               </Card>
 
-              <Card>
+              <Card className="p-6">
                 <h3 className="text-base font-semibold text-slate-900">Daily Session Reset</h3>
                 <p className="mt-2 text-sm font-semibold text-primary-600">
                   Require all users to log in again once per day.
@@ -493,6 +468,6 @@ export default function SecurityAccessPage() {
           )}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

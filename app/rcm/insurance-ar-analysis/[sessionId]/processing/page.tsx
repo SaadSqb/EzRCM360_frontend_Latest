@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FileUploadZone } from "@/components/rcm/FileUploadZone";
@@ -225,23 +226,14 @@ export default function InsuranceArAnalysisProcessingPage() {
     (status?.sessionStatus !== "Completed" && status?.sessionStatus !== "Failed");
 
   return (
-    <div className="animate-fade-in">
-      <div className="mb-8">
-        <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-          <Link href="/rcm/insurance-ar-analysis" className="hover:text-primary-600">
-            Insurance AR Analysis
-          </Link>
-          <span className="mx-1">/</span>
-          <span className="text-neutral-600">Processing</span>
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-neutral-900">
-          AR Analysis in Progress
-        </h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          Your data is being analyzed through our multi-stage validation pipeline.
-        </p>
-      </div>
-
+    <PageShell
+      breadcrumbs={[
+        { label: "Insurance AR Analysis", href: "/rcm/insurance-ar-analysis" },
+        { label: "Processing" },
+      ]}
+      title="AR Analysis in Progress"
+      description="Your data is being analyzed through our multi-stage validation pipeline."
+    >
       {session && (
         <Card className="mb-6 animate-fade-in-up">
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-neutral-500">
@@ -368,6 +360,6 @@ export default function InsuranceArAnalysisProcessingPage() {
           )}
         </div>
       </Card>
-    </div>
+    </PageShell>
   );
 }

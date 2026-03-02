@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Loader } from "@/components/ui/Loader";
@@ -84,27 +85,19 @@ export default function InsuranceArAnalysisReportPage() {
   const { analysisSummary, totalClaimsAnalyzed, totalUnderpayment, riskAdjustedRecovery } = report;
 
   return (
-    <div className="animate-fade-in">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">
-            <Link href="/rcm/insurance-ar-analysis" className="hover:text-neutral-700">
-              INSURANCE AR ANALYSIS
-            </Link>
-            {" / "}
-            <span className="text-neutral-700">
-              AR ANALYSIS {analysisSummary.practiceName.toUpperCase()} - {formatDate(analysisSummary.uploadedAt)}
-            </span>
-          </p>
-          <h1 className="mt-2 text-xl font-semibold text-neutral-900">
-            {analysisSummary.sessionName}
-          </h1>
-        </div>
+    <PageShell
+      breadcrumbs={[
+        { label: "Insurance AR Analysis", href: "/rcm/insurance-ar-analysis" },
+        { label: `${analysisSummary.practiceName} – ${formatDate(analysisSummary.uploadedAt)}` },
+      ]}
+      title={analysisSummary.sessionName}
+      description={`AR Analysis report for ${analysisSummary.practiceName}`}
+      actions={
         <Button onClick={handleExport} disabled={exporting}>
           {exporting ? "Exporting…" : "Export Full Report →"}
         </Button>
-      </div>
-
+      }
+    >
       <Card className="mb-6">
         <h3 className="mb-4 text-base font-semibold text-neutral-900">Analysis Summary</h3>
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
@@ -273,6 +266,6 @@ export default function InsuranceArAnalysisReportPage() {
           </div>
         </Card>
       )}
-    </div>
+    </PageShell>
   );
 }
