@@ -101,25 +101,25 @@ export function Sidebar() {
   const navLinkClass = (active: boolean) =>
     `flex items-center gap-3 rounded-lg py-2.5 pl-3 pr-3 text-sm font-medium transition-all duration-200 border-l-4 ${
       active
-        ? "border-primary-600 bg-primary-50/80 text-primary-700 shadow-sm"
-        : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+        ? "border-primary-600 bg-primary-50/90 text-primary-700"
+        : "border-transparent text-slate-600 hover:bg-slate-50/80 hover:text-slate-800"
     }`;
 
   const subLinkClass = (active: boolean) =>
     `flex items-center gap-3 rounded-lg py-2.5 pl-9 pr-3 text-sm font-medium transition-all duration-200 border-l-4 ${
       active
-        ? "border-primary-600 bg-primary-50/80 text-primary-700"
-        : "border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+        ? "border-primary-600 bg-primary-50/90 text-primary-700"
+        : "border-transparent text-slate-600 hover:bg-slate-50/80 hover:text-slate-800"
     }`;
 
   return (
-    <aside className="fixed left-0 top-0 z-30 flex h-full w-64 flex-col border-r border-slate-200/80 bg-white shadow-sm">
+    <aside className="fixed left-0 top-0 z-30 flex h-full w-64 flex-col border-r border-slate-200/60 bg-white shadow-[var(--shadow-sidebar)]">
       {/* Logo / Brand */}
-      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-slate-200/80 px-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary-100 text-primary-600 font-semibold text-sm">
+      <div className="flex h-14 shrink-0 items-center gap-3 border-b border-slate-200/60 px-4">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-sm font-semibold text-white shadow-sm">
           E
         </div>
-        <span className="font-semibold text-neutral-800">EzRCM360</span>
+        <span className="font-semibold tracking-tight text-slate-800">EzRCM360</span>
       </div>
 
       {/* Navigation */}
@@ -190,7 +190,7 @@ export function Sidebar() {
       </nav>
 
       {/* User section */}
-      <div className="shrink-0 border-t border-slate-200/80 p-3">
+      <div className="shrink-0 border-t border-slate-200/60 p-3">
         <Link
           href="/profile/edit"
           className="flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200 hover:bg-slate-50"

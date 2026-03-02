@@ -29,14 +29,14 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" aria-hidden onClick={onClose} />
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" aria-hidden onClick={onClose} />
       <div
-        className={`relative w-full ${sizeClass} max-h-[90vh] flex flex-col rounded-xl bg-white shadow-lg animate-scale-in`}
+        className={`relative w-full ${sizeClass} max-h-[90vh] flex flex-col rounded-xl border border-slate-200/60 bg-white shadow-xl animate-scale-in`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
       >
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200/60 px-6 py-4">
           <h2 id="modal-title" className="text-lg font-semibold text-slate-900">
             {title}
           </h2>

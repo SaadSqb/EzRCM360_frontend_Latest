@@ -8,8 +8,10 @@ export interface CardProps {
 export function Card({ children, className = "", elevated = false }: CardProps) {
   return (
     <div
-      className={`rounded-xl border border-slate-200/50 bg-white shadow-ms-card transition-all duration-300 ${
-        elevated ? "shadow-card-hover" : "hover:shadow-ms-card-hover"
+      className={`rounded-xl border border-slate-200/60 bg-white transition-all duration-300 ${
+        elevated
+          ? "shadow-[var(--shadow-card-hover)]"
+          : "shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)]"
       } ${className}`}
     >
       {children}

@@ -4,7 +4,8 @@
 
 :root {
   --foreground: #0f172a;
-  --background: #f8fafc;
+  --background: #f1f5f9;
+  --background-subtle: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   --card: #ffffff;
   --primary: #0078d4;
   --primary-hover: #106ebe;
@@ -13,17 +14,24 @@
   --sidebar-border: #e2e8f0;
   --sidebar-active-bg: #e6f2ff;
   --sidebar-active-border: #0078d4;
-  --header-bg: #ffffff;
-  --header-border: #e2e8f0;
+  --header-bg: rgba(255, 255, 255, 0.9);
+  --header-border: rgba(226, 232, 240, 0.8);
   --surface-neutral: #f1f5f9;
+  --surface-raised: #ffffff;
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #64748b;
   --border-default: #e2e8f0;
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.08);
-  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(226, 232, 240, 0.6);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-header: 0 1px 0 rgba(0, 0, 0, 0.04);
+  --shadow-sidebar: 2px 0 12px rgba(0, 0, 0, 0.03);
+  --radius-card: 0.75rem;
+  --radius-button: 0.5rem;
   --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 html {
@@ -36,12 +44,27 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  font-optical-sizing: auto;
 }
 
-/* Enterprise-style focus rings */
+/* Enterprise page entrance */
+@layer utilities {
+  .animate-page-enter {
+    animation: pageEnter 0.3s var(--transition-smooth) forwards;
+  }
+}
+
+/* Enterprise-style focus rings - WCAG compliant */
 *:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Selection styling */
+::selection {
+  background: rgba(0, 120, 212, 0.15);
+  color: inherit;
 }
 
 /* Enterprise scrollbar - sleeker */
