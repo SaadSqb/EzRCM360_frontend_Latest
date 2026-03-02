@@ -332,6 +332,154 @@ export function insuranceArAnalysisApi() {
       return res.blob();
     },
 
+    downloadPayerNotFound: async (sessionId: string): Promise<Blob> => {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem(AUTH_TOKEN_KEY)
+          : null;
+      const url = getApiUrl(`${BASE}/${sessionId}/payer-not-found/download`);
+      const res = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error("Payer-NotFound file is not available.");
+      return res.blob();
+    },
+
+    uploadPayerNotFound: async (sessionId: string, file: File): Promise<void> => {
+      const fd = new FormData();
+      fd.append("file", file);
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem(AUTH_TOKEN_KEY)
+          : null;
+      const url = getApiUrl(`${BASE}/${sessionId}/payer-not-found/upload`);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd,
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        let msg = text;
+        try {
+          const j = JSON.parse(text) as { message?: string };
+          msg = j.message ?? text;
+        } catch {}
+        throw new Error(msg || "Failed to upload.");
+      }
+    },
+
+    downloadPlanNotFound: async (sessionId: string): Promise<Blob> => {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem(AUTH_TOKEN_KEY)
+          : null;
+      const url = getApiUrl(`${BASE}/${sessionId}/plan-not-found/download`);
+      const res = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error("Plan-NotFound file is not available.");
+      return res.blob();
+    },
+
+    uploadPlanNotFound: async (sessionId: string, file: File): Promise<void> => {
+      const fd = new FormData();
+      fd.append("file", file);
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem(AUTH_TOKEN_KEY)
+          : null;
+      const url = getApiUrl(`${BASE}/${sessionId}/plan-not-found/upload`);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd,
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        let msg = text;
+        try {
+          const j = JSON.parse(text) as { message?: string };
+          msg = j.message ?? text;
+        } catch {}
+        throw new Error(msg || "Failed to upload.");
+      }
+    },
+
+    downloadProviderParticipationNotFound: async (sessionId: string): Promise<Blob> => {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem(AUTH_TOKEN_KEY)
+          : null;
+      const url = getApiUrl(`${BASE}/${sessionId}/provider-participation-not-found/download`);
+      const res = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error("Provider-participation-not-found file is not available.");
+      return res.blob();
+    },
+
+    uploadProviderParticipationNotFound: async (sessionId: string, file: File): Promise<void> => {
+      const fd = new FormData();
+      fd.append("file", file);
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem(AUTH_TOKEN_KEY)
+          : null;
+      const url = getApiUrl(`${BASE}/${sessionId}/provider-participation-not-found/upload`);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd,
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        let msg = text;
+        try {
+          const j = JSON.parse(text) as { message?: string };
+          msg = j.message ?? text;
+        } catch {}
+        throw new Error(msg || "Failed to upload.");
+      }
+    },
+
+    downloadFacilityParticipationNotFound: async (sessionId: string): Promise<Blob> => {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem(AUTH_TOKEN_KEY)
+          : null;
+      const url = getApiUrl(`${BASE}/${sessionId}/facility-participation-not-found/download`);
+      const res = await fetch(url, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error("Facility-participation-not-found file is not available.");
+      return res.blob();
+    },
+
+    uploadFacilityParticipationNotFound: async (sessionId: string, file: File): Promise<void> => {
+      const fd = new FormData();
+      fd.append("file", file);
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem(AUTH_TOKEN_KEY)
+          : null;
+      const url = getApiUrl(`${BASE}/${sessionId}/facility-participation-not-found/upload`);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: fd,
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        let msg = text;
+        try {
+          const j = JSON.parse(text) as { message?: string };
+          msg = j.message ?? text;
+        } catch {}
+        throw new Error(msg || "Failed to upload.");
+      }
+    },
+
     uploadClaimIntegrityConflicts: async (
       sessionId: string,
       file: File

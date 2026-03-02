@@ -19,8 +19,24 @@ import {
 import { Loader } from "@/components/ui/Loader";
 import { Alert } from "@/components/ui/Alert";
 import { useToast } from "@/lib/contexts/ToastContext";
-import { insuranceArAnalysisApi, type ArAnalysisSessionListItemDto } from "@/lib/services/insuranceArAnalysis";
+import { insuranceArAnalysisApi, type ArAnalysisSessionListItemDto, type ArAnalysisSessionStatus } from "@/lib/services/insuranceArAnalysis";
 import { usePaginatedList } from "@/lib/hooks";
+
+const STATUS_OPTIONS: { value: ArAnalysisSessionStatus | ""; label: string }[] = [
+  { value: "", label: "All statuses" },
+  { value: "Draft", label: "Draft" },
+  { value: "IntakeUploaded", label: "Intake Uploaded" },
+  { value: "ValidationInProgress", label: "Validation In Progress" },
+  { value: "ValidationCompleted", label: "Validation Completed" },
+  { value: "ValidationFailed", label: "Validation Failed" },
+  { value: "PmUploaded", label: "PM Uploaded" },
+  { value: "Processing", label: "Processing" },
+  { value: "ConflictResolution", label: "Conflict Resolution" },
+  { value: "EnrichmentPending", label: "Enrichment Pending" },
+  { value: "EnrichmentCompleted", label: "Enrichment Completed" },
+  { value: "Completed", label: "Completed" },
+  { value: "Failed", label: "Failed" },
+];
 
 function formatDate(s: string) {
   try {
@@ -48,13 +64,19 @@ export default function InsuranceArAnalysisListPage() {
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState("");
   const [uploadedBy, setUploadedBy] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<ArAnalysisSessionStatus | "">("");
   const [downloading, setDownloading] = useState(false);
 
-  const { data, error, loading } = usePaginatedList({
+  const { data, error, loading, reload } = usePaginatedList({
     pageNumber: page,
     pageSize,
-    fetch: (p) => api.list({ pageNumber: p.pageNumber, pageSize }),
+    fetch: (p) => api.list({ pageNumber: p.pageNumber, pageSize, status: statusFilter || undefined }),
   });
+
+  useEffect(() => {
+    setPage(1);
+    reload();
+  }, [statusFilter]); // eslint-disable-line react-hooks/exhaustive-deps -- reload refetches with new status
 
   const uniqueUploadedBy = data
     ? Array.from(new Set(data.items.map((r) => r.uploadedBy))).filter(Boolean).sort()
@@ -125,6 +147,19 @@ export default function InsuranceArAnalysisListPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-1 flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
+                <label htmlFor="status" className="text-sm font-medium text-slate-600">Status</label>
+                <select
+                  id="status"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as ArAnalysisSessionStatus | "")}
+                  className="input-enterprise w-auto min-w-[12rem]"
+                >
+                  {STATUS_OPTIONS.map((o) => (
+                    <option key={o.value || "_all"} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2">
                 <label htmlFor="uploaded-by" className="text-sm font-medium text-slate-600">Uploaded by</label>
                 <select
                   id="uploaded-by"
@@ -178,6 +213,8 @@ export default function InsuranceArAnalysisListPage() {
               <TableHead>
                 <TableRow>
                   <TableHeaderCell>Session Name</TableHeaderCell>
+                  <TableHeaderCell>Practice Name</TableHeaderCell>
+                  <TableHeaderCell>Status</TableHeaderCell>
                   <TableHeaderCell>Uploaded By</TableHeaderCell>
                   <TableHeaderCell>Uploaded At</TableHeaderCell>
                   <TableHeaderCell>Source Type</TableHeaderCell>
@@ -187,7 +224,7 @@ export default function InsuranceArAnalysisListPage() {
               <TableBody>
                 {displayedItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-16 text-center text-sm text-slate-500">
+                    <TableCell colSpan={7} className="py-16 text-center text-sm text-slate-500">
                       {canCreate
                         ? "No sessions found. Click \"Upload Data\" to create one."
                         : "No sessions found."}
@@ -206,6 +243,8 @@ export default function InsuranceArAnalysisListPage() {
                       <TableCell className="font-medium text-slate-900">
                         {row.sessionName}
                       </TableCell>
+                      <TableCell>{row.practiceName ?? "—"}</TableCell>
+                      <TableCell>{row.sessionStatus}</TableCell>
                       <TableCell>{row.uploadedBy}</TableCell>
                       <TableCell>{formatDate(row.uploadedAt)}</TableCell>
                       <TableCell>{row.sourceType}</TableCell>

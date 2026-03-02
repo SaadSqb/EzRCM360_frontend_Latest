@@ -27,6 +27,7 @@ import {
 } from "@/lib/services/insuranceArAnalysis";
 
 type Step = 1 | 2 | 3;
+type ValidationMode = "Full" | "ColumnsThenRows";
 
 const MODULE_NAME = "Insurance AR Analysis";
 
@@ -57,6 +58,9 @@ export default function InsuranceArAnalysisUploadPage() {
   const [practiceName, setPracticeName] = useState("");
   const [intakeFile, setIntakeFile] = useState<File | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [validationMode, setValidationMode] = useState<ValidationMode>("Full");
+  const [columnsPassed, setColumnsPassed] = useState(false);
+  const [rowsPassed, setRowsPassed] = useState(false);
   const [validationResult, setValidationResult] = useState<ArIntakeValidationResult | null>(null);
   const [validationLoading, setValidationLoading] = useState(false);
   const [pmFiles, setPmFiles] = useState<File[]>([]);
@@ -90,21 +94,36 @@ export default function InsuranceArAnalysisUploadPage() {
     setSubmitLoading(true);
     setValidationLoading(true);
     setValidationResult(null);
+    const scope = validationMode === "Full" ? "Full" : (columnsPassed ? "Rows" : "Columns");
     try {
       if (sessionId) {
-        const vr = await api.uploadIntake(sessionId, intakeFile, "Full");
+        const vr = await api.uploadIntake(sessionId, intakeFile, scope);
         setValidationResult(vr);
-        toast.success("Intake re-uploaded and validated.");
+        if (validationMode === "ColumnsThenRows") {
+          if (scope === "Columns" && vr.columnErrors.length === 0 && vr.columnValidatedCount > 0) {
+            setColumnsPassed(true);
+          } else if (scope === "Rows" && vr.success) {
+            setRowsPassed(true);
+          }
+        }
+        toast.success(scope === "Rows" ? "Row validation complete." : scope === "Columns" ? "Column validation complete." : "Intake re-uploaded and validated.");
       } else {
         const result = await api.createSession({
           practiceName: practiceName.trim(),
           sourceType: "ExcelIntake",
           intakeFile,
-          validationScope: "Full",
+          validationScope: scope,
         });
         setSessionId(result.sessionId);
         setValidationResult(result.validationResult ?? null);
-        toast.success("Session created.");
+        if (validationMode === "ColumnsThenRows" && result.validationResult) {
+          if (scope === "Columns" && result.validationResult.columnErrors.length === 0 && result.validationResult.columnValidatedCount > 0) {
+            setColumnsPassed(true);
+          } else if (scope === "Rows" && result.validationResult.success) {
+            setRowsPassed(true);
+          }
+        }
+        toast.success(scope === "Rows" ? "Row validation complete." : scope === "Columns" ? "Column validation complete." : "Session created.");
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to create session.");
@@ -112,12 +131,14 @@ export default function InsuranceArAnalysisUploadPage() {
       setSubmitLoading(false);
       setValidationLoading(false);
     }
-  }, [practiceName, intakeFile, sessionId, api, toast]);
+  }, [practiceName, intakeFile, sessionId, api, toast, validationMode, columnsPassed, rowsPassed]);
 
   const canProceedFromStep1 =
     !!sessionId &&
-    validationResult?.success === true &&
-    !validationLoading;
+    !validationLoading &&
+    (validationMode === "Full"
+      ? validationResult?.success === true
+      : columnsPassed && rowsPassed);
 
   const handleNextFromStep1 = () => {
     if (canProceedFromStep1) setStep(2);
@@ -223,6 +244,42 @@ export default function InsuranceArAnalysisUploadPage() {
         <Card className="animate-fade-in-up">
           <div className="space-y-6">
             <div>
+              <label className="block text-sm font-medium text-neutral-700">Validation Mode</label>
+              <div className="mt-2 flex gap-6">
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="radio"
+                    name="validationMode"
+                    checked={validationMode === "Full"}
+                    onChange={() => {
+                      setValidationMode("Full");
+                      setColumnsPassed(false);
+                      setRowsPassed(false);
+                      setValidationResult(null);
+                    }}
+                    className="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className="text-sm text-neutral-700">Full (recommended) — validates columns and rows in one step</span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-2">
+                  <input
+                    type="radio"
+                    name="validationMode"
+                    checked={validationMode === "ColumnsThenRows"}
+                    onChange={() => {
+                      setValidationMode("ColumnsThenRows");
+                      setColumnsPassed(false);
+                      setRowsPassed(false);
+                      setValidationResult(null);
+                    }}
+                    className="h-4 w-4 border-neutral-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className="text-sm text-neutral-700">Columns first, then Rows — two-step validation</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-neutral-700">Practice Name</label>
               <input
                 type="text"
@@ -278,6 +335,8 @@ export default function InsuranceArAnalysisUploadPage() {
                 onReupload={() => {
                   setIntakeFile(null);
                   setValidationResult(null);
+                  setColumnsPassed(false);
+                  setRowsPassed(false);
                 }}
                 onDownloadDataValidationErrors={sessionId ? async () => {
                   try {
@@ -301,7 +360,15 @@ export default function InsuranceArAnalysisUploadPage() {
                 onClick={validationResult?.success ? handleNextFromStep1 : handleCreateSession}
                 disabled={!practiceName.trim() || !intakeFile || submitLoading}
               >
-                {submitLoading ? "Validating…" : validationResult?.success ? "Next →" : "Next →"}
+                {submitLoading
+                  ? "Validating…"
+                  : validationResult?.success
+                    ? "Next →"
+                    : validationMode === "ColumnsThenRows" && columnsPassed
+                      ? "Validate Rows"
+                      : validationMode === "ColumnsThenRows"
+                        ? "Validate Columns"
+                        : "Validate"}
               </Button>
               <Link href="/rcm/insurance-ar-analysis">
                 <Button variant="secondary">Cancel</Button>

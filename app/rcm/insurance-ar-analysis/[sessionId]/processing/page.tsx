@@ -108,6 +108,10 @@ export default function InsuranceArAnalysisProcessingPage() {
   const [status, setStatus] = useState<ArAnalysisProcessingStatusDto | null>(null);
   const [session, setSession] = useState<ArAnalysisSessionDetailDto | null>(null);
   const [conflictFile, setConflictFile] = useState<File | null>(null);
+  const [payerFile, setPayerFile] = useState<File | null>(null);
+  const [planFile, setPlanFile] = useState<File | null>(null);
+  const [providerFile, setProviderFile] = useState<File | null>(null);
+  const [facilityFile, setFacilityFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -174,12 +178,24 @@ export default function InsuranceArAnalysisProcessingPage() {
   const refreshStatus = useCallback(async () => {
     if (!sessionId) return;
     try {
-      const s = await apiRef.current.getStatus(sessionId);
+      const [s, sess] = await Promise.all([
+        apiRef.current.getStatus(sessionId),
+        apiRef.current.getSession(sessionId),
+      ]);
       setStatus(s);
+      setSession(sess);
     } catch {
       /* ignore */
     }
   }, [sessionId]);
+
+  const needsResolution = (val: string | null | undefined) =>
+    val && /NotFound|Pending|ActionRequired/i.test(val);
+
+  const needsPayerResolution = needsResolution(session?.payerValidationStatus);
+  const needsPlanResolution = needsResolution(session?.planValidationStatus);
+  const needsProviderResolution = needsResolution(session?.providerParticipationValidationStatus);
+  const needsFacilityResolution = needsResolution(session?.facilityParticipationValidationStatus);
 
   const handleDownloadConflicts = async () => {
     setDownloading(true);
@@ -216,6 +232,99 @@ export default function InsuranceArAnalysisProcessingPage() {
       setUploading(false);
     }
   };
+
+  const createDownloadHandler = (name: string, downloadFn: () => Promise<Blob>, filename: string) => async () => {
+    setDownloading(true);
+    try {
+      const blob = await downloadFn();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`${name} file downloaded.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Download failed.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const createUploadHandler = (name: string, file: File | null, uploadFn: (f: File) => Promise<void>, setFile: (f: File | null) => void) => async () => {
+    if (!file) {
+      toast.error("Please select a file.");
+      return;
+    }
+    setUploading(true);
+    try {
+      await uploadFn(file);
+      setFile(null);
+      toast.success(`${name} file uploaded.`);
+      refreshStatus();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDownloadPayer = createDownloadHandler("Payer-NotFound", () => apiRef.current.downloadPayerNotFound(sessionId), "Payer-NotFound.xlsx");
+  const handleDownloadPlan = createDownloadHandler("Plan-NotFound", () => apiRef.current.downloadPlanNotFound(sessionId), "Plan-NotFound.xlsx");
+  const handleDownloadProvider = createDownloadHandler("Provider participation", () => apiRef.current.downloadProviderParticipationNotFound(sessionId), "ProviderParticipation-NotFound.xlsx");
+  const handleDownloadFacility = createDownloadHandler("Facility participation", () => apiRef.current.downloadFacilityParticipationNotFound(sessionId), "FacilityParticipation-NotFound.xlsx");
+
+  const handleUploadPayer = createUploadHandler("Payer-NotFound", payerFile, (f) => apiRef.current.uploadPayerNotFound(sessionId, f), setPayerFile);
+  const handleUploadPlan = createUploadHandler("Plan-NotFound", planFile, (f) => apiRef.current.uploadPlanNotFound(sessionId, f), setPlanFile);
+  const handleUploadProvider = createUploadHandler("Provider participation", providerFile, (f) => apiRef.current.uploadProviderParticipationNotFound(sessionId, f), setProviderFile);
+  const handleUploadFacility = createUploadHandler("Facility participation", facilityFile, (f) => apiRef.current.uploadFacilityParticipationNotFound(sessionId, f), setFacilityFile);
+
+  const ResolutionBlock = ({
+    title,
+    description,
+    downloadLabel,
+    filename,
+    onDownload,
+    onUpload,
+    file,
+    setFile,
+    disabled,
+  }: {
+    title: string;
+    description: string;
+    downloadLabel: string;
+    filename: string;
+    onDownload: () => Promise<void>;
+    onUpload: () => Promise<void>;
+    file: File | null;
+    setFile: (f: File | null) => void;
+    disabled: boolean;
+  }) => (
+    <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
+      <h4 className="text-base font-semibold text-amber-900">{title}</h4>
+      <p className="mt-2 text-sm text-amber-800">{description}</p>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Button onClick={onDownload} disabled={disabled} variant="secondary">
+          {disabled ? "Downloading…" : downloadLabel}
+        </Button>
+      </div>
+      <div className="mt-6">
+        <h5 className="text-sm font-medium text-amber-900">Upload corrected file</h5>
+        <div className="mt-2">
+          <FileUploadZone
+            label={`Drop ${filename} here`}
+            hint="XLSX or XLS"
+            onFiles={(f) => setFile(f[0] ?? null)}
+          />
+        </div>
+        {file && (
+          <Button onClick={onUpload} disabled={uploading} className="mt-3">
+            {uploading ? "Uploading…" : "Upload & Continue"}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
 
   const needsConflictResolution =
     status?.sessionStatus === "ConflictResolution" ||
@@ -318,44 +427,111 @@ export default function InsuranceArAnalysisProcessingPage() {
           ) : null}
 
           {needsConflictResolution && (
-            <div className="mt-8 animate-fade-in-up rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
-              <h3 className="text-base font-semibold text-amber-900">
-                Action required
-              </h3>
-              <p className="mt-2 text-sm text-amber-800">
-                We detected claim integrity conflicts. Download the report, correct
-                the issues, and re-upload to continue the analysis.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <Button
-                  onClick={handleDownloadConflicts}
-                  disabled={downloading}
-                  variant="secondary"
-                >
-                  {downloading ? "Downloading…" : "Download Conflict Claims"}
-                </Button>
-              </div>
-              <div className="mt-6">
-                <h4 className="text-sm font-medium text-amber-900">
-                  Upload corrected file
-                </h4>
-                <div className="mt-2">
-                  <FileUploadZone
-                    label="Drop corrected file here"
-                    hint="XLSX or XLS"
-                    onFiles={(f) => setConflictFile(f[0] ?? null)}
-                  />
-                </div>
-                {conflictFile && (
+            <div className="mt-8 animate-fade-in-up">
+              <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
+              <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
+                <h4 className="text-base font-semibold text-amber-900">Claim integrity conflicts</h4>
+                <p className="mt-2 text-sm text-amber-800">
+                  We detected claim integrity conflicts. Download the report, correct
+                  the issues, and re-upload to continue the analysis.
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
                   <Button
-                    onClick={handleUploadConflicts}
-                    disabled={uploading}
-                    className="mt-3"
+                    onClick={handleDownloadConflicts}
+                    disabled={downloading}
+                    variant="secondary"
                   >
-                    {uploading ? "Uploading…" : "Upload & Continue"}
+                    {downloading ? "Downloading…" : "Download Conflict Claims"}
                   </Button>
-                )}
+                </div>
+                <div className="mt-6">
+                  <h5 className="text-sm font-medium text-amber-900">Upload corrected file</h5>
+                  <div className="mt-2">
+                    <FileUploadZone
+                      label="Drop corrected file here"
+                      hint="XLSX or XLS"
+                      onFiles={(f) => setConflictFile(f[0] ?? null)}
+                    />
+                  </div>
+                  {conflictFile && (
+                    <Button
+                      onClick={handleUploadConflicts}
+                      disabled={uploading}
+                      className="mt-3"
+                    >
+                      {uploading ? "Uploading…" : "Upload & Continue"}
+                    </Button>
+                  )}
+                </div>
               </div>
+            </div>
+          )}
+
+          {needsPayerResolution && (
+            <div className="mt-8 animate-fade-in-up">
+              <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
+              <ResolutionBlock
+                title="Payer not found"
+                description="Some payers in your intake file were not found. Download the report, map or add the payers, and re-upload to continue."
+                downloadLabel="Download Payer-NotFound.xlsx"
+                filename="Payer-NotFound.xlsx"
+                onDownload={handleDownloadPayer}
+                onUpload={handleUploadPayer}
+                file={payerFile}
+                setFile={setPayerFile}
+                disabled={downloading}
+              />
+            </div>
+          )}
+
+          {needsPlanResolution && (
+            <div className="mt-8 animate-fade-in-up">
+              <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
+              <ResolutionBlock
+                title="Plan not found"
+                description="Some plans in your intake file were not found. Download the report, map or add the plans, and re-upload to continue."
+                downloadLabel="Download Plan-NotFound.xlsx"
+                filename="Plan-NotFound.xlsx"
+                onDownload={handleDownloadPlan}
+                onUpload={handleUploadPlan}
+                file={planFile}
+                setFile={setPlanFile}
+                disabled={downloading}
+              />
+            </div>
+          )}
+
+          {needsProviderResolution && (
+            <div className="mt-8 animate-fade-in-up">
+              <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
+              <ResolutionBlock
+                title="Provider participation not found"
+                description="Provider participation could not be resolved for some claims. Download the report, correct the data, and re-upload to continue."
+                downloadLabel="Download ProviderParticipation-NotFound.xlsx"
+                filename="ProviderParticipation-NotFound.xlsx"
+                onDownload={handleDownloadProvider}
+                onUpload={handleUploadProvider}
+                file={providerFile}
+                setFile={setProviderFile}
+                disabled={downloading}
+              />
+            </div>
+          )}
+
+          {needsFacilityResolution && (
+            <div className="mt-8 animate-fade-in-up">
+              <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
+              <ResolutionBlock
+                title="Facility participation not found"
+                description="Facility participation could not be resolved for some claims. Download the report, correct the data, and re-upload to continue."
+                downloadLabel="Download FacilityParticipation-NotFound.xlsx"
+                filename="FacilityParticipation-NotFound.xlsx"
+                onDownload={handleDownloadFacility}
+                onUpload={handleUploadFacility}
+                file={facilityFile}
+                setFile={setFacilityFile}
+                disabled={downloading}
+              />
             </div>
           )}
         </div>

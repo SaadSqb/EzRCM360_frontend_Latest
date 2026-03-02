@@ -1,5 +1,5 @@
 import { PageShell } from "@/components/layout/PageShell";
-import { Card } from "@/components/ui/Card";
+import { ComingSoonCard } from "@/components/ui/ComingSoonCard";
 
 export default function EntityFeeSchedulesPage() {
   return (
@@ -8,15 +8,16 @@ export default function EntityFeeSchedulesPage() {
       title="Entity Billable Fee Schedules"
       description="Entity-level fee schedule assignments."
     >
-      <Card className="flex flex-col items-center justify-center py-16">
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-          <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <ComingSoonCard
+        icon={
+          <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-        </div>
-        <p className="text-sm font-medium text-slate-600">Coming soon</p>
-        <p className="mt-1 text-xs text-slate-500">This section will be available in a future update.</p>
-      </Card>
+        }
+        title="Entity fee schedules"
+        description="This section will be available in a future update."
+        iconBg="from-teal-100 to-teal-200"
+      />
     </PageShell>
   );
 }
