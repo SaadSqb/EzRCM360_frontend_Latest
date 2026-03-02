@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { TableActionsCell } from "@/components/ui/TableActionsCell";
 import { feeSchedulesApi } from "@/lib/services/feeSchedules";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { useModulePermission } from "@/lib/contexts/PermissionsContext";
@@ -179,9 +180,13 @@ export default function FeeSchedulesPage() {
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.year} / {row.quarter}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">{statusLabel(row.status)}</td>
                       {(canUpdate || canDelete) && (
-                        <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
-                          {canUpdate && <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>Edit</Button>}
-                          {canDelete && <Button variant="danger" onClick={() => setDeleteId(row.id)}>Delete</Button>}
+                        <td className="min-w-[180px] whitespace-nowrap px-5 py-4 text-right">
+                          <TableActionsCell
+                            canEdit={canUpdate}
+                            canDelete={canDelete}
+                            onEdit={() => openEdit(row)}
+                            onDelete={() => setDeleteId(row.id)}
+                          />
                         </td>
                       )}
                     </tr>

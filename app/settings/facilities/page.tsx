@@ -14,6 +14,7 @@ import {
   TableCell,
 } from "@/components/ui/Table";
 import { Pagination } from "@/components/ui/Pagination";
+import { TableActionsCell } from "@/components/ui/TableActionsCell";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { FacilityFormModal } from "./FacilityFormModal";
 import { facilitiesApi } from "@/lib/services/facilities";
@@ -179,17 +180,13 @@ export default function FacilitiesPage() {
                     <TableCell className="whitespace-nowrap">{row.posCode ?? "—"}</TableCell>
                     <TableCell className="whitespace-nowrap">{row.isActive ? "Yes" : "No"}</TableCell>
                     {(canUpdate || canDelete) && (
-                      <TableCell align="right" className="whitespace-nowrap">
-                        {canUpdate && (
-                          <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>
-                            Edit
-                          </Button>
-                        )}
-                        {canDelete && (
-                          <Button variant="danger" onClick={() => setDeleteId(row.id)}>
-                            Delete
-                          </Button>
-                        )}
+                      <TableCell align="right" className="min-w-[180px]">
+                        <TableActionsCell
+                          canEdit={canUpdate}
+                          canDelete={canDelete}
+                          onEdit={() => openEdit(row)}
+                          onDelete={() => setDeleteId(row.id)}
+                        />
                       </TableCell>
                     )}
                   </TableRow>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/settings/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { TableActionsCell } from "@/components/ui/TableActionsCell";
 import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ndcCodesApi } from "@/lib/services/ndcCodes";
@@ -125,9 +126,9 @@ export default function NdcCodesPage() {
   return (
     <div>
       <PageHeader title="NDC Codes" description="National Drug Code master." />
-      <Card>
+      <Card className="p-6">
         {canCreate && (
-          <div className="mb-4 flex justify-end">
+          <div className="mb-6 flex justify-end">
             <Button onClick={openCreate}>Add NDC code</Button>
           </div>
         )}
@@ -135,35 +136,39 @@ export default function NdcCodesPage() {
         {data && (
           <>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200">
+              <table className="min-w-full divide-y divide-border">
                 <thead>
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">NDC code</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Description</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Package size</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Unit of measure</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Effective from</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Effective to</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">Active</th>
+                    <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">NDC code</th>
+                    <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Description</th>
+                    <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Package size</th>
+                    <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Unit of measure</th>
+                    <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Effective from</th>
+                    <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Effective to</th>
+                    <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Active</th>
                     {(canUpdate || canDelete) && (
-                      <th className="px-4 py-3 text-right text-xs font-medium uppercase text-slate-500">Actions</th>
+                      <th className="min-w-[180px] px-5 py-4 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">Actions</th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-border">
                   {data.items.map((row) => (
-                    <tr key={row.id} className="hover:bg-slate-50">
-                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-slate-900">{row.ndcCodeValue}</td>
-                      <td className="px-4 py-3 text-sm text-slate-600">{row.description}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.packageSize ?? "—"}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.unitOfMeasure ?? "—"}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.effectiveStartDate ? toDateInput(row.effectiveStartDate) : "—"}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-600">{row.effectiveEndDate ? toDateInput(row.effectiveEndDate) : "—"}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm">{row.isActive ? "Yes" : "No"}</td>
+                    <tr key={row.id} className="transition-colors hover:bg-muted/50">
+                      <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-foreground">{row.ndcCodeValue}</td>
+                      <td className="px-5 py-4 text-sm text-muted-foreground">{row.description}</td>
+                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{row.packageSize ?? "—"}</td>
+                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{row.unitOfMeasure ?? "—"}</td>
+                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{row.effectiveStartDate ? toDateInput(row.effectiveStartDate) : "—"}</td>
+                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{row.effectiveEndDate ? toDateInput(row.effectiveEndDate) : "—"}</td>
+                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted-foreground">{row.isActive ? "Yes" : "No"}</td>
                       {(canUpdate || canDelete) && (
-                        <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
-                          {canUpdate && <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>Edit</Button>}
-                          {canDelete && <Button variant="danger" onClick={() => setDeleteId(row.id)}>Delete</Button>}
+                        <td className="whitespace-nowrap px-5 py-4 text-right">
+                          <TableActionsCell
+                            canEdit={canUpdate}
+                            canDelete={canDelete}
+                            onEdit={() => openEdit(row)}
+                            onDelete={() => setDeleteId(row.id)}
+                          />
                         </td>
                       )}
                     </tr>
@@ -171,9 +176,9 @@ export default function NdcCodesPage() {
                 </tbody>
               </table>
             </div>
-            <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
-              <p className="text-sm text-slate-600">Page {data.pageNumber} of {data.totalPages} ({data.totalCount} total)</p>
-              <div className="flex gap-2">
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6">
+              <p className="text-sm text-muted-foreground">Page {data.pageNumber} of {data.totalPages} ({data.totalCount} total)</p>
+              <div className="flex gap-3">
                 <Button variant="secondary" disabled={!data.hasPreviousPage} onClick={() => setPage((p) => Math.max(1, p - 1))}>Previous</Button>
                 <Button variant="secondary" disabled={!data.hasNextPage} onClick={() => setPage((p) => p + 1)}>Next</Button>
               </div>

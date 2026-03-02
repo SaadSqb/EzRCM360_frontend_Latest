@@ -25,12 +25,12 @@ export function Pagination({
 }: PaginationProps) {
   return (
     <div
-      className={`flex items-center justify-between border-t border-slate-200 pt-4 ${className}`}
+      className={`mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6 ${className}`}
     >
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-muted-foreground">
         Page {pageNumber} of {totalPages} ({totalCount} total)
       </p>
-      <div className="flex gap-2">
+      <div className="flex gap-3">
         <Button
           variant="secondary"
           disabled={!hasPreviousPage}

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { TableActionsCell } from "@/components/ui/TableActionsCell";
 import { applicabilityRulesApi } from "@/lib/services/applicabilityRules";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { useModulePermission } from "@/lib/contexts/PermissionsContext";
@@ -265,16 +266,12 @@ export default function ApplicabilityRulesPage() {
                       </td>
                       {(canUpdate || canDelete) && (
                         <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
-                          {canUpdate && (
-                            <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>
-                              Edit
-                            </Button>
-                          )}
-                          {canDelete && (
-                            <Button variant="danger" onClick={() => setDeleteId(row.id)}>
-                              Delete
-                            </Button>
-                          )}
+                          <TableActionsCell
+                            canEdit={canUpdate}
+                            canDelete={canDelete}
+                            onEdit={() => openEdit(row)}
+                            onDelete={() => setDeleteId(row.id)}
+                          />
                         </td>
                       )}
                     </tr>

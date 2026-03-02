@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/Table";
 import { Pagination } from "@/components/ui/Pagination";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { TableActionsCell } from "@/components/ui/TableActionsCell";
 import { ModifierFormModal } from "./ModifierFormModal";
 import { modifiersApi } from "@/lib/services/modifiers";
 import { usePaginatedList } from "@/lib/hooks";
@@ -169,16 +170,12 @@ export default function ModifiersPage() {
                     <TableCell className="whitespace-nowrap">{row.isActive ? "Yes" : "No"}</TableCell>
                     {(canUpdate || canDelete) && (
                       <TableCell align="right" className="whitespace-nowrap">
-                        {canUpdate && (
-                          <Button variant="ghost" className="mr-1" onClick={() => openEdit(row)}>
-                            Edit
-                          </Button>
-                        )}
-                        {canDelete && (
-                          <Button variant="danger" onClick={() => setDeleteId(row.id)}>
-                            Delete
-                          </Button>
-                        )}
+                        <TableActionsCell
+                          canEdit={canUpdate}
+                          canDelete={canDelete}
+                          onEdit={() => openEdit(row)}
+                          onDelete={() => setDeleteId(row.id)}
+                        />
                       </TableCell>
                     )}
                   </TableRow>
