@@ -15,7 +15,8 @@ import {
   type ArAnalysisSessionDetailDto,
 } from "@/lib/services/insuranceArAnalysis";
 
-const POLL_INTERVAL_MS = 2000;
+const POLL_BASE_MS = 1000; // 1st after 1s, 2nd after 2s, 3rd after 4s, 4th after 8s, 5th after 16s...
+const POLL_MAX_MS = 30000; // Cap at 30s
 
 function PipelineStep({
   step,
@@ -102,7 +103,6 @@ export default function InsuranceArAnalysisProcessingPage() {
   const sessionId = params.sessionId as string;
   const toast = useToast();
   const apiRef = useRef(insuranceArAnalysisApi());
-  const api = apiRef.current;
 
   const [status, setStatus] = useState<ArAnalysisProcessingStatusDto | null>(null);
   const [session, setSession] = useState<ArAnalysisSessionDetailDto | null>(null);
@@ -110,40 +110,80 @@ export default function InsuranceArAnalysisProcessingPage() {
   const [uploading, setUploading] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
-  const loadStatus = useCallback(async () => {
-    if (!sessionId) return;
-    try {
-      const s = await api.getStatus(sessionId);
-      setStatus(s);
-      if (s.sessionStatus === "Completed") {
-        router.push(`/rcm/insurance-ar-analysis/${sessionId}/report`);
-      }
-    } catch {
-      /* ignore */
-    }
-  }, [sessionId, router]);
+  const routerRef = useRef(router);
+  routerRef.current = router;
 
-  const loadSession = useCallback(async () => {
+  useEffect(() => {
+    if (!sessionId) return;
+
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let pollCount = 0;
+
+    const scheduleNext = () => {
+      if (cancelled) return;
+      const delay = Math.min(POLL_BASE_MS * Math.pow(2, pollCount), POLL_MAX_MS);
+      pollCount += 1;
+      timeoutId = setTimeout(() => {
+        timeoutId = null;
+        fetchStatus();
+      }, delay);
+    };
+
+    const fetchStatus = async () => {
+      if (cancelled) return;
+      if (typeof document !== "undefined" && document.hidden) {
+        scheduleNext();
+        return;
+      }
+      try {
+        const s = await apiRef.current.getStatus(sessionId);
+        if (cancelled) return;
+        setStatus(s);
+        if (s.sessionStatus === "Completed") {
+          routerRef.current.push(`/rcm/insurance-ar-analysis/${sessionId}/report`);
+          return;
+        }
+        if (s.sessionStatus === "Failed") return;
+        scheduleNext();
+      } catch {
+        if (!cancelled) scheduleNext();
+      }
+    };
+
+    const fetchSession = async () => {
+      if (cancelled) return;
+      try {
+        const s = await apiRef.current.getSession(sessionId);
+        if (!cancelled) setSession(s);
+      } catch {
+        /* ignore */
+      }
+    };
+
+    fetchStatus();
+    fetchSession();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [sessionId]); // sessionId only - stable deps prevent effect re-runs
+
+  const refreshStatus = useCallback(async () => {
     if (!sessionId) return;
     try {
-      const s = await api.getSession(sessionId);
-      setSession(s);
+      const s = await apiRef.current.getStatus(sessionId);
+      setStatus(s);
     } catch {
       /* ignore */
     }
   }, [sessionId]);
 
-  useEffect(() => {
-    loadStatus();
-    loadSession();
-    const t = setInterval(loadStatus, POLL_INTERVAL_MS);
-    return () => clearInterval(t);
-  }, [loadStatus, loadSession]);
-
   const handleDownloadConflicts = async () => {
     setDownloading(true);
     try {
-      const blob = await api.downloadClaimIntegrityConflicts(sessionId);
+      const blob = await apiRef.current.downloadClaimIntegrityConflicts(sessionId);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -165,10 +205,10 @@ export default function InsuranceArAnalysisProcessingPage() {
     }
     setUploading(true);
     try {
-      await api.uploadClaimIntegrityConflicts(sessionId, conflictFile);
+      await apiRef.current.uploadClaimIntegrityConflicts(sessionId, conflictFile);
       setConflictFile(null);
       toast.success("Conflict file uploaded.");
-      loadStatus();
+      refreshStatus();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed.");
     } finally {
