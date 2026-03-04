@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronRightIcon, ExternalLinkIcon } from "@/lib/icons/AppIcons";
 
 export interface ContentCardLink {
   label: string;
@@ -24,17 +25,6 @@ export interface ContentCardProps {
   className?: string;
 }
 
-const ExternalLinkIcon = () => (
-  <svg className="ml-1 h-4 w-4 shrink-0 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-  </svg>
-);
-
-const ChevronIcon = () => (
-  <svg className="h-4 w-4 shrink-0 opacity-70 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-  </svg>
-);
 
 /**
  * ContentCard - Microsoft-style card with icon, category, title/links.
@@ -84,7 +74,7 @@ export function ContentCard({
                   className="group inline-flex items-center text-sm font-semibold text-primary transition-colors hover:text-primary/80"
                 >
                   {link.label}
-                  <ExternalLinkIcon />
+                  <ExternalLinkIcon className="ml-1" />
                 </a>
               ) : (
                 <Link
@@ -92,7 +82,7 @@ export function ContentCard({
                   className="group inline-flex items-center text-sm font-semibold text-primary transition-colors hover:text-primary/80"
                 >
                   {link.label}
-                  <ChevronIcon />
+                  <ChevronRightIcon className="transition-transform group-hover:translate-x-0.5" />
                 </Link>
               )}
             </li>

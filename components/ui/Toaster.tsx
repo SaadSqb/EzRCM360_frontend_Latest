@@ -1,6 +1,7 @@
 "use client";
 
 import { useToast } from "@/lib/contexts/ToastContext";
+import { CloseIcon } from "@/lib/icons/AppIcons";
 
 export function Toaster() {
   const { toasts, dismiss } = useToast();
@@ -26,12 +27,10 @@ export function Toaster() {
           <button
             type="button"
             onClick={() => dismiss(t.id)}
-            className="ml-2 rounded p-1 opacity-70 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-1"
+            className="ml-2 rounded p-1 opacity-70 hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
             aria-label="Dismiss"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <CloseIcon className="h-4 w-4" />
           </button>
         </div>
       ))}

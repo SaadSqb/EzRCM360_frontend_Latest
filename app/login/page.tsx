@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { getApiUrl } from "@/lib/api";
@@ -80,9 +81,7 @@ function LoginForm() {
     <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] p-6">
       <Card className="w-full max-w-md animate-fade-in-up overflow-hidden border border-border bg-card p-8 shadow-none">
         <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-semibold shadow-sm">
-            E
-          </div>
+          <Image src="/logo.png" alt="EzRCM360" width={147} height={32} className="h-10 w-auto shrink-0" priority />
           <span className="text-xl font-semibold tracking-tight text-foreground">EzRCM360</span>
         </div>
         <h2 className="font-aileron text-2xl font-semibold tracking-tight text-foreground">Sign in</h2>

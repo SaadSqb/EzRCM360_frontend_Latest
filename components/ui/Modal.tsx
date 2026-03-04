@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { CloseIcon } from "@/lib/icons/AppIcons";
 import { ModalFooter } from "./ModalFooter";
 
 export interface ModalProps {
@@ -43,13 +44,11 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label="Close"
           >
             <span className="sr-only">Close</span>
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <CloseIcon />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-6 py-4">{children}</div>
