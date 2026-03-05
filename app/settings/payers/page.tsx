@@ -109,11 +109,15 @@ export default function PayersPage() {
             emailAddress: e.emailAddress,
             label: e.label ?? "",
           })) ?? [];
+        const statusNum =
+          detail.status === "Active" || detail.status === 1 ? 1
+            : detail.status === "Inactive" || detail.status === 0 ? 0
+            : 1;
         setForm({
           payerName: detail.payerName,
           aliases: detail.aliases ?? "",
           entityType: detail.entityType,
-          status: detail.status,
+          status: statusNum,
           planIds: detail.planIds ?? [],
           addresses: mapAddresses(),
           phoneNumbers: mapPhones(),
@@ -252,7 +256,7 @@ export default function PayersPage() {
                   <TableCell>
                     {entityTypeLabel(row.entityType)}
                   </TableCell>
-                  <TableCell>{row.status === 1 ? "Active" : "Inactive"}</TableCell>
+                  <TableCell>{row.status === 1 || row.status === "Active" ? "Active" : "Inactive"}</TableCell>
                   {(canUpdate || canDelete) && (
                     <TableCell>
                       <TableActionsCell

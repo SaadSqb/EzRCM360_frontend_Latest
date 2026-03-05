@@ -9,6 +9,23 @@ import type { PaginatedList } from "@/lib/types";
 
 const BASE = "/api/RcmIntelligence/InsuranceArAnalysis";
 
+/** Parse API error body (RFC 9110 problem details, or Ardalis ValidationError[]) for user-facing message. */
+function getErrorMessageFromResponse(text: string, fallback: string): string {
+  try {
+    const j = JSON.parse(text) as
+      | { detail?: string; message?: string; title?: string }
+      | Array<{ ErrorMessage?: string; errorMessage?: string }>;
+    if (Array.isArray(j) && j.length > 0) {
+      const first = j[0];
+      return first.ErrorMessage ?? first.errorMessage ?? fallback;
+    }
+    const obj = j as { detail?: string; message?: string; title?: string };
+    return obj.detail ?? obj.message ?? obj.title ?? (text && text.trim() ? text : fallback);
+  } catch {
+    return text && text.trim() ? text : fallback;
+  }
+}
+
 export type ArSourceType = "ExcelIntake";
 export type ArIntakeValidationScope = "Columns" | "Rows" | "Full";
 export type ArAnalysisSessionStatus =
@@ -178,7 +195,10 @@ export function insuranceArAnalysisApi() {
       const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) throw new Error("Failed to download template.");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(getErrorMessageFromResponse(text, "Failed to download template."));
+      }
       return res.blob();
     },
 
@@ -315,7 +335,10 @@ export function insuranceArAnalysisApi() {
       const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) throw new Error("DataValidationErrors file is not available.");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(getErrorMessageFromResponse(text, "DataValidationErrors file is not available."));
+      }
       return res.blob();
     },
 
@@ -328,7 +351,10 @@ export function insuranceArAnalysisApi() {
       const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) throw new Error("ClaimIntegrityConflicts file is not available.");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(getErrorMessageFromResponse(text, "ClaimIntegrityConflicts file is not available."));
+      }
       return res.blob();
     },
 
@@ -341,7 +367,10 @@ export function insuranceArAnalysisApi() {
       const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) throw new Error("Payer-NotFound file is not available.");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(getErrorMessageFromResponse(text, "Payer-NotFound file is not available."));
+      }
       return res.blob();
     },
 
@@ -360,12 +389,7 @@ export function insuranceArAnalysisApi() {
       });
       if (!res.ok) {
         const text = await res.text();
-        let msg = text;
-        try {
-          const j = JSON.parse(text) as { message?: string };
-          msg = j.message ?? text;
-        } catch {}
-        throw new Error(msg || "Failed to upload.");
+        throw new Error(getErrorMessageFromResponse(text, "Failed to upload."));
       }
     },
 
@@ -378,7 +402,10 @@ export function insuranceArAnalysisApi() {
       const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) throw new Error("Plan-NotFound file is not available.");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(getErrorMessageFromResponse(text, "Plan-NotFound file is not available."));
+      }
       return res.blob();
     },
 
@@ -397,12 +424,7 @@ export function insuranceArAnalysisApi() {
       });
       if (!res.ok) {
         const text = await res.text();
-        let msg = text;
-        try {
-          const j = JSON.parse(text) as { message?: string };
-          msg = j.message ?? text;
-        } catch {}
-        throw new Error(msg || "Failed to upload.");
+        throw new Error(getErrorMessageFromResponse(text, "Failed to upload."));
       }
     },
 
@@ -415,7 +437,10 @@ export function insuranceArAnalysisApi() {
       const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) throw new Error("Provider-participation-not-found file is not available.");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(getErrorMessageFromResponse(text, "Provider-participation-not-found file is not available."));
+      }
       return res.blob();
     },
 
@@ -434,12 +459,7 @@ export function insuranceArAnalysisApi() {
       });
       if (!res.ok) {
         const text = await res.text();
-        let msg = text;
-        try {
-          const j = JSON.parse(text) as { message?: string };
-          msg = j.message ?? text;
-        } catch {}
-        throw new Error(msg || "Failed to upload.");
+        throw new Error(getErrorMessageFromResponse(text, "Failed to upload."));
       }
     },
 
@@ -452,7 +472,10 @@ export function insuranceArAnalysisApi() {
       const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) throw new Error("Facility-participation-not-found file is not available.");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(getErrorMessageFromResponse(text, "Facility-participation-not-found file is not available."));
+      }
       return res.blob();
     },
 
@@ -471,12 +494,7 @@ export function insuranceArAnalysisApi() {
       });
       if (!res.ok) {
         const text = await res.text();
-        let msg = text;
-        try {
-          const j = JSON.parse(text) as { message?: string };
-          msg = j.message ?? text;
-        } catch {}
-        throw new Error(msg || "Failed to upload.");
+        throw new Error(getErrorMessageFromResponse(text, "Failed to upload."));
       }
     },
 
@@ -498,12 +516,71 @@ export function insuranceArAnalysisApi() {
       });
       if (!res.ok) {
         const text = await res.text();
-        let msg = text;
-        try {
-          const j = JSON.parse(text) as { message?: string };
-          msg = j.message ?? text;
-        } catch {}
-        throw new Error(msg || "Failed to upload.");
+        throw new Error(getErrorMessageFromResponse(text, "Failed to upload."));
+      }
+    },
+
+    skipClaimIntegrityConflicts: async (sessionId: string): Promise<void> => {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem(AUTH_TOKEN_KEY)
+          : null;
+      const url = getApiUrl(`${BASE}/${sessionId}/claim-integrity-conflicts/skip`);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(getErrorMessageFromResponse(text, "Skip failed."));
+      }
+    },
+
+    skipPayerNotFound: async (sessionId: string): Promise<void> => {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem(AUTH_TOKEN_KEY)
+          : null;
+      const url = getApiUrl(`${BASE}/${sessionId}/payer-not-found/skip`);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(getErrorMessageFromResponse(text, "Skip failed."));
+      }
+    },
+
+    skipPlanNotFound: async (sessionId: string): Promise<void> => {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem(AUTH_TOKEN_KEY)
+          : null;
+      const url = getApiUrl(`${BASE}/${sessionId}/plan-not-found/skip`);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(getErrorMessageFromResponse(text, "Skip failed."));
+      }
+    },
+
+    skipProviderParticipationNotFound: async (sessionId: string): Promise<void> => {
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem(AUTH_TOKEN_KEY)
+          : null;
+      const url = getApiUrl(`${BASE}/${sessionId}/provider-participation-not-found/skip`);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(getErrorMessageFromResponse(text, "Skip failed."));
       }
     },
 
@@ -519,7 +596,10 @@ export function insuranceArAnalysisApi() {
       const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      if (!res.ok) throw new Error("Report export is not available.");
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(getErrorMessageFromResponse(text, "Report export is not available."));
+      }
       return res.blob();
     },
   };

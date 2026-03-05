@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { Search, ArrowRight, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Pagination } from "@/components/ui/Pagination";
@@ -141,11 +141,11 @@ export default function InsuranceArAnalysisListPage() {
     <PageShell
       breadcrumbs={[{ label: "RCM Intelligence", href: "/rcm" }, { label: "Insurance AR Analysis" }]}
       title="Insurance AR Analysis"
-      description="Manage AR intake sessions and analyze insurance receivables."
+      description={undefined}
     >
-      <div className="animate-fade-in-up">
+      <div className="animate-fade-in-up space-y-6">
         {/* Toolbar */}
-        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-1 flex-wrap items-center gap-3">
             <select
               id="status"
@@ -166,7 +166,7 @@ export default function InsuranceArAnalysisListPage() {
               }}
               className="h-10 rounded-[5px] border border-[#E2E8F0] bg-background px-3 font-aileron text-[14px] text-[#202830] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <option value="">All uploaded by</option>
+              <option value="">Uploaded By</option>
               {uniqueUploadedBy.map((u) => (
                 <option key={u} value={u}>{u}</option>
               ))}
@@ -175,7 +175,7 @@ export default function InsuranceArAnalysisListPage() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]" />
               <input
                 type="text"
-                placeholder="Search sessions…"
+                placeholder="Search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="h-10 w-[300px] rounded-[5px] border border-[#E2E8F0] bg-background pl-9 pr-4 font-aileron text-[14px] text-[#202830] placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -184,11 +184,13 @@ export default function InsuranceArAnalysisListPage() {
           </div>
           {canCreate && (
             <div className="flex shrink-0 items-center gap-3">
-              <Button variant="outline" onClick={handleDownloadTemplate} disabled={downloading} className="h-10 rounded-[5px] px-[18px] border-[#E2E8F0] font-aileron text-[14px] text-[#2A2C33]">
-                {downloading ? "Downloading…" : "Download Template"}
+              <Button variant="outline" onClick={handleDownloadTemplate} disabled={downloading} className="h-10 rounded-[5px] py-3 px-[18px] gap-[5px] border-[#E2E8F0] font-['Aileron'] text-[14px] text-foreground">
+                {downloading ? "Downloading…" : "Download AR Intake Template"}
+                <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button onClick={handleUploadData} className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]">
+              <Button onClick={handleUploadData} className="h-10 rounded-[5px] py-3 px-[18px] gap-[5px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-['Aileron'] text-[14px]">
                 Upload Data
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           )}
@@ -202,17 +204,51 @@ export default function InsuranceArAnalysisListPage() {
 
         {data && (
           <>
-            <div className="overflow-hidden px-6 py-2">
+            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
             <Table>
               <TableHead>
-                <TableRow>
-                  <TableHeaderCell>Session Name</TableHeaderCell>
-                  <TableHeaderCell>Practice Name</TableHeaderCell>
-                  <TableHeaderCell>Status</TableHeaderCell>
-                  <TableHeaderCell>Uploaded By</TableHeaderCell>
-                  <TableHeaderCell>Uploaded At</TableHeaderCell>
-                  <TableHeaderCell>Source Type</TableHeaderCell>
-                  <TableHeaderCell>Actions</TableHeaderCell>
+                <TableRow className="bg-[hsl(210,100%,97%)] hover:bg-[hsl(210,100%,97%)]">
+                  <TableHeaderCell className="first:rounded-bl-[5px] !bg-[hsl(210,100%,97%)] border-border">
+                    <div className="flex items-center gap-3 font-['Aileron'] font-bold text-[13px] leading-none text-[#0066CC]">
+                      Session Name
+                      <ArrowUpDown className="h-3.5 w-3.5 text-[#0066CC]/70" />
+                    </div>
+                  </TableHeaderCell>
+                  <TableHeaderCell className="!bg-[hsl(210,100%,97%)] border-border">
+                    <div className="flex items-center gap-3 font-['Aileron'] font-normal text-[14px] leading-none text-[#0066CC]">
+                      Practice Name
+                      <ArrowUpDown className="h-3.5 w-3.5 text-[#0066CC]/70" />
+                    </div>
+                  </TableHeaderCell>
+                  <TableHeaderCell className="!bg-[hsl(210,100%,97%)] border-border">
+                    <div className="flex items-center gap-3 font-['Aileron'] font-bold text-[13px] leading-none text-[#0066CC]">
+                      Status
+                      <ArrowUpDown className="h-3.5 w-3.5 text-[#0066CC]/70" />
+                    </div>
+                  </TableHeaderCell>
+                  <TableHeaderCell className="!bg-[hsl(210,100%,97%)] border-border">
+                    <div className="flex items-center gap-3 font-['Aileron'] font-normal text-[14px] leading-none text-[#0066CC]">
+                      Uploaded By
+                      <ArrowUpDown className="h-3.5 w-3.5 text-[#0066CC]/70" />
+                    </div>
+                  </TableHeaderCell>
+                  <TableHeaderCell className="!bg-[hsl(210,100%,97%)] border-border">
+                    <div className="flex items-center gap-3 font-['Aileron'] font-bold text-[13px] leading-none text-[#0066CC]">
+                      Uploaded At
+                      <ArrowUpDown className="h-3.5 w-3.5 text-[#0066CC]/70" />
+                    </div>
+                  </TableHeaderCell>
+                  <TableHeaderCell className="!bg-[hsl(210,100%,97%)] border-border">
+                    <div className="flex items-center gap-3 font-['Aileron'] font-bold text-[13px] leading-none text-[#0066CC]">
+                      Source Type
+                      <ArrowUpDown className="h-3.5 w-3.5 text-[#0066CC]/70" />
+                    </div>
+                  </TableHeaderCell>
+                  <TableHeaderCell className="border-r-0 !bg-[hsl(210,100%,97%)] border-border">
+                    <span className="font-['Aileron'] font-bold text-[13px] leading-none text-[#0066CC]">
+                      Actions
+                    </span>
+                  </TableHeaderCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -241,16 +277,15 @@ export default function InsuranceArAnalysisListPage() {
                       <TableCell>{row.sessionStatus}</TableCell>
                       <TableCell>{row.uploadedBy}</TableCell>
                       <TableCell>{formatDate(row.uploadedAt)}</TableCell>
-                      <TableCell>{row.sourceType}</TableCell>
-                      <TableCell>
+                      <TableCell className="border-r-0">{row.sourceType}</TableCell>
+                      <TableCell className="border-r-0 border-l-0">
                         {row.sessionStatus === "Completed" ? (
                           <Link
                             href={`/rcm/insurance-ar-analysis/${row.id}/report`}
                             prefetch={false}
-                            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50 hover:text-primary-700"
+                            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[14px] font-['Aileron'] font-normal text-[#0066CC] hover:text-[#0066CC]/80 transition-colors"
                           >
                             View Report
-                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                           </Link>
                         ) : ["Processing", "ConflictResolution", "EnrichmentPending", "PmUploaded", "ValidationCompleted"].includes(
                             row.sessionStatus
@@ -258,10 +293,9 @@ export default function InsuranceArAnalysisListPage() {
                           <Link
                             href={`/rcm/insurance-ar-analysis/${row.id}/processing`}
                             prefetch={false}
-                            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-primary-600 transition-colors hover:bg-primary-50 hover:text-primary-700"
+                            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[14px] font-['Aileron'] font-normal text-[#0066CC] hover:text-[#0066CC]/80 transition-colors"
                           >
                             View Progress
-                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                           </Link>
                         ) : (
                           <span className="text-sm text-muted-foreground">—</span>

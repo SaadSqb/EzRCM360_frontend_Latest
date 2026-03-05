@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 import { useModulePermission } from "@/lib/contexts/PermissionsContext";
 import { AccessDenied } from "@/components/auth/AccessDenied";
 import { Button } from "@/components/ui/Button";
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/Table";
 import { Loader } from "@/components/ui/Loader";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { PageShell } from "@/components/layout/PageShell";
 import {
   insuranceArAnalysisApi,
   type ArIntakeValidationResult,
@@ -222,30 +224,23 @@ export default function InsuranceArAnalysisUploadPage() {
   };
 
   return (
-    <div className="animate-fade-in">
-      <div className="mb-6">
-        <nav className="-mx-6 -mt-4 mb-6 bg-[#F7F8F9] px-6 py-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          <Link href="/rcm/insurance-ar-analysis" className="transition-colors hover:text-primary-600 hover:underline">
-            Insurance AR Analysis
-          </Link>
-          <span className="text-muted-foreground" aria-hidden>/</span>
-          <span className="text-foreground">Upload AR Intake</span>
-        </nav>
-        <h1 className="font-aileron font-bold text-[24px] text-[#202830]">
-          Data Upload and AR Analysis Session Creation
-        </h1>
-        <p className="mt-2 text-base text-muted-foreground">
-          Upload AR intake and PM reports to start an analysis session.
-        </p>
-      </div>
-      <Stepper steps={steps} />
+    <PageShell
+      breadcrumbs={[
+        { label: "Insurance AR Analysis", href: "/rcm/insurance-ar-analysis" },
+        { label: "Upload AR Intake" },
+      ]}
+      title="Data Upload and AR Analysis Session Creation"
+      description="Upload AR Intake and PM reports to start an analysis session."
+    >
+      <div className="space-y-8">
+        <Stepper steps={steps} />
 
-      {step === 1 && (
-        <Card className="animate-fade-in-up">
-          <div className="space-y-6">
-            <div>
-              <label className="block font-aileron font-normal text-[14px] leading-none text-[#2A2C33]">Validation Mode</label>
-              <div className="mt-2 flex gap-6">
+        {step === 1 && (
+          <Card className="animate-fade-in-up overflow-hidden">
+          <div className="space-y-8 p-6 sm:p-8">
+            <div className="space-y-3">
+              <label className="block text-[14px] font-['Aileron'] font-medium text-foreground">Validation Mode</label>
+              <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
                 <label className="flex cursor-pointer items-center gap-2">
                   <input
                     type="radio"
@@ -279,23 +274,23 @@ export default function InsuranceArAnalysisUploadPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block font-aileron font-normal text-[14px] leading-none text-[#2A2C33]">Practice Name</label>
+            <div className="space-y-2">
+              <label className="block text-[14px] font-['Aileron'] font-medium text-foreground">Practice Name</label>
               <input
                 type="text"
                 value={practiceName}
                 onChange={(e) => setPracticeName(e.target.value)}
                 placeholder="e.g., Medical Billing"
-                className="mt-1.5 w-full max-w-md h-[39px] rounded-[5px] border border-[#E2E8F0] bg-background px-4 font-aileron text-[14px] placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="h-11 w-full max-w-md rounded-[5px] border border-[#E2E8F0] bg-background px-4 text-[14px] font-['Aileron'] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               />
             </div>
 
-            <div>
-              <label className="block font-aileron font-normal text-[14px] leading-none text-[#2A2C33]">
+            <div className="space-y-2">
+              <label className="block text-[14px] font-['Aileron'] font-medium text-foreground">
                 Upload AR Intake File
               </label>
               {!intakeFile ? (
-                <div className="mt-2">
+                <div>
                   <FileUploadZone
                     label="Drag and Drop AR Intake File"
                     hint="Accepted formats: XLSX, XLS"
@@ -327,6 +322,7 @@ export default function InsuranceArAnalysisUploadPage() {
             </div>
 
             {validationResult && (
+              <div className="pt-2">
               <ValidationStatus
                 result={validationResult}
                 loading={validationLoading}
@@ -353,35 +349,38 @@ export default function InsuranceArAnalysisUploadPage() {
                   }
                 } : undefined}
               />
+              </div>
             )}
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex flex-wrap gap-3 border-t border-border pt-6">
               <Button
                 onClick={validationResult?.success ? handleNextFromStep1 : handleCreateSession}
                 disabled={!practiceName.trim() || !intakeFile || submitLoading}
+                className={validationResult?.success ? "h-10 rounded-[5px] py-3 px-[18px] gap-[5px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-['Aileron']" : undefined}
               >
                 {submitLoading
                   ? "Validating…"
                   : validationResult?.success
-                    ? "Next →"
+                    ? "Next"
                     : validationMode === "ColumnsThenRows" && columnsPassed
                       ? "Validate Rows"
                       : validationMode === "ColumnsThenRows"
                         ? "Validate Columns"
                         : "Validate"}
+                {validationResult?.success && !submitLoading && <ArrowRight className="h-4 w-4" />}
               </Button>
               <Link href="/rcm/insurance-ar-analysis">
                 <Button variant="secondary">Cancel</Button>
               </Link>
             </div>
           </div>
-        </Card>
-      )}
+          </Card>
+        )}
 
-      {step === 2 && (
-        <Card className="animate-fade-in-up">
-          <div className="space-y-6">
-            <div>
+        {step === 2 && (
+          <Card className="animate-fade-in-up overflow-hidden">
+          <div className="space-y-8 p-6 sm:p-8">
+            <div className="space-y-4">
               <h3 className="text-base font-semibold text-foreground">
                 Upload PM Source Reports (Required for Audit)
               </h3>
@@ -427,12 +426,14 @@ export default function InsuranceArAnalysisUploadPage() {
                 </ul>
               </div>
             )}
-            <div className="flex gap-3 pt-4">
+            <div className="flex flex-wrap gap-3 border-t border-border pt-6">
               <Button
                 onClick={handleUploadPmReports}
                 disabled={pmFiles.length === 0 || submitLoading}
+                className="h-10 rounded-[5px] py-3 px-[18px] gap-[5px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-['Aileron']"
               >
-                {submitLoading ? "Uploading…" : "Next →"}
+                {submitLoading ? "Uploading…" : "Next"}
+                <ArrowRight className="h-4 w-4" />
               </Button>
               <Button variant="secondary" onClick={() => setStep(1)}>
                 Back
@@ -442,56 +443,59 @@ export default function InsuranceArAnalysisUploadPage() {
               </Link>
             </div>
           </div>
-        </Card>
-      )}
+          </Card>
+        )}
 
-      {step === 3 && sessionDetail && (
-        <Card className="animate-fade-in-up">
-          <div className="space-y-6">
-            <h3 className="text-base font-semibold text-foreground">Review & Create Session</h3>
-            <dl className="grid gap-3 text-sm sm:grid-cols-2">
-              <div>
-                <dt className="text-muted-foreground">Session Name</dt>
-                <dd className="font-medium text-foreground">{sessionDetail.sessionName}</dd>
+        {step === 3 && sessionDetail && (
+          <Card className="animate-fade-in-up overflow-hidden">
+          <div className="space-y-8 p-6 sm:p-8">
+            <h2 className="text-[18px] font-['Aileron'] font-semibold text-foreground">Review & Create Session</h2>
+            <div className="space-y-0">
+              <div className="flex justify-between py-3 border-b border-border">
+                <span className="text-[14px] font-['Aileron'] text-muted-foreground">Session Name</span>
+                <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%]">{sessionDetail.sessionName}</span>
               </div>
-              <div>
-                <dt className="text-muted-foreground">Practice Name</dt>
-                <dd className="font-medium text-foreground">{sessionDetail.practiceName}</dd>
+              <div className="flex justify-between py-3 border-b border-border">
+                <span className="text-[14px] font-['Aileron'] text-muted-foreground">Practice Name</span>
+                <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%]">{sessionDetail.practiceName}</span>
               </div>
-              <div>
-                <dt className="text-muted-foreground">Uploaded by</dt>
-                <dd className="font-medium text-foreground">{sessionDetail.uploadedBy ?? "—"}</dd>
+              <div className="flex justify-between py-3 border-b border-border">
+                <span className="text-[14px] font-['Aileron'] text-muted-foreground">Uploaded by</span>
+                <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%]">{sessionDetail.uploadedBy ?? "—"}</span>
               </div>
-              <div>
-                <dt className="text-muted-foreground">Uploaded at</dt>
-                <dd className="font-medium text-foreground">{formatDate(sessionDetail.uploadedAt)}</dd>
+              <div className="flex justify-between py-3 border-b border-border">
+                <span className="text-[14px] font-['Aileron'] text-muted-foreground">Uploaded at</span>
+                <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%]">{formatDate(sessionDetail.uploadedAt)}</span>
               </div>
-              <div>
-                <dt className="text-muted-foreground">Source Type</dt>
-                <dd className="font-medium text-foreground">{sessionDetail.sourceType}</dd>
+              <div className="flex justify-between py-3 border-b border-border">
+                <span className="text-[14px] font-['Aileron'] text-muted-foreground">Source Type</span>
+                <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%]">{sessionDetail.sourceType}</span>
               </div>
-              <div>
-                <dt className="text-muted-foreground">Intake Template File</dt>
-                <dd className="font-medium text-foreground">{sessionDetail.intakeTemplateFile ?? "—"}</dd>
+              <div className="flex justify-between py-3 border-b border-border">
+                <span className="text-[14px] font-['Aileron'] text-muted-foreground">Intake Template File</span>
+                <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%]">{sessionDetail.intakeTemplateFile ?? "—"}</span>
               </div>
-              <div>
-                <dt className="text-muted-foreground">PM Source Report File</dt>
-                <dd className="font-medium text-foreground">
-                  {sessionDetail.pmSourceReportFiles.length > 0
-                    ? sessionDetail.pmSourceReportFiles.join(", ")
-                    : "—"}
-                </dd>
+              <div className="flex justify-between py-3 border-b border-border">
+                <span className="text-[14px] font-['Aileron'] text-muted-foreground">PM Source Report File</span>
+                <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%]">
+                  {sessionDetail.pmSourceReportFiles.length > 0 ? sessionDetail.pmSourceReportFiles.join(", ") : "—"}
+                </span>
               </div>
-              <div>
-                <dt className="text-muted-foreground">Total Rows</dt>
-                <dd className="font-medium text-foreground">
+              <div className="flex justify-between py-3 border-b border-border">
+                <span className="text-[14px] font-['Aileron'] text-muted-foreground">Total Rows</span>
+                <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%]">
                   {sessionDetail.totalRows != null ? `${sessionDetail.totalRows} Rows` : "—"}
-                </dd>
+                </span>
               </div>
-            </dl>
-            <div className="flex gap-3 pt-4">
-              <Button onClick={handleStartAnalysis} disabled={submitLoading}>
-                {submitLoading ? "Starting…" : "Start AR Analysis →"}
+            </div>
+            <div className="flex flex-wrap gap-3 border-t border-border pt-6">
+              <Button
+                onClick={handleStartAnalysis}
+                disabled={submitLoading}
+                className="h-10 rounded-[5px] py-3 px-[18px] gap-[5px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-['Aileron'] text-[14px]"
+              >
+                {submitLoading ? "Starting…" : "Start AR Analysis"}
+                <ArrowRight className="h-4 w-4" />
               </Button>
               <Button variant="secondary" onClick={() => setStep(2)}>
                 Back
@@ -501,9 +505,10 @@ export default function InsuranceArAnalysisUploadPage() {
               </Link>
             </div>
           </div>
-        </Card>
-      )}
-    </div>
+          </Card>
+        )}
+      </div>
+    </PageShell>
   );
 }
 

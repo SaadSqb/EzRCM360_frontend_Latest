@@ -90,9 +90,9 @@ function PipelineStep({
             completed
               ? "border-emerald-500 bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
               : failed
-                ? "border-red-500 bg-red-50 text-red-600"
+                ? "border-red-500 bg-red-500 text-white"
                 : inProgress
-                  ? "border-primary-600 bg-primary-50 text-primary-600 ring-4 ring-primary-100 animate-pulse-soft"
+                  ? "border-[#0066CC] bg-[#0066CC]/10 text-[#0066CC] ring-4 ring-[#0066CC]/20 animate-pulse-soft"
                   : "border-border bg-card text-muted-foreground"
           }`}
         >
@@ -154,6 +154,103 @@ function PipelineStep({
   );
 }
 
+interface ResolutionBlockProps {
+  title: string;
+  description: string;
+  hint?: React.ReactNode;
+  downloadLabel: string;
+  filename: string;
+  onDownload: () => Promise<void>;
+  onUpload: () => Promise<void>;
+  file: File | null;
+  setFile: (f: File | null) => void;
+  disabled: boolean;
+  uploading: boolean;
+  /** When set, show this API error message prominently (e.g. file not yet available). */
+  downloadError?: string | null;
+  /** If true, show required column headers so the backend can parse the file. */
+  showRequiredColumns?: boolean;
+  /** Optional "Skip and Continue": exclude all affected records and resume pipeline without uploading a file. */
+  onSkip?: () => Promise<void>;
+  /** True while skip request is in progress. */
+  skipping?: boolean;
+}
+
+function ResolutionBlock({
+  title,
+  description,
+  hint,
+  downloadLabel,
+  filename,
+  onDownload,
+  onUpload,
+  file,
+  setFile,
+  disabled,
+  uploading,
+  downloadError,
+  showRequiredColumns,
+  onSkip,
+  skipping,
+}: ResolutionBlockProps) {
+  return (
+    <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
+      {downloadError && (
+        <div className="mb-4 rounded-lg border border-amber-400 bg-amber-100 px-4 py-3">
+          <p className="text-sm font-medium text-amber-900">Download not available</p>
+          <p className="mt-1 text-sm text-amber-800">{downloadError}</p>
+        </div>
+      )}
+      {showRequiredColumns && (
+        <div className="mb-4 rounded-lg border border-amber-400 bg-amber-100 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">Required for upload to work</p>
+          <p className="mt-1 text-sm text-amber-800">
+            Keep the column headers <strong>exactly</strong> as in the downloaded file: <strong>Client Claim ID</strong> and <strong>Action</strong>. Do not rename or remove columns. For rows you want to exclude, set <strong>Action</strong> to <strong>Exclude</strong>. The backend reads the first sheet only.
+          </p>
+        </div>
+      )}
+      <h4 className="text-base font-semibold text-amber-900">{title}</h4>
+      <p className="mt-2 text-sm text-amber-800">{description}</p>
+      {hint != null && (
+        <div className="mt-4 rounded-lg border border-amber-300 bg-amber-100/80 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">Hint: What to do next</p>
+          <p className="mt-1.5 text-sm text-amber-900">{hint}</p>
+        </div>
+      )}
+      <div className="mt-4 flex flex-wrap gap-3">
+        <Button onClick={onDownload} disabled={disabled} variant="secondary">
+          {disabled ? "Downloading…" : downloadLabel}
+        </Button>
+      </div>
+      <div className="mt-6">
+        <h5 className="text-sm font-medium text-amber-900">Upload corrected file</h5>
+        <p className="mt-0.5 text-xs text-amber-800">Re-upload the same file after you correct it or mark rows to exclude.</p>
+        <p className="mt-1 text-xs text-amber-700">After you upload, the pipeline resumes in the background (may take up to a minute). Use &quot;Refresh status&quot; above to see when it moves to the next step.</p>
+        <div className="mt-2">
+          <FileUploadZone
+            label={`Drop ${filename} here`}
+            hint="XLSX or XLS"
+            onFiles={(f) => setFile(f[0] ?? null)}
+          />
+        </div>
+        {file && (
+          <Button onClick={onUpload} disabled={uploading} className="mt-3">
+            {uploading ? "Uploading…" : "Upload & Continue"}
+          </Button>
+        )}
+      </div>
+      {onSkip != null && (
+        <div className="mt-6 border-t border-amber-200 pt-4">
+          <p className="text-xs text-amber-800 mb-2">Skip all affected records and continue the analysis without uploading a file.</p>
+          <Button onClick={onSkip} disabled={skipping ?? disabled} variant="outline" className="border-amber-400 text-amber-900 hover:bg-amber-100">
+            {skipping ? "Skipping…" : "Skip and Continue"}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function InsuranceArAnalysisProcessingPage() {
   const params = useParams();
   const router = useRouter();
@@ -170,6 +267,15 @@ export default function InsuranceArAnalysisProcessingPage() {
   const [facilityFile, setFacilityFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [refreshingStatus, setRefreshingStatus] = useState(false);
+  const [skippingConflict, setSkippingConflict] = useState(false);
+  const [skippingPayer, setSkippingPayer] = useState(false);
+  const [skippingPlan, setSkippingPlan] = useState(false);
+  const [skippingProvider, setSkippingProvider] = useState(false);
+  const [planDownloadError, setPlanDownloadError] = useState<string | null>(null);
+  const [payerDownloadError, setPayerDownloadError] = useState<string | null>(null);
+  const [providerDownloadError, setProviderDownloadError] = useState<string | null>(null);
+  const [facilityDownloadError, setFacilityDownloadError] = useState<string | null>(null);
 
   const routerRef = useRef(router);
   routerRef.current = router;
@@ -273,6 +379,13 @@ export default function InsuranceArAnalysisProcessingPage() {
   const needsProviderResolution = needsResolution(session?.providerParticipationValidationStatus);
   const needsFacilityResolution = needsResolution(session?.facilityParticipationValidationStatus);
 
+  useEffect(() => {
+    if (!needsPlanResolution) setPlanDownloadError(null);
+    if (!needsPayerResolution) setPayerDownloadError(null);
+    if (!needsProviderResolution) setProviderDownloadError(null);
+    if (!needsFacilityResolution) setFacilityDownloadError(null);
+  }, [needsPlanResolution, needsPayerResolution, needsProviderResolution, needsFacilityResolution]);
+
   const handleDownloadConflicts = async () => {
     setDownloading(true);
     try {
@@ -310,7 +423,12 @@ export default function InsuranceArAnalysisProcessingPage() {
     }
   };
 
-  const createDownloadHandler = (name: string, downloadFn: () => Promise<Blob>, filename: string) => async () => {
+  const createDownloadHandler = (
+    name: string,
+    downloadFn: () => Promise<Blob>,
+    filename: string,
+    callbacks?: { onError?: (message: string) => void; onSuccess?: () => void }
+  ) => async () => {
     setDownloading(true);
     try {
       const blob = await downloadFn();
@@ -321,8 +439,11 @@ export default function InsuranceArAnalysisProcessingPage() {
       a.click();
       URL.revokeObjectURL(url);
       toast.success(`${name} file downloaded.`);
+      callbacks?.onSuccess?.();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Download failed.");
+      const message = err instanceof Error ? err.message : "Download failed.";
+      toast.error(message);
+      callbacks?.onError?.(message);
     } finally {
       setDownloading(false);
     }
@@ -347,146 +468,178 @@ export default function InsuranceArAnalysisProcessingPage() {
     }
   };
 
-  const handleDownloadPayer = createDownloadHandler("Payer-NotFound", () => apiRef.current.downloadPayerNotFound(sessionId), "Payer-NotFound.xlsx");
-  const handleDownloadPlan = createDownloadHandler("Plan-NotFound", () => apiRef.current.downloadPlanNotFound(sessionId), "Plan-NotFound.xlsx");
-  const handleDownloadProvider = createDownloadHandler("Provider participation", () => apiRef.current.downloadProviderParticipationNotFound(sessionId), "ProviderParticipation-NotFound.xlsx");
-  const handleDownloadFacility = createDownloadHandler("Facility participation", () => apiRef.current.downloadFacilityParticipationNotFound(sessionId), "FacilityParticipation-NotFound.xlsx");
+  const handleRefreshStatus = useCallback(async () => {
+    setRefreshingStatus(true);
+    try {
+      const s = await refreshStatus();
+      if (s?.sessionStatus === "Completed") {
+        toast.success("Analysis completed.");
+      } else if (s?.sessionStatus === "Failed") {
+        toast.error("Analysis failed. Check the pipeline steps for details.");
+      } else {
+        toast.success("Status updated.");
+      }
+    } catch {
+      toast.error("Could not refresh status.");
+    } finally {
+      setRefreshingStatus(false);
+    }
+  }, [refreshStatus, toast]);
+
+  const handleDownloadPayer = createDownloadHandler(
+    "Payer-NotFound",
+    () => apiRef.current.downloadPayerNotFound(sessionId),
+    "Payer-NotFound.xlsx",
+    { onError: (m) => setPayerDownloadError(m || null), onSuccess: () => setPayerDownloadError(null) }
+  );
+  const handleDownloadPlan = createDownloadHandler(
+    "Plan-NotFound",
+    () => apiRef.current.downloadPlanNotFound(sessionId),
+    "Plan-NotFound.xlsx",
+    { onError: (m) => setPlanDownloadError(m || null), onSuccess: () => setPlanDownloadError(null) }
+  );
+  const handleDownloadProvider = createDownloadHandler(
+    "Provider participation",
+    () => apiRef.current.downloadProviderParticipationNotFound(sessionId),
+    "ProviderParticipation-NotFound.xlsx",
+    { onError: (m) => setProviderDownloadError(m || null), onSuccess: () => setProviderDownloadError(null) }
+  );
+  const handleDownloadFacility = createDownloadHandler(
+    "Facility participation",
+    () => apiRef.current.downloadFacilityParticipationNotFound(sessionId),
+    "FacilityParticipation-NotFound.xlsx",
+    { onError: (m) => setFacilityDownloadError(m || null), onSuccess: () => setFacilityDownloadError(null) }
+  );
 
   const handleUploadPayer = createUploadHandler("Payer-NotFound", payerFile, (f) => apiRef.current.uploadPayerNotFound(sessionId, f), setPayerFile);
   const handleUploadPlan = createUploadHandler("Plan-NotFound", planFile, (f) => apiRef.current.uploadPlanNotFound(sessionId, f), setPlanFile);
   const handleUploadProvider = createUploadHandler("Provider participation", providerFile, (f) => apiRef.current.uploadProviderParticipationNotFound(sessionId, f), setProviderFile);
   const handleUploadFacility = createUploadHandler("Facility participation", facilityFile, (f) => apiRef.current.uploadFacilityParticipationNotFound(sessionId, f), setFacilityFile);
 
-  const ResolutionBlock = ({
-    title,
-    description,
-    hint,
-    downloadLabel,
-    filename,
-    onDownload,
-    onUpload,
-    file,
-    setFile,
-    disabled,
-  }: {
-    title: string;
-    description: string;
-    hint?: React.ReactNode;
-    downloadLabel: string;
-    filename: string;
-    onDownload: () => Promise<void>;
-    onUpload: () => Promise<void>;
-    file: File | null;
-    setFile: (f: File | null) => void;
-    disabled: boolean;
-  }) => (
-    <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
-      <h4 className="text-base font-semibold text-amber-900">{title}</h4>
-      <p className="mt-2 text-sm text-amber-800">{description}</p>
-      {hint != null && (
-        <div className="mt-4 rounded-lg border border-amber-300 bg-amber-100/80 px-4 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">Hint: What to do next</p>
-          <p className="mt-1.5 text-sm text-amber-900">{hint}</p>
-        </div>
-      )}
-      <div className="mt-4 flex flex-wrap gap-3">
-        <Button onClick={onDownload} disabled={disabled} variant="secondary">
-          {disabled ? "Downloading…" : downloadLabel}
-        </Button>
-      </div>
-      <div className="mt-6">
-        <h5 className="text-sm font-medium text-amber-900">Upload corrected file</h5>
-        <p className="mt-0.5 text-xs text-amber-800">Re-upload the same file after you correct it or mark rows to exclude.</p>
-        <p className="mt-1 text-xs text-amber-700">After you upload, the pipeline will resume automatically; the page will update to the next step or redirect to the report when complete.</p>
-        <div className="mt-2">
-          <FileUploadZone
-            label={`Drop ${filename} here`}
-            hint="XLSX or XLS"
-            onFiles={(f) => setFile(f[0] ?? null)}
-          />
-        </div>
-        {file && (
-          <Button onClick={onUpload} disabled={uploading} className="mt-3">
-            {uploading ? "Uploading…" : "Upload & Continue"}
-          </Button>
-        )}
-      </div>
-    </div>
+  const createSkipHandler = (
+    name: string,
+    skipFn: () => Promise<void>,
+    setSkipping: (v: boolean) => void
+  ) => async () => {
+    setSkipping(true);
+    try {
+      await skipFn();
+      toast.success(`${name} skipped. Pipeline resuming—page will update when ready.`);
+      await refreshStatus();
+      pollUntilSettled();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Skip failed.");
+    } finally {
+      setSkipping(false);
+    }
+  };
+
+  const handleSkipConflicts = createSkipHandler(
+    "Claim integrity conflicts",
+    () => apiRef.current.skipClaimIntegrityConflicts(sessionId),
+    setSkippingConflict
   );
+  const handleSkipPayer = createSkipHandler("Payer validation", () => apiRef.current.skipPayerNotFound(sessionId), setSkippingPayer);
+  const handleSkipPlan = createSkipHandler("Plan validation", () => apiRef.current.skipPlanNotFound(sessionId), setSkippingPlan);
+  const handleSkipProvider = createSkipHandler("Provider participation", () => apiRef.current.skipProviderParticipationNotFound(sessionId), setSkippingProvider);
 
   const needsConflictResolution =
     status?.sessionStatus === "ConflictResolution" ||
     status?.currentStage?.toLowerCase().includes("conflict");
 
+  const stage = status?.currentStage?.toLowerCase() ?? "";
+  const isPayerStepCurrent = stage.includes("payer enrollment");
+  const isPlanStepCurrent = stage.includes("plan enrollment");
+  const isProviderStepCurrent = stage.includes("rendering provider") || stage.includes("provider participation");
+
   const isEnrichmentPending = status?.sessionStatus === "EnrichmentPending";
+  const isFailed = status?.sessionStatus === "Failed";
   const isProcessing =
     !isEnrichmentPending &&
+    !isFailed &&
     (status?.sessionStatus === "Processing" ||
       (status?.sessionStatus !== "Completed" && status?.sessionStatus !== "Failed"));
+
+  /** When session has already failed (or completed), do not show resolution blocks—nothing to resolve. */
+  const showResolutionBlocks = !isFailed && !(status?.sessionStatus === "Completed");
 
   return (
     <PageShell
       breadcrumbs={[
         { label: "Insurance AR Analysis", href: "/rcm/insurance-ar-analysis" },
-        { label: "Processing" },
+        { label: "Upload AR Intake" },
       ]}
-      title="AR Analysis in Progress"
-      description="Your data is being analyzed through our multi-stage validation pipeline."
+      title="Data Upload and AR Analysis Session Creation"
+      description="Review session summary and complete any required actions."
     >
-      {session && (
-        <Card className="mb-6 animate-fade-in-up">
-          <h3 className="mb-4 font-aileron text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Session Summary
-          </h3>
-          <dl className="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <dt className="text-muted-foreground">Uploaded by</dt>
-              <dd className="mt-0.5 font-medium text-foreground">
-                {session.uploadedBy ?? "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Uploaded at</dt>
-              <dd className="mt-0.5 font-medium text-foreground">
-                {session.uploadedAt
-                  ? new Date(session.uploadedAt).toLocaleDateString(undefined, {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
-                    })
-                  : "—"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Total rows</dt>
-              <dd className="mt-0.5 font-medium text-foreground">
-                {session.totalRows ?? "—"}
-              </dd>
-            </div>
-          </dl>
-        </Card>
-      )}
+      <div className="space-y-6">
+        {session && (
+          <Card className="animate-fade-in-up border border-[#E2E8F0] bg-card p-6 sm:p-8">
+            <h3 className="mb-6 text-[13px] font-['Aileron'] font-semibold uppercase tracking-wide text-[#64748B]">
+              SESSION SUMMARY
+            </h3>
+            <dl className="grid gap-x-10 gap-y-6 text-[14px] font-['Aileron'] sm:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-1.5">
+                <dt className="text-muted-foreground">Uploaded by</dt>
+                <dd className="font-medium text-foreground">
+                  {session.uploadedBy ?? "—"}
+                </dd>
+              </div>
+              <div className="space-y-1.5">
+                <dt className="text-muted-foreground">Uploaded at</dt>
+                <dd className="font-medium text-foreground">
+                  {session.uploadedAt
+                    ? new Date(session.uploadedAt).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })
+                    : "—"}
+                </dd>
+              </div>
+              <div className="space-y-1.5">
+                <dt className="text-muted-foreground">Total rows</dt>
+                <dd className="font-medium text-foreground">
+                  {session.totalRows ?? "—"}
+                </dd>
+              </div>
+            </dl>
+          </Card>
+        )}
 
-      <Card className="overflow-hidden">
-        <div
-          className={`border-b border-border px-6 py-5 ${
-            isEnrichmentPending
-              ? "bg-gradient-to-r from-amber-50 to-amber-50/80"
-              : "bg-gradient-to-r from-primary-50 to-primary-50/50"
-          }`}
-        >
+        <Card className="overflow-hidden border border-[#E2E8F0]">
+          <div
+            className={`border-b border-border px-6 py-5 ${
+              isFailed
+                ? "bg-red-50 border-red-200/60"
+                : isEnrichmentPending
+                  ? "bg-[#FEFCE8] border-amber-200/60"
+                  : "bg-[#F0F7FF]"
+            }`}
+          >
           <div className="flex items-center gap-4">
-            {isEnrichmentPending ? (
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+            {isFailed ? (
+              <div
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-white bg-red-500 shadow-[0_0_0_2px_#ef4444]"
+                aria-label="Analysis failed"
+              >
+                <svg className="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </div>
+            ) : isEnrichmentPending ? (
+              <div
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-white bg-[#EA580C] shadow-[0_0_0_2px_#EA580C]"
+                aria-label="Action required"
+              >
                 <svg
-                  className="h-6 w-6 text-amber-600"
+                  className="h-6 w-6 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                   strokeWidth={2}
-                  aria-label="Action required"
                 >
                   <path
                     strokeLinecap="round"
@@ -496,62 +649,75 @@ export default function InsuranceArAnalysisProcessingPage() {
                 </svg>
               </div>
             ) : (
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-100">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0066CC]/10">
                 <div
-                  className="h-6 w-6 animate-spin rounded-full border-2 border-primary-600 border-t-transparent"
+                  className="h-6 w-6 animate-spin rounded-full border-2 border-[#0066CC] border-t-transparent"
                   role="status"
                   aria-label="Loading"
                 />
               </div>
             )}
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">
-                {isEnrichmentPending
-                  ? "Action required"
-                  : isProcessing
-                    ? "Analyzing your AR data"
-                    : status?.overallMessage ?? "Processing"}
+            <div className="min-w-0 flex-1">
+              <h2 className="text-[14px] font-['Aileron'] font-semibold text-foreground">
+                {isFailed
+                  ? "Analysis failed"
+                  : isEnrichmentPending
+                    ? "Action required"
+                    : isProcessing
+                      ? "Processing AR Data..."
+                      : status?.overallMessage ?? "Processing"}
               </h2>
-              <p className="text-sm text-muted-foreground">
-                {isEnrichmentPending
-                  ? status?.overallMessage ??
-                    "Download the report, correct data or mark rows as Exclude, then re-upload that same corrected file."
-                  : isProcessing
-                    ? "Running validation, enrichment, and recovery calculations. This typically takes 1–3 minutes."
-                    : status?.overallMessage}
+              <p className={`text-[13px] font-['Aileron'] ${isFailed ? "text-red-800" : isEnrichmentPending ? "text-amber-800" : "text-[#0066CC]"}`}>
+                {isFailed
+                  ? (status?.currentStage ?? status?.overallMessage ?? "The pipeline could not complete. Check the steps above for details.")
+                  : isEnrichmentPending
+                    ? status?.overallMessage ??
+                      "Pending your action: Pending Payer Enrollment. Download the file for this step, resolve or exclude, then re-upload."
+                    : isProcessing
+                      ? "This may take a few minutes. Please do not close this window."
+                      : status?.overallMessage ?? ""}
               </p>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefreshStatus}
+              disabled={refreshingStatus}
+              className="shrink-0 border-[#E2E8F0] font-['Aileron'] text-[14px]"
+            >
+              {refreshingStatus ? "Refreshing…" : "Refresh status"}
+            </Button>
           </div>
-        </div>
+          </div>
 
-        <div className="px-6 py-6">
-          {!status ? (
-            <div className="flex flex-col items-center justify-center gap-4 py-12">
-              <ValidationAnalysisIcon className="h-20 w-20" />
-              <p className="text-sm font-medium text-foreground">
-                Loading pipeline status…
-              </p>
-              <p className="text-xs text-muted-foreground">
-                No errors detected so far.
-              </p>
-            </div>
-          ) : status?.steps && status.steps.length > 0 ? (
-            <div className="space-y-0">
-              {status.steps.map((s, i) => (
-                <PipelineStep
-                  key={s.name}
-                  step={s}
-                  index={i}
-                  isLast={i === status.steps.length - 1}
-                />
-              ))}
-            </div>
-          ) : null}
+          <div className="px-6 py-6">
+            {!status ? (
+              <div className="flex flex-col items-center justify-center gap-4 py-12">
+                <ValidationAnalysisIcon className="h-20 w-20" />
+                <p className="text-sm font-medium text-foreground">
+                  Loading pipeline status…
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  No errors detected so far.
+                </p>
+              </div>
+            ) : status?.steps && status.steps.length > 0 ? (
+              <div className="space-y-3">
+                {status.steps.map((s, i) => (
+                  <PipelineStep
+                    key={s.name}
+                    step={s}
+                    index={i}
+                    isLast={i === status.steps.length - 1}
+                  />
+                ))}
+              </div>
+            ) : null}
 
-          {needsConflictResolution && (
-            <div className="mt-8 animate-fade-in-up">
-              <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
-              <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
+            {showResolutionBlocks && needsConflictResolution && (
+              <div className="mt-8 animate-fade-in-up">
+                <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
+                <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
                 <h4 className="text-base font-semibold text-amber-900">Claim integrity conflicts</h4>
                 <p className="mt-2 text-sm text-amber-800">
                   We detected claim integrity conflicts. Download the report, correct header inconsistencies or mark claim groups as <strong>Exclude</strong> in the Action column, then re-upload that same corrected file to continue.
@@ -572,7 +738,7 @@ export default function InsuranceArAnalysisProcessingPage() {
                 <div className="mt-6">
                   <h5 className="text-sm font-medium text-amber-900">Upload corrected file</h5>
                   <p className="mt-0.5 text-xs text-amber-800">Re-upload the same file after you correct it or mark rows to exclude.</p>
-                  <p className="mt-1 text-xs text-amber-700">After you upload, the pipeline will resume automatically; the page will update to the next step or redirect to the report when complete.</p>
+                  <p className="mt-1 text-xs text-amber-700">After you upload, the pipeline resumes in the background (may take up to a minute). Use &quot;Refresh status&quot; above to see when it moves to the next step.</p>
                   <div className="mt-2">
                     <FileUploadZone
                       label="Drop corrected file here"
@@ -590,83 +756,112 @@ export default function InsuranceArAnalysisProcessingPage() {
                     </Button>
                   )}
                 </div>
+                <div className="mt-6 border-t border-amber-200 pt-4">
+                  <p className="text-xs text-amber-800 mb-2">Skip all affected claim groups and continue the analysis without uploading a file.</p>
+                  <Button onClick={handleSkipConflicts} disabled={skippingConflict || downloading} variant="outline" className="border-amber-400 text-amber-900 hover:bg-amber-100">
+                    {skippingConflict ? "Skipping…" : "Skip and Continue"}
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+              </div>
+            )}
 
-          {needsPayerResolution && (
-            <div className="mt-8 animate-fade-in-up">
-              <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
-              <ResolutionBlock
-                title="Payer not found"
-                description="Some payers in your intake were not matched. Download the report, correct the data (map or add payers) or mark rows as Exclude in the Action column, then re-upload that same corrected file."
-                hint={RESOLUTION_HINTS.payerNotFound}
-                downloadLabel="Download Payer-NotFound.xlsx"
-                filename="Payer-NotFound.xlsx"
-                onDownload={handleDownloadPayer}
-                onUpload={handleUploadPayer}
-                file={payerFile}
-                setFile={setPayerFile}
-                disabled={downloading}
-              />
-            </div>
-          )}
+            {showResolutionBlocks && (needsPayerResolution || needsPlanResolution) && (
+              <p className="mt-6 text-[13px] font-['Aileron'] text-muted-foreground rounded-lg bg-muted/50 px-4 py-3">
+                After uploading both Payer and Plan resolution files (if both were required), the pipeline may take a few minutes to resume. Use <strong>Refresh status</strong> above to check the latest state.
+              </p>
+            )}
 
-          {needsPlanResolution && (
-            <div className="mt-8 animate-fade-in-up">
-              <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
-              <ResolutionBlock
-                title="Plan not found"
-                description="Some plans in your intake were not matched. Download the report, correct the data (map to existing plan) or mark rows as Exclude in the Action column, then re-upload that same corrected file."
-                hint={RESOLUTION_HINTS.planNotFound}
-                downloadLabel="Download Plan-NotFound.xlsx"
-                filename="Plan-NotFound.xlsx"
-                onDownload={handleDownloadPlan}
-                onUpload={handleUploadPlan}
-                file={planFile}
-                setFile={setPlanFile}
-                disabled={downloading}
-              />
-            </div>
-          )}
+            {showResolutionBlocks && needsPayerResolution && (
+              <div className="mt-8 animate-fade-in-up">
+                <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
+                <ResolutionBlock
+                  title="Payer not found"
+                  description="Some payers in your intake were not matched. Download the report, correct the data (map or add payers) or mark rows as Exclude in the Action column, then re-upload that same corrected file."
+                  hint={RESOLUTION_HINTS.payerNotFound}
+                  downloadLabel="Download Payer-NotFound.xlsx"
+                  filename="Payer-NotFound.xlsx"
+                  onDownload={handleDownloadPayer}
+                  onUpload={handleUploadPayer}
+                  file={payerFile}
+                  setFile={setPayerFile}
+                  disabled={downloading}
+                  uploading={uploading}
+                  downloadError={payerDownloadError}
+                  showRequiredColumns
+                  onSkip={isPayerStepCurrent ? handleSkipPayer : undefined}
+                  skipping={skippingPayer}
+                />
+              </div>
+            )}
 
-          {needsProviderResolution && (
-            <div className="mt-8 animate-fade-in-up">
-              <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
-              <ResolutionBlock
-                title="Provider participation not found"
-                description="Rendering provider × payer × plan combinations need participation status. Download the report, set participation status or mark rows as Exclude in the Action column, then re-upload that same corrected file."
-                hint={RESOLUTION_HINTS.providerParticipation}
-                downloadLabel="Download ProviderParticipation-NotFound.xlsx"
-                filename="ProviderParticipation-NotFound.xlsx"
-                onDownload={handleDownloadProvider}
-                onUpload={handleUploadProvider}
-                file={providerFile}
-                setFile={setProviderFile}
-                disabled={downloading}
-              />
-            </div>
-          )}
+            {showResolutionBlocks && needsPlanResolution && (
+              <div className="mt-8 animate-fade-in-up">
+                <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
+                <ResolutionBlock
+                  title="Plan not found"
+                  description="Some plans in your intake were not matched. Download the report, correct the data (map to existing plan) or mark rows as Exclude in the Action column, then re-upload that same corrected file."
+                  hint={RESOLUTION_HINTS.planNotFound}
+                  downloadLabel="Download Plan-NotFound.xlsx"
+                  filename="Plan-NotFound.xlsx"
+                  onDownload={handleDownloadPlan}
+                  onUpload={handleUploadPlan}
+                  file={planFile}
+                  setFile={setPlanFile}
+                  disabled={downloading}
+                  uploading={uploading}
+                  downloadError={planDownloadError}
+                  showRequiredColumns
+                  onSkip={isPlanStepCurrent ? handleSkipPlan : undefined}
+                  skipping={skippingPlan}
+                />
+              </div>
+            )}
 
-          {needsFacilityResolution && (
-            <div className="mt-8 animate-fade-in-up">
-              <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
-              <ResolutionBlock
-                title="Facility participation not found"
-                description="Facility × payer × plan combinations need resolution. Download the report, correct the data or mark rows as Exclude in the Action column, then re-upload that same corrected file."
-                hint={RESOLUTION_HINTS.facilityParticipation}
-                downloadLabel="Download FacilityParticipation-NotFound.xlsx"
-                filename="FacilityParticipation-NotFound.xlsx"
-                onDownload={handleDownloadFacility}
-                onUpload={handleUploadFacility}
-                file={facilityFile}
-                setFile={setFacilityFile}
-                disabled={downloading}
-              />
-            </div>
-          )}
-        </div>
-      </Card>
+            {showResolutionBlocks && needsProviderResolution && (
+              <div className="mt-8 animate-fade-in-up">
+                <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
+                <ResolutionBlock
+                  title="Provider participation not found"
+                  description="Rendering provider × payer × plan combinations need participation status. Download the report, set participation status or mark rows as Exclude in the Action column, then re-upload that same corrected file."
+                  hint={RESOLUTION_HINTS.providerParticipation}
+                  downloadLabel="Download ProviderParticipation-NotFound.xlsx"
+                  filename="ProviderParticipation-NotFound.xlsx"
+                  onDownload={handleDownloadProvider}
+                  onUpload={handleUploadProvider}
+                  file={providerFile}
+                  setFile={setProviderFile}
+                  disabled={downloading}
+                  uploading={uploading}
+                  downloadError={providerDownloadError}
+                  onSkip={isProviderStepCurrent ? handleSkipProvider : undefined}
+                  skipping={skippingProvider}
+                />
+              </div>
+            )}
+
+            {showResolutionBlocks && needsFacilityResolution && (
+              <div className="mt-8 animate-fade-in-up">
+                <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
+                <ResolutionBlock
+                  title="Facility participation not found"
+                  description="Facility × payer × plan combinations need resolution. Download the report, correct the data or mark rows as Exclude in the Action column, then re-upload that same corrected file."
+                  hint={RESOLUTION_HINTS.facilityParticipation}
+                  downloadLabel="Download FacilityParticipation-NotFound.xlsx"
+                  filename="FacilityParticipation-NotFound.xlsx"
+                  onDownload={handleDownloadFacility}
+                  onUpload={handleUploadFacility}
+                  file={facilityFile}
+                  setFile={setFacilityFile}
+                  disabled={downloading}
+                  uploading={uploading}
+                  downloadError={facilityDownloadError}
+                />
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
     </PageShell>
   );
 }

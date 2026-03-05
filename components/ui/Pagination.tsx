@@ -71,9 +71,9 @@ export function Pagination({
         className,
       )}
     >
-      {/* Left: Results count */}
-      <div className="font-aileron text-[14px] text-[#64748B]">
-        Result(s): {String(filteredCount).padStart(2, "0")}/{String(totalCount).padStart(2, "0")}
+      {/* Left: Results count - matches design: Result(s): X/Y */}
+      <div className="font-aileron text-[14px] text-muted-foreground">
+        Result(s): {filteredCount}/{totalCount}
       </div>
 
       {/* Center: Page numbers */}
@@ -121,9 +121,9 @@ export function Pagination({
         </button>
       </div>
 
-      {/* Right: Items per page */}
+      {/* Right: Items per page - design: text-foreground */}
       <div className="flex items-center gap-2">
-        <span className="font-aileron text-[14px] text-[#64748B]">
+        <span className="font-aileron text-[14px] text-foreground">
           Show per page
         </span>
         <Select
@@ -134,10 +134,10 @@ export function Pagination({
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-white z-50">
+            <SelectItem value="5">5</SelectItem>
             <SelectItem value="10">10</SelectItem>
-            <SelectItem value="25">25</SelectItem>
+            <SelectItem value="20">20</SelectItem>
             <SelectItem value="50">50</SelectItem>
-            <SelectItem value="100">100</SelectItem>
           </SelectContent>
         </Select>
       </div>

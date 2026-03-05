@@ -41,7 +41,8 @@ export interface PayerDetailDto {
   payerName: string;
   aliases?: string | null;
   entityType: number;
-  status: number;
+  /** API may return number (0/1) or string ("Active"/"Inactive"). */
+  status: number | string;
   addresses: PayerAddressDto[];
   phoneNumbers: PayerPhoneDto[];
   emails: PayerEmailDto[];

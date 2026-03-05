@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -93,179 +94,206 @@ export default function InsuranceArAnalysisReportPage() {
       title={analysisSummary.sessionName}
       description={`AR Analysis report for ${analysisSummary.practiceName}`}
       actions={
-        <Button onClick={handleExport} disabled={exporting}>
-          {exporting ? "Exporting…" : "Export Full Report →"}
+        <Button
+          onClick={handleExport}
+          disabled={exporting}
+          className="h-10 rounded-[5px] py-3 px-[18px] gap-[5px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-['Aileron'] text-[14px] font-medium"
+        >
+          {exporting ? "Exporting…" : "Export Full Report"}
+          <ArrowRight className="h-4 w-4" />
         </Button>
       }
     >
-      <Card className="mb-6">
-        <h3 className="mb-4 text-base font-semibold text-foreground">Analysis Summary</h3>
-        <dl className="grid gap-3 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-muted-foreground">Session Name</dt>
-            <dd className="font-medium">{analysisSummary.sessionName}</dd>
+      <div className="space-y-8 pb-10">
+        <Card className="border border-[#E2E8F0] overflow-hidden p-6 sm:p-8">
+          <h2 className="mb-5 text-[16px] font-['Aileron'] font-bold text-foreground">Analysis Summary</h2>
+          <div className="space-y-0">
+            <div className="flex justify-between py-3 border-b border-border">
+              <span className="text-[14px] font-['Aileron'] text-muted-foreground pl-[8px]">Session Name</span>
+              <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%] pr-[10px]">{analysisSummary.sessionName}</span>
+            </div>
+            <div className="flex justify-between py-3 border-b border-border">
+              <span className="text-[14px] font-['Aileron'] text-muted-foreground pl-[8px]">Practice Name</span>
+              <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%] pr-[10px]">{analysisSummary.practiceName}</span>
+            </div>
+            <div className="flex justify-between py-3 border-b border-border">
+              <span className="text-[14px] font-['Aileron'] text-muted-foreground pl-[8px]">Uploaded by</span>
+              <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%] pr-[10px]">{analysisSummary.uploadedBy}</span>
+            </div>
+            <div className="flex justify-between py-3 border-b border-border">
+              <span className="text-[14px] font-['Aileron'] text-muted-foreground pl-[8px]">Uploaded at</span>
+              <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%] pr-[10px]">{formatDate(analysisSummary.uploadedAt)}</span>
+            </div>
+            <div className="flex justify-between py-3 border-b border-border">
+              <span className="text-[14px] font-['Aileron'] text-muted-foreground pl-[8px]">Source Type</span>
+              <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%] pr-[10px]">{analysisSummary.sourceType}</span>
+            </div>
+            <div className="flex justify-between py-3 border-b border-border">
+              <span className="text-[14px] font-['Aileron'] text-muted-foreground pl-[8px]">Intake Template File</span>
+              <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%] pr-[10px]">{analysisSummary.intakeTemplateFile ?? "—"}</span>
+            </div>
+            <div className="flex justify-between py-3 border-b border-border">
+              <span className="text-[14px] font-['Aileron'] text-muted-foreground pl-[8px]">PM Source Report File</span>
+              <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%] pr-[10px]">
+                {analysisSummary.pmSourceReportFiles?.length ? analysisSummary.pmSourceReportFiles.join(", ") : "—"}
+              </span>
+            </div>
+            <div className="flex justify-between py-3 border-b border-border">
+              <span className="text-[14px] font-['Aileron'] text-muted-foreground pl-[8px]">Total Rows</span>
+              <span className="text-[14px] font-['Aileron'] text-foreground text-right max-w-[60%] pr-[10px]">{analysisSummary.totalRows ?? "—"} Rows</span>
+            </div>
           </div>
-          <div>
-            <dt className="text-muted-foreground">Practice Name</dt>
-            <dd className="font-medium">{analysisSummary.practiceName}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Uploaded by</dt>
-            <dd className="font-medium">{analysisSummary.uploadedBy}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Uploaded at</dt>
-            <dd className="font-medium">{formatDate(analysisSummary.uploadedAt)}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Source Type</dt>
-            <dd className="font-medium">{analysisSummary.sourceType}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Intake Template File</dt>
-            <dd className="font-medium">{analysisSummary.intakeTemplateFile ?? "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">PM Source Report File</dt>
-            <dd className="font-medium">
-              {analysisSummary.pmSourceReportFiles?.length
-                ? analysisSummary.pmSourceReportFiles.join(", ")
-                : "—"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Total Rows</dt>
-            <dd className="font-medium">{analysisSummary.totalRows ?? "—"} Rows</dd>
-          </div>
-        </dl>
-      </Card>
+        </Card>
 
-      <h3 className="mb-3 font-aileron text-base font-semibold text-[#202830]">Analysis Report</h3>
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Card elevated className="animate-fade-in-up [animation-delay:0.05s] [animation-fill-mode:forwards] opacity-0">
-          <p className="text-sm font-medium text-muted-foreground">Total Claims Analyzed</p>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">
-            {totalClaimsAnalyzed.toLocaleString()}
-          </p>
+        <section>
+          <h2 className="mb-5 text-[16px] font-['Aileron'] font-bold text-foreground">Analysis Report</h2>
+          <div className="grid gap-5 sm:grid-cols-3">
+            <div className="bg-[#F8FAFC] rounded-lg p-6 text-center border border-border">
+              <div className="text-[32px] font-bold font-['Aileron'] text-foreground mb-1">
+                {totalClaimsAnalyzed.toLocaleString()}
+              </div>
+              <div className="text-[14px] font-['Aileron'] text-muted-foreground">Total Claims Analyzed</div>
+            </div>
+            <div className="bg-[#F8FAFC] rounded-lg p-6 text-center border border-border">
+              <div className="text-[32px] font-bold font-['Aileron'] text-[#DC2626] mb-1">
+                {formatCurrency(totalUnderpayment)}
+              </div>
+              <div className="text-[14px] font-['Aileron'] text-muted-foreground">Total Underpayment</div>
+            </div>
+            <div className="bg-[#F8FAFC] rounded-lg p-6 text-center border border-border">
+              <div className="text-[32px] font-bold font-['Aileron'] text-[#16A34A] mb-1">
+                {formatCurrency(riskAdjustedRecovery)}
+              </div>
+              <div className="text-[14px] font-['Aileron'] text-muted-foreground">Risk-Adjusted Recovery</div>
+            </div>
+          </div>
+        </section>
+
+        <Card className="p-6 sm:p-8">
+          <h2 className="mb-5 text-[16px] font-bold font-['Aileron'] text-foreground">
+            Claim Categorisation Breakdown
+          </h2>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+            {report.claimCategorisationBreakdown?.length
+              ? report.claimCategorisationBreakdown.map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex justify-between py-4 px-4 bg-[#F9FAFC] rounded"
+                  >
+                    <span className="text-[14px] font-['Aileron'] text-muted-foreground">
+                      {item.category}
+                    </span>
+                    <span className="text-[14px] font-['Aileron'] text-foreground font-medium text-right">
+                      {item.count}
+                    </span>
+                  </div>
+                ))
+              : (
+                  <div className="flex justify-between py-4 px-4 bg-[#F9FAFC] rounded col-span-2">
+                    <span className="text-[14px] font-['Aileron'] text-muted-foreground">No categorisation data</span>
+                    <span className="text-[14px] font-['Aileron'] text-foreground font-medium">—</span>
+                  </div>
+                )}
+          </div>
         </Card>
-        <Card elevated className="animate-fade-in-up [animation-delay:0.1s] [animation-fill-mode:forwards] opacity-0">
-          <p className="text-sm font-medium text-muted-foreground">Total Underpayment</p>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-red-600">
-            {formatCurrency(totalUnderpayment)}
-          </p>
-        </Card>
-        <Card elevated className="animate-fade-in-up [animation-delay:0.15s] [animation-fill-mode:forwards] opacity-0">
-          <p className="text-sm font-medium text-muted-foreground">Risk-Adjusted Recovery</p>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-emerald-600">
-            {formatCurrency(riskAdjustedRecovery)}
-          </p>
+
+        {report.underpaymentByPriority?.length > 0 && (
+          <Card className="p-6 sm:p-8">
+            <h2 className="mb-5 text-[16px] font-bold font-['Aileron'] text-foreground">
+              Underpayment Analysis by Priority
+            </h2>
+            <div className="space-y-3">
+              {report.underpaymentByPriority.map((item, i) => {
+                const isHigh = item.priority.toLowerCase().includes("high");
+                const isMid = item.priority.toLowerCase().includes("mid");
+                const isLow = item.priority.toLowerCase().includes("low");
+                const bg = isHigh
+                  ? "rgba(220, 38, 38, 0.1)"
+                  : isMid
+                    ? "rgba(245, 158, 11, 0.1)"
+                    : "rgba(59, 130, 246, 0.12)";
+                const color = isHigh ? "#DC2626" : isMid ? "#F59E0B" : "#2563EB";
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between rounded px-5 py-4"
+                    style={{ backgroundColor: bg }}
+                  >
+                    <span className="text-[14px] font-['Aileron'] font-medium" style={{ color }}>
+                      {item.priority}
+                    </span>
+                    <span className="text-[14px] font-['Aileron'] font-medium text-right" style={{ color }}>
+                      {formatCurrency(item.amount)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        )}
+
+        {report.recoveryProjectionSummary && (
+          <Card className="p-6 sm:p-8">
+            <h2 className="mb-5 text-[16px] font-bold font-['Aileron'] text-foreground">
+              Recovery Projection Summary
+            </h2>
+            <div className="grid gap-5 sm:grid-cols-2 mb-5">
+              <div className="bg-background rounded-lg p-6 sm:p-7 text-center border border-border">
+                <div className="text-[32px] font-bold font-['Aileron'] text-foreground mb-2">
+                  {formatCurrency(report.recoveryProjectionSummary.maxPotentialRecovery)}
+                </div>
+                <div className="text-[15px] font-['Aileron'] font-normal leading-snug text-center text-muted-foreground">
+                  Maximum Potential Recovery (100%)
+                </div>
+              </div>
+              <div className="bg-background rounded-lg p-6 sm:p-7 text-center border-2 border-[#16A34A] bg-green-50/50">
+                <div className="text-[32px] font-bold font-['Aileron'] text-[#16A34A] mb-2">
+                  {formatCurrency(report.recoveryProjectionSummary.riskAdjustedRecovery)}
+                </div>
+                <div className="text-[15px] font-['Aileron'] font-normal leading-snug text-center text-[#16A34A]">
+                  Risk-Adjusted Recovery
+                  {report.recoveryProjectionSummary.historicalCollectionRatePct != null
+                    ? ` (${report.recoveryProjectionSummary.historicalCollectionRatePct}% Historical)`
+                    : ""}
+                </div>
+              </div>
+            </div>
+            {report.recoveryProjectionSummary.historicalCollectionRatePct != null && (
+              <p className="text-[13px] font-['Aileron'] text-muted-foreground text-center pt-1">
+                Historical Collection Rate: {report.recoveryProjectionSummary.historicalCollectionRatePct}% (based on 3-year rolling average)
+              </p>
+            )}
+          </Card>
+        )}
+
+        <Card className="p-6 sm:p-8">
+          <h2 className="mb-5 text-[16px] font-bold font-['Aileron'] text-foreground">
+            Contingency Fee Application by Claim Age
+          </h2>
+          <div className="space-y-3">
+            {report.contingencyFeeByClaimAge?.length
+              ? report.contingencyFeeByClaimAge.map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex justify-between py-4 px-4 bg-[#F9FAFC] rounded"
+                  >
+                    <span className="text-[14px] font-['Aileron'] text-muted-foreground">
+                      {item.ageBand} ({item.feePct}% fee)
+                    </span>
+                    <span className="text-[14px] font-['Aileron'] text-foreground font-medium text-right">
+                      {formatCurrency(item.amount)}
+                    </span>
+                  </div>
+                ))
+              : (
+                  <div className="flex justify-between py-4 px-4 bg-[#F9FAFC] rounded">
+                    <span className="text-[14px] font-['Aileron'] text-muted-foreground">No contingency fee data</span>
+                    <span className="text-[14px] font-['Aileron'] text-foreground font-medium">—</span>
+                  </div>
+                )}
+          </div>
         </Card>
       </div>
-
-      {report.claimCategorisationBreakdown?.length > 0 && (
-        <Card className="mb-6">
-          <h3 className="mb-4 text-base font-semibold text-foreground">
-            Claim Categorisation Breakdown
-          </h3>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {report.claimCategorisationBreakdown.map((item, i) => (
-              <div key={i} className="flex justify-between border-b border-border pb-2">
-                <span className="text-foreground">{item.category}</span>
-                <span className="font-medium">{item.count}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {report.underpaymentByPriority?.length > 0 && (
-        <Card className="mb-6">
-          <h3 className="mb-4 text-base font-semibold text-foreground">
-            Underpayment Analysis by Priority
-          </h3>
-          <div className="space-y-2">
-            {report.underpaymentByPriority.map((item, i) => (
-              <div
-                key={i}
-                className={`flex items-center justify-between rounded-lg px-4 py-2 ${
-                  item.priority.toLowerCase().includes("high")
-                    ? "bg-red-50"
-                    : item.priority.toLowerCase().includes("mid")
-                      ? "bg-amber-50"
-                      : "bg-blue-50"
-                }`}
-              >
-                <span className="text-sm font-medium">{item.priority}</span>
-                <span
-                  className={`font-semibold ${
-                    item.priority.toLowerCase().includes("high")
-                      ? "text-red-700"
-                      : item.priority.toLowerCase().includes("mid")
-                        ? "text-amber-700"
-                        : "text-blue-700"
-                  }`}
-                >
-                  {formatCurrency(item.amount)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {report.recoveryProjectionSummary && (
-        <Card>
-          <h3 className="mb-4 text-base font-semibold text-foreground">
-            Recovery Projection Summary
-          </h3>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-border p-4">
-              <p className="text-sm text-muted-foreground">Maximum Potential Recovery (100%)</p>
-              <p className="mt-1 text-xl font-bold text-foreground">
-                {formatCurrency(report.recoveryProjectionSummary.maxPotentialRecovery)}
-              </p>
-            </div>
-            <div className="rounded-lg border-2 border-green-300 bg-green-50 p-4">
-              <p className="text-sm text-green-700">
-                Risk-Adjusted Recovery
-                {report.recoveryProjectionSummary.historicalCollectionRatePct != null &&
-                  ` (${report.recoveryProjectionSummary.historicalCollectionRatePct}% Historical)`}
-              </p>
-              <p className="mt-1 text-xl font-bold text-green-800">
-                {formatCurrency(report.recoveryProjectionSummary.riskAdjustedRecovery)}
-              </p>
-            </div>
-          </div>
-          {report.recoveryProjectionSummary.historicalCollectionRatePct != null && (
-            <p className="mt-3 text-xs text-muted-foreground">
-              Historical Collection Rate: {report.recoveryProjectionSummary.historicalCollectionRatePct}% (based on 3-year rolling average)
-            </p>
-          )}
-        </Card>
-      )}
-
-      {report.contingencyFeeByClaimAge?.length > 0 && (
-        <Card className="mt-6">
-          <h3 className="mb-4 text-base font-semibold text-foreground">
-            Contingency Fee Application by Claim Age
-          </h3>
-          <div className="space-y-2">
-            {report.contingencyFeeByClaimAge.map((item, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between border-b border-border pb-3 last:border-0"
-              >
-                <span className="text-sm text-foreground">
-                  {item.ageBand} ({item.feePct}% fee)
-                </span>
-                <span className="font-medium text-foreground">
-                  {formatCurrency(item.amount)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
     </PageShell>
   );
 }

@@ -110,14 +110,19 @@ export default function SettingsPage() {
   const filteredSections = useMemo(() => {
     if (!permissions || permissions.loading) return null;
     return configSections
-      .map((section) => ({
-        ...section,
-        links: section.links.filter((link) => {
+      .map((section) => {
+        const filteredLinks = section.links.filter((link) => {
           const moduleName = SETTINGS_HREF_TO_MODULE_NAME[link.href];
           if (!moduleName) return false;
           return permissions.canView(moduleName);
-        }),
-      }))
+        });
+        // Always show NSA Configuration card with all links (permission checked on target pages)
+        const links =
+          section.title === "NSA Configuration"
+            ? section.links
+            : filteredLinks;
+        return { ...section, links };
+      })
       .filter((section) => section.links.length > 0);
   }, [permissions]);
 
