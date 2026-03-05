@@ -2,6 +2,7 @@
 
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
+import { AppFooter } from "./AppFooter";
 import { NavigationProgress } from "./NavigationProgress";
 import { SidebarProvider, useSidebarOptional } from "@/lib/contexts/SidebarContext";
 
@@ -10,10 +11,11 @@ function MainContent({ children }: { children: React.ReactNode }) {
   const collapsed = sidebar?.collapsed ?? false;
   return (
     <div
-      className={`flex min-h-screen flex-col transition-[padding] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${collapsed ? "pl-20" : "pl-64"}`}
+      className={`flex min-h-screen flex-col transition-[padding] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${collapsed ? "pl-12" : "pl-64"}`}
     >
       <Header />
-      <main className="flex-1 p-6 sm:p-8 lg:p-10">{children}</main>
+      <main className="flex-1 pt-4 px-6 pb-6 flex flex-col">{children}</main>
+      <AppFooter />
     </div>
   );
 }

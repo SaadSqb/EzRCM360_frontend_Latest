@@ -4,6 +4,7 @@ import { ToastProviderWithToaster } from "@/components/providers/ToastProviderWi
 import { ApiAuthProvider } from "@/components/providers/ApiAuthProvider";
 import { PermissionsProvider } from "@/lib/contexts/PermissionsContext";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { ConditionalLayout } from "@/components/layout/ConditionalLayout";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -26,7 +27,9 @@ export default function RootLayout({
         <ToastProviderWithToaster>
           <ApiAuthProvider>
             <AuthGuard>
-              <PermissionsProvider>{children}</PermissionsProvider>
+              <PermissionsProvider>
+                <ConditionalLayout>{children}</ConditionalLayout>
+              </PermissionsProvider>
             </AuthGuard>
           </ApiAuthProvider>
         </ToastProviderWithToaster>

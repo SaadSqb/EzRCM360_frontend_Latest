@@ -140,7 +140,7 @@ export default function InsuranceArAnalysisReportPage() {
         </dl>
       </Card>
 
-      <h3 className="mb-3 text-base font-semibold text-foreground">Analysis Report</h3>
+      <h3 className="mb-3 font-aileron text-base font-semibold text-[#202830]">Analysis Report</h3>
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Card elevated className="animate-fade-in-up [animation-delay:0.05s] [animation-fill-mode:forwards] opacity-0">
           <p className="text-sm font-medium text-muted-foreground">Total Claims Analyzed</p>

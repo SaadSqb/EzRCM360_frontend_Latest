@@ -200,7 +200,7 @@ export default function OrganizationPage() {
       description="Manage organization profile and preferences."
     >
       {/* Summary card - design: bg-[#F7F8F9] rounded-[5px] h-[120px] */}
-      <Card className="mb-8 overflow-hidden animate-fade-in-up rounded-[5px] border border-border bg-[#F7F8F9]">
+      <Card className="mb-6 overflow-hidden animate-fade-in-up rounded-[5px] border border-border bg-[#F7F8F9]">
         <div className="flex flex-col sm:flex-row">
           <div className="flex min-h-[120px] min-w-[140px] items-center justify-center p-6">
             <div className="flex h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-primary-600 text-2xl font-semibold text-white shadow-lg shadow-primary-600/20">

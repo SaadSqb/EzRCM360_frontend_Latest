@@ -365,7 +365,7 @@ export default function InsuranceArAnalysisProcessingPage() {
     >
       {session && (
         <Card className="mb-6 animate-fade-in-up">
-          <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <h3 className="mb-4 font-aileron text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Session Summary
           </h3>
           <dl className="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">

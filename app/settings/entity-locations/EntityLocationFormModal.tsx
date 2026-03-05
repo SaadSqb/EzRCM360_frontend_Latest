@@ -1,9 +1,10 @@
 "use client";
 
-import { Modal, ModalFooter } from "@/components/ui/Modal";
+import { DrawerForm } from "@/components/ui/DrawerForm";
+import { DrawerFooter } from "@/components/ui/ModalFooter";
 import { Alert } from "@/components/ui/Alert";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
+import { NativeSelect as Select } from "@/components/ui/Select";
 import type { CreateEntityLocationRequest } from "@/lib/services/entityLocations";
 import type { EntityLookupDto } from "@/lib/services/lookups";
 
@@ -37,7 +38,19 @@ export function EntityLocationFormModal({
   const entityOptions = entities.map(entityToOption);
 
   return (
-    <Modal open={open} onClose={onClose} title={editId ? "Edit location" : "Add location"} size="md">
+    <DrawerForm
+      open={open}
+      onOpenChange={(v) => !v && onClose()}
+      title={editId ? "Edit Location" : "Add Location"}
+      footer={
+        <DrawerFooter
+          onCancel={onClose}
+          submitLabel={editId ? "Update" : "Create"}
+          onSubmit={onSubmit}
+          loading={loading}
+        />
+      }
+    >
       <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
         {error && (
           <div className="mb-4">
@@ -84,13 +97,7 @@ export function EntityLocationFormModal({
             <span className="text-sm text-foreground">Active</span>
           </label>
         </div>
-        <ModalFooter
-          onCancel={onClose}
-          submitLabel={editId ? "Update" : "Create"}
-          onSubmit={onSubmit}
-          loading={loading}
-        />
       </form>
-    </Modal>
+    </DrawerForm>
   );
 }

@@ -3,8 +3,10 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Pagination } from "@/components/ui/Pagination";
 import { useModulePermission } from "@/lib/contexts/PermissionsContext";
 import { AccessDenied } from "@/components/auth/AccessDenied";
 import { PageShell } from "@/components/layout/PageShell";
@@ -141,63 +143,55 @@ export default function InsuranceArAnalysisListPage() {
       title="Insurance AR Analysis"
       description="Manage AR intake sessions and analyze insurance receivables."
     >
-      <Card className="overflow-hidden animate-fade-in-up">
-        {/* Toolbar with gradient header */}
-        <div className="border-b border-border/80 bg-gradient-to-r from-muted/50 to-background px-6 py-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-1 flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <label htmlFor="status" className="text-sm font-medium text-muted-foreground">Status</label>
-                <select
-                  id="status"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as ArAnalysisSessionStatus | "")}
-                  className="input-enterprise w-auto min-w-[12rem]"
-                >
-                  {STATUS_OPTIONS.map((o) => (
-                    <option key={o.value || "_all"} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <label htmlFor="uploaded-by" className="text-sm font-medium text-muted-foreground">Uploaded by</label>
-                <select
-                  id="uploaded-by"
-                  value={uploadedBy}
-                  onChange={(e) => {
-                    setUploadedBy(e.target.value);
-                    setPage(1);
-                  }}
-                  className="input-enterprise w-auto min-w-[11rem]"
-                >
-                  <option value="">All</option>
-                  {uniqueUploadedBy.map((u) => (
-                    <option key={u} value={u}>{u}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="relative flex-1 min-w-[12rem] max-w-xs">
-                <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search sessions…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="input-enterprise pl-10"
-                />
-              </div>
+      <div className="animate-fade-in-up">
+        {/* Toolbar */}
+        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-1 flex-wrap items-center gap-3">
+            <select
+              id="status"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as ArAnalysisSessionStatus | "")}
+              className="h-10 rounded-[5px] border border-[#E2E8F0] bg-background px-3 font-aileron text-[14px] text-[#202830] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              {STATUS_OPTIONS.map((o) => (
+                <option key={o.value || "_all"} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            <select
+              id="uploaded-by"
+              value={uploadedBy}
+              onChange={(e) => {
+                setUploadedBy(e.target.value);
+                setPage(1);
+              }}
+              className="h-10 rounded-[5px] border border-[#E2E8F0] bg-background px-3 font-aileron text-[14px] text-[#202830] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <option value="">All uploaded by</option>
+              {uniqueUploadedBy.map((u) => (
+                <option key={u} value={u}>{u}</option>
+              ))}
+            </select>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]" />
+              <input
+                type="text"
+                placeholder="Search sessions…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-10 w-[300px] rounded-[5px] border border-[#E2E8F0] bg-background pl-9 pr-4 font-aileron text-[14px] text-[#202830] placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
             </div>
-            {canCreate && (
-              <div className="flex shrink-0 items-center gap-3">
-                <Button variant="secondary" onClick={handleDownloadTemplate} disabled={downloading}>
-                  {downloading ? "Downloading…" : "Download Template"}
-                </Button>
-                <Button onClick={handleUploadData}>Upload Data</Button>
-              </div>
-            )}
           </div>
+          {canCreate && (
+            <div className="flex shrink-0 items-center gap-3">
+              <Button variant="outline" onClick={handleDownloadTemplate} disabled={downloading} className="h-10 rounded-[5px] px-[18px] border-[#E2E8F0] font-aileron text-[14px] text-[#2A2C33]">
+                {downloading ? "Downloading…" : "Download Template"}
+              </Button>
+              <Button onClick={handleUploadData} className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]">
+                Upload Data
+              </Button>
+            </div>
+          )}
         </div>
 
         {error && (
@@ -218,7 +212,7 @@ export default function InsuranceArAnalysisListPage() {
                   <TableHeaderCell>Uploaded By</TableHeaderCell>
                   <TableHeaderCell>Uploaded At</TableHeaderCell>
                   <TableHeaderCell>Source Type</TableHeaderCell>
-                  <TableHeaderCell align="right">Actions</TableHeaderCell>
+                  <TableHeaderCell>Actions</TableHeaderCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -240,7 +234,7 @@ export default function InsuranceArAnalysisListPage() {
                         animationFillMode: "forwards",
                       }}
                     >
-                      <TableCell className="font-medium text-foreground">
+                      <TableCell>
                         {row.sessionName}
                       </TableCell>
                       <TableCell>{row.practiceName ?? "—"}</TableCell>
@@ -248,7 +242,7 @@ export default function InsuranceArAnalysisListPage() {
                       <TableCell>{row.uploadedBy}</TableCell>
                       <TableCell>{formatDate(row.uploadedAt)}</TableCell>
                       <TableCell>{row.sourceType}</TableCell>
-                      <TableCell align="right">
+                      <TableCell>
                         {row.sessionStatus === "Completed" ? (
                           <Link
                             href={`/rcm/insurance-ar-analysis/${row.id}/report`}
@@ -280,47 +274,18 @@ export default function InsuranceArAnalysisListPage() {
             </Table>
             </div>
 
-            <div className="flex flex-col items-center justify-between gap-4 border-t border-border/80 bg-muted/50 px-6 py-4 sm:flex-row">
-              <div className="flex flex-wrap items-center gap-4">
-                <p className="text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">{displayedItems.length}</span>
-                  <span className="text-muted-foreground"> of </span>
-                  <span className="font-medium text-foreground">{data.totalCount}</span>
-                  <span className="text-muted-foreground"> result{data.totalCount !== 1 ? "s" : ""}</span>
-                </p>
-                <div className="flex items-center gap-2">
-                  <label htmlFor="per-page" className="text-sm text-muted-foreground">Per page</label>
-                  <select
-                    id="per-page"
-                    value={pageSize}
-                    onChange={(e) => setPageSize(Number(e.target.value))}
-                    className="input-enterprise w-auto min-w-[4.5rem] px-3 py-1.5 text-sm"
-                  >
-                  {[5, 10, 25, 50].map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ))}
-                </select>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="secondary"
-                  disabled={!data.hasPreviousPage}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="secondary"
-                  disabled={!data.hasNextPage}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
+            <Pagination
+              pageNumber={page}
+              totalPages={data.totalPages}
+              totalCount={data.totalCount}
+              hasPreviousPage={data.hasPreviousPage}
+              hasNextPage={data.hasNextPage}
+              onPrevious={() => setPage((p) => Math.max(1, p - 1))}
+              onNext={() => setPage((p) => p + 1)}
+              onPageChange={setPage}
+              pageSize={pageSize}
+              onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+            />
           </>
         )}
 
@@ -340,7 +305,7 @@ export default function InsuranceArAnalysisListPage() {
             ))}
           </div>
         )}
-      </Card>
+      </div>
     </PageShell>
   );
 }

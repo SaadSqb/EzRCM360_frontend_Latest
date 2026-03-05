@@ -1,9 +1,10 @@
 "use client";
 
-import { Modal, ModalFooter } from "@/components/ui/Modal";
+import { DrawerForm } from "@/components/ui/DrawerForm";
+import { DrawerFooter } from "@/components/ui/ModalFooter";
 import { Alert } from "@/components/ui/Alert";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
+import { NativeSelect as Select } from "@/components/ui/Select";
 import type { CreateEntityRequest } from "@/lib/services/entities";
 import type { SelectOption } from "@/components/ui/Select";
 
@@ -34,11 +35,18 @@ export function EntityFormModal({
   error,
 }: EntityFormModalProps) {
   return (
-    <Modal
+    <DrawerForm
       open={open}
-      onClose={onClose}
-      title={editId ? "Edit entity" : "Add entity"}
-      size="lg"
+      onOpenChange={(v) => !v && onClose()}
+      title={editId ? "Edit Entity" : "Add Entity"}
+      footer={
+        <DrawerFooter
+          onCancel={onClose}
+          submitLabel={editId ? "Update" : "Create"}
+          onSubmit={onSubmit}
+          loading={loading}
+        />
+      }
     >
       <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
         {error && (
@@ -82,13 +90,7 @@ export function EntityFormModal({
             onChange={(e) => onFormChange({ ...form, status: Number(e.target.value) })}
           />
         </div>
-        <ModalFooter
-          onCancel={onClose}
-          submitLabel={editId ? "Update" : "Create"}
-          onSubmit={onSubmit}
-          loading={loading}
-        />
       </form>
-    </Modal>
+    </DrawerForm>
   );
 }

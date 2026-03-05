@@ -450,7 +450,7 @@ export default function RolesPermissionsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(280px,360px)_1fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(280px,360px)_1fr]">
         {/* Left: Roles list */}
         <Card className="p-6" elevated>
           <div className="mb-5 flex items-center gap-3">

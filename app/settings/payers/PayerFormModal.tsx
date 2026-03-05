@@ -1,10 +1,11 @@
 "use client";
 
-import { Modal, ModalFooter } from "@/components/ui/Modal";
+import { DrawerForm } from "@/components/ui/DrawerForm";
+import { DrawerFooter } from "@/components/ui/ModalFooter";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
+import { NativeSelect as Select } from "@/components/ui/Select";
 import type {
   CreatePayerRequest,
   PayerAddressRequest,
@@ -113,11 +114,18 @@ export function PayerFormModal({
   };
 
   return (
-    <Modal
+    <DrawerForm
       open={open}
-      onClose={onClose}
-      title={editId ? "Edit payer" : "Add payer"}
-      size="lg"
+      onOpenChange={(v) => !v && onClose()}
+      title={editId ? "Edit Payer" : "Add Payer"}
+      footer={
+        <DrawerFooter
+          onCancel={onClose}
+          submitLabel={editId ? "Update" : "Create"}
+          onSubmit={onSubmit}
+          loading={loading}
+        />
+      }
     >
       <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
         {error && (
@@ -129,7 +137,7 @@ export function PayerFormModal({
         <div className="space-y-6">
           {/* Basic info */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-foreground">Basic information</h3>
+            <h3 className="font-aileron text-sm font-semibold text-[#2A2C33]">Basic information</h3>
             <Input
               label="Payer name"
               required
@@ -158,8 +166,8 @@ export function PayerFormModal({
           {/* Addresses */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">Addresses</h3>
-              <Button type="button" variant="secondary" onClick={addAddress}>
+              <h3 className="font-aileron text-sm font-semibold text-[#2A2C33]">Addresses</h3>
+              <Button type="button" variant="outline" size="sm" onClick={addAddress}>
                 Add address
               </Button>
             </div>
@@ -169,12 +177,13 @@ export function PayerFormModal({
             {addresses.map((addr, index) => (
               <div
                 key={index}
-                className="rounded-lg border border-border bg-muted/50 p-4 space-y-3"
+                className="rounded-lg border border-[#E2E8F0] bg-[#F7F8F9] p-4 space-y-3"
               >
                 <div className="flex justify-end">
                   <Button
                     type="button"
                     variant="ghost"
+                    size="sm"
                     className="text-red-600 hover:text-red-700"
                     onClick={() => removeAddress(index)}
                   >
@@ -220,8 +229,8 @@ export function PayerFormModal({
           {/* Phone numbers */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">Phone numbers</h3>
-              <Button type="button" variant="secondary" onClick={addPhone}>
+              <h3 className="font-aileron text-sm font-semibold text-[#2A2C33]">Phone numbers</h3>
+              <Button type="button" variant="outline" size="sm" onClick={addPhone}>
                 Add phone
               </Button>
             </div>
@@ -231,7 +240,7 @@ export function PayerFormModal({
             {phoneNumbers.map((ph, index) => (
               <div
                 key={index}
-                className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-muted/50 p-4"
+                className="flex flex-wrap items-end gap-3 rounded-lg border border-[#E2E8F0] bg-[#F7F8F9] p-4"
               >
                 <div className="min-w-[200px] flex-1">
                   <Input
@@ -250,6 +259,7 @@ export function PayerFormModal({
                 <Button
                   type="button"
                   variant="ghost"
+                  size="sm"
                   className="text-red-600 hover:text-red-700"
                   onClick={() => removePhone(index)}
                 >
@@ -262,8 +272,8 @@ export function PayerFormModal({
           {/* Emails */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">Emails</h3>
-              <Button type="button" variant="secondary" onClick={addEmail}>
+              <h3 className="font-aileron text-sm font-semibold text-[#2A2C33]">Emails</h3>
+              <Button type="button" variant="outline" size="sm" onClick={addEmail}>
                 Add email
               </Button>
             </div>
@@ -273,7 +283,7 @@ export function PayerFormModal({
             {emails.map((em, index) => (
               <div
                 key={index}
-                className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-muted/50 p-4"
+                className="flex flex-wrap items-end gap-3 rounded-lg border border-[#E2E8F0] bg-[#F7F8F9] p-4"
               >
                 <div className="min-w-[200px] flex-1">
                   <Input
@@ -293,6 +303,7 @@ export function PayerFormModal({
                 <Button
                   type="button"
                   variant="ghost"
+                  size="sm"
                   className="text-red-600 hover:text-red-700"
                   onClick={() => removeEmail(index)}
                 >
@@ -304,19 +315,19 @@ export function PayerFormModal({
 
           {/* Plans */}
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-foreground">Linked plans</h3>
+            <h3 className="font-aileron text-sm font-semibold text-[#2A2C33]">Linked plans</h3>
             <p className="text-sm text-muted-foreground">
               Select plans that belong to this payer. Plans are scoped to your organization.
             </p>
             {planOptions.length === 0 && (
               <p className="text-sm text-muted-foreground">No plans available. Create plans first under Plan Configuration.</p>
             )}
-            <div className="max-h-48 overflow-y-auto rounded-lg border border-border p-3">
+            <div className="max-h-48 overflow-y-auto rounded-lg border border-[#E2E8F0] p-3">
               <div className="space-y-2">
                 {planOptions.map((plan) => (
                   <label
                     key={plan.id}
-                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-muted"
+                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-[#F7F8F9]"
                   >
                     <input
                       type="checkbox"
@@ -331,14 +342,7 @@ export function PayerFormModal({
             </div>
           </div>
         </div>
-
-        <ModalFooter
-          onCancel={onClose}
-          submitLabel={editId ? "Update" : "Create"}
-          onSubmit={onSubmit}
-          loading={loading}
-        />
       </form>
-    </Modal>
+    </DrawerForm>
   );
 }

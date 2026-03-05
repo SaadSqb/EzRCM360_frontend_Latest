@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRightIcon, ExternalLinkIcon } from "@/lib/icons/AppIcons";
+import { ChevronRight, ExternalLink } from "lucide-react";
 
 export interface ContentCardLink {
   label: string;
@@ -74,7 +74,7 @@ export function ContentCard({
                   className="group inline-flex items-center text-sm font-semibold text-primary transition-colors hover:text-primary/80"
                 >
                   {link.label}
-                  <ExternalLinkIcon className="ml-1" />
+                  <ExternalLink className="ml-1 h-3.5 w-3.5" />
                 </a>
               ) : (
                 <Link
@@ -82,7 +82,7 @@ export function ContentCard({
                   className="group inline-flex items-center text-sm font-semibold text-primary transition-colors hover:text-primary/80"
                 >
                   {link.label}
-                  <ChevronRightIcon className="transition-transform group-hover:translate-x-0.5" />
+                  <ChevronRight className="ml-1 h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               )}
             </li>

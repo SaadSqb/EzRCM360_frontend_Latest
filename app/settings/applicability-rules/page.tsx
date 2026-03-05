@@ -1,9 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Search, ArrowRight } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
 import { PageHeader } from "@/components/settings/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Pagination } from "@/components/ui/Pagination";
 import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { TableActionsCell } from "@/components/ui/TableActionsCell";
@@ -81,7 +84,8 @@ export default function ApplicabilityRulesPage() {
   );
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -210,105 +214,119 @@ export default function ApplicabilityRulesPage() {
         title="Applicability Rules"
         description="Fee schedule applicability rules."
       />
-      <Card>
+      {/* Toolbar: search + add button */}
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Select value="" onValueChange={() => {}}>
+            <SelectTrigger className="w-[130px] h-10 border-[#E2E8F0] rounded-[5px] font-aileron text-[14px]">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent className="bg-white z-50">
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-10 w-[300px] rounded-[5px] border border-[#E2E8F0] bg-background pl-9 pr-4 font-aileron text-[14px] placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </div>
+        </div>
         {canCreate && (
-          <div className="mb-4 flex justify-end">
-            <Button onClick={openCreate}>Add rule</Button>
-          </div>
+          <Button
+            onClick={openCreate}
+            className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
+          >
+            <>Add Applicability Rule <ArrowRight className="ml-1 h-4 w-4" /></>
+          </Button>
         )}
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-        {data && (
-          <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-border">
-                <thead>
-                  <tr>
+      </div>
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      {data && (
+        <>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border">
+              <thead>
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
+                    Sort
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
+                    Rule set / Display
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
+                    Payer category
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
+                    Active
+                  </th>
+                  {(canUpdate || canDelete) && (
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
-                      Sort
+                      Actions
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
-                      Rule set / Display
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
-                      Payer category
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
-                      Active
-                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {data.items.map((row) => (
+                  <tr key={row.id} className="hover:bg-muted">
+                    <td className="px-4 py-3 text-sm">
+                      {row.sortOrder}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {row.ruleSetName} / {row.displayName}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {payerCategoryLabel(row.payerCategory)}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {row.isActive ? "Yes" : "No"}
+                    </td>
                     {(canUpdate || canDelete) && (
-                      <th className="px-4 py-3 text-right text-xs font-medium uppercase text-muted-foreground">
-                        Actions
-                      </th>
+                      <td className="px-4 py-3 text-sm">
+                        <TableActionsCell
+                          canEdit={canUpdate}
+                          canDelete={canDelete}
+                          onEdit={() => openEdit(row)}
+                          onDelete={() => setDeleteId(row.id)}
+                        />
+                      </td>
                     )}
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {data.items.map((row) => (
-                    <tr key={row.id} className="hover:bg-muted">
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
-                        {row.sortOrder}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className="font-medium text-foreground">
-                          {row.ruleSetName}
-                        </span>
-                        <span className="text-muted-foreground"> / {row.displayName}</span>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
-                        {payerCategoryLabel(row.payerCategory)}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm">
-                        {row.isActive ? "Yes" : "No"}
-                      </td>
-                      {(canUpdate || canDelete) && (
-                        <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
-                          <TableActionsCell
-                            canEdit={canUpdate}
-                            canDelete={canDelete}
-                            onEdit={() => openEdit(row)}
-                            onDelete={() => setDeleteId(row.id)}
-                          />
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-              <p className="text-sm text-muted-foreground">
-                Page {data.pageNumber} of {data.totalPages} ({data.totalCount}{" "}
-                total)
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="secondary"
-                  disabled={!data.hasPreviousPage}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="secondary"
-                  disabled={!data.hasNextPage}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
-        {!data && !error && (
-          <div className="py-8 text-center text-sm text-muted-foreground">
-            Loading…
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-      </Card>
+          <Pagination
+            pageNumber={data.pageNumber}
+            totalPages={data.totalPages}
+            totalCount={data.totalCount}
+            hasPreviousPage={data.hasPreviousPage}
+            hasNextPage={data.hasNextPage}
+            onPrevious={() => setPage((p) => Math.max(1, p - 1))}
+            onNext={() => setPage((p) => p + 1)}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+          />
+        </>
+      )}
+      {!data && !error && (
+        <div className="py-8 text-center text-sm text-muted-foreground">
+          Loading…
+        </div>
+      )}
 
       <Modal
         open={modalOpen}

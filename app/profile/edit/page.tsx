@@ -151,7 +151,7 @@ export default function EditProfilePage() {
 
           {/* Avatar */}
           <div>
-            <label className="block text-sm font-medium text-foreground">Profile Picture</label>
+            <label className="block font-aileron font-normal text-[14px] leading-none text-[#2A2C33]">Profile Picture</label>
             <div className="mt-2 flex items-center gap-4">
               <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-2xl font-medium text-primary-700">
                 {avatarSrc ? (
@@ -186,7 +186,7 @@ export default function EditProfilePage() {
 
           {/* User Name */}
           <div>
-            <label htmlFor="userName" className="block text-sm font-medium text-foreground">
+            <label htmlFor="userName" className="block font-aileron font-normal text-[14px] leading-none text-[#2A2C33]">
               User Name
             </label>
             <input
@@ -195,13 +195,13 @@ export default function EditProfilePage() {
               value={form.userName ?? ""}
               onChange={(e) => setForm((f) => ({ ...f, userName: e.target.value }))}
               required
-              className="mt-1 block w-full rounded-lg border border-input px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="mt-1.5 block w-full h-[39px] rounded-[5px] border border-[#E2E8F0] bg-background px-4 font-aileron text-[14px] ring-offset-background transition-colors placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
           </div>
 
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-foreground">
+            <label htmlFor="email" className="block font-aileron font-normal text-[14px] leading-none text-[#2A2C33]">
               Email
             </label>
             <input
@@ -210,15 +210,15 @@ export default function EditProfilePage() {
               value={form.email ?? ""}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
               required
-              className="mt-1 block w-full rounded-lg border border-input px-3 py-2 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              className="mt-1.5 block w-full h-[39px] rounded-[5px] border border-[#E2E8F0] bg-background px-4 font-aileron text-[14px] ring-offset-background transition-colors placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
           </div>
 
           {/* New Password (optional) */}
-          <div className="space-y-4 border-t border-border pt-6">
-            <p className="text-sm font-medium text-foreground">Change Password (optional)</p>
+          <div className="space-y-4 border-t border-[#E2E8F0] pt-6">
+            <p className="font-aileron font-semibold text-[14px] text-[#2A2C33]">Change Password (optional)</p>
             <div>
-              <label htmlFor="newPassword" className="block text-sm text-muted-foreground">
+              <label htmlFor="newPassword" className="block font-aileron font-normal text-[14px] leading-none text-[#2A2C33]">
                 New Password
               </label>
               <input
@@ -226,12 +226,12 @@ export default function EditProfilePage() {
                 type="password"
                 value={form.newPassword ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, newPassword: e.target.value }))}
-                className="mt-1 block w-full rounded-lg border border-input px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="mt-1.5 block w-full h-[39px] rounded-[5px] border border-[#E2E8F0] bg-background px-4 font-aileron text-[14px] ring-offset-background transition-colors placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 placeholder="Leave blank to keep current"
               />
             </div>
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm text-muted-foreground">
+              <label htmlFor="confirmPassword" className="block font-aileron font-normal text-[14px] leading-none text-[#2A2C33]">
                 Confirm New Password
               </label>
               <input
@@ -239,17 +239,17 @@ export default function EditProfilePage() {
                 type="password"
                 value={form.confirmPassword ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
-                className="mt-1 block w-full rounded-lg border border-input px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="mt-1.5 block w-full h-[39px] rounded-[5px] border border-[#E2E8F0] bg-background px-4 font-aileron text-[14px] ring-offset-background transition-colors placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               />
             </div>
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="submit" disabled={submitLoading}>
+            <Button type="submit" disabled={submitLoading} className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]">
               {submitLoading ? "Saving…" : "Save Changes"}
             </Button>
             <Link href="/settings">
-              <Button type="button" variant="secondary">
+              <Button type="button" variant="outline" className="h-10 rounded-[5px] px-[18px] border-[#E2E8F0] font-aileron text-[14px] text-[#2A2C33]">
                 Cancel
               </Button>
             </Link>

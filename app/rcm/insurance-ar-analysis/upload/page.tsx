@@ -223,15 +223,15 @@ export default function InsuranceArAnalysisUploadPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="mb-8">
-        <nav className="mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <div className="mb-6">
+        <nav className="-mx-6 -mt-4 mb-6 bg-[#F7F8F9] px-6 py-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           <Link href="/rcm/insurance-ar-analysis" className="transition-colors hover:text-primary-600 hover:underline">
             Insurance AR Analysis
           </Link>
           <span className="text-muted-foreground" aria-hidden>/</span>
           <span className="text-foreground">Upload AR Intake</span>
         </nav>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+        <h1 className="font-aileron font-bold text-[24px] text-[#202830]">
           Data Upload and AR Analysis Session Creation
         </h1>
         <p className="mt-2 text-base text-muted-foreground">
@@ -244,7 +244,7 @@ export default function InsuranceArAnalysisUploadPage() {
         <Card className="animate-fade-in-up">
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-foreground">Validation Mode</label>
+              <label className="block font-aileron font-normal text-[14px] leading-none text-[#2A2C33]">Validation Mode</label>
               <div className="mt-2 flex gap-6">
                 <label className="flex cursor-pointer items-center gap-2">
                   <input
@@ -280,18 +280,18 @@ export default function InsuranceArAnalysisUploadPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground">Practice Name</label>
+              <label className="block font-aileron font-normal text-[14px] leading-none text-[#2A2C33]">Practice Name</label>
               <input
                 type="text"
                 value={practiceName}
                 onChange={(e) => setPracticeName(e.target.value)}
                 placeholder="e.g., Medical Billing"
-                className="mt-1 w-full max-w-md rounded-md border border-input px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="mt-1.5 w-full max-w-md h-[39px] rounded-[5px] border border-[#E2E8F0] bg-background px-4 font-aileron text-[14px] placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground">
+              <label className="block font-aileron font-normal text-[14px] leading-none text-[#2A2C33]">
                 Upload AR Intake File
               </label>
               {!intakeFile ? (

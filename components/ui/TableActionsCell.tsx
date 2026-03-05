@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/Button";
+import { Pencil, Trash2 } from "lucide-react";
 
 interface TableActionsCellProps {
   onEdit?: () => void;
@@ -11,7 +11,6 @@ interface TableActionsCellProps {
   deleteLabel?: string;
 }
 
-/** Spacious action buttons for table rows – avoids cramped Edit/Delete. */
 export function TableActionsCell({
   onEdit,
   onDelete,
@@ -25,16 +24,24 @@ export function TableActionsCell({
   if (!showEdit && !showDelete) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex items-center gap-3">
       {showEdit && (
-        <Button variant="secondary" className="min-w-[72px]" onClick={onEdit}>
-          {editLabel}
-        </Button>
+        <button
+          onClick={onEdit}
+          className="text-[#64748B] hover:text-[#202830] transition-colors"
+          aria-label={editLabel}
+        >
+          <Pencil className="h-4 w-4" />
+        </button>
       )}
       {showDelete && (
-        <Button variant="danger" className="min-w-[72px]" onClick={onDelete}>
-          {deleteLabel}
-        </Button>
+        <button
+          onClick={onDelete}
+          className="text-[#64748B] hover:text-[#EF4444] transition-colors"
+          aria-label={deleteLabel}
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
       )}
     </div>
   );

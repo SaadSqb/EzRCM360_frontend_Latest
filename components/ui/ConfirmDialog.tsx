@@ -1,6 +1,15 @@
 "use client";
 
-import { Button } from "./Button";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "./AlertDialog";
 
 type ConfirmDialogProps = {
   open: boolean;
@@ -23,36 +32,38 @@ export function ConfirmDialog({
   variant = "danger",
   loading,
 }: ConfirmDialogProps) {
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-foreground/60" aria-hidden onClick={onClose} />
-      <div
-        className="relative w-full max-w-md rounded-lg border bg-card p-6 shadow-xl text-card-foreground"
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby="confirm-title"
-      >
-        <h2 id="confirm-title" className="text-lg font-semibold text-foreground">
-          {title}
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground">{message}</p>
-        <div className="mt-6 flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose} disabled={loading}>
-            Cancel
-          </Button>
-          <Button
-            onClick={() => {
-              onConfirm();
-            }}
-            variant={variant === "danger" ? "danger" : "primary"}
+    <AlertDialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <AlertDialogContent className="bg-white rounded-lg">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="font-aileron font-bold text-[18px] text-[#202830]">
+            {title}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="font-aileron text-[14px] text-[#64748B]">
+            {message}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="flex flex-row justify-start gap-3 sm:justify-start">
+          <AlertDialogAction
+            onClick={onConfirm}
             disabled={loading}
+            className={
+              variant === "danger"
+                ? "h-10 rounded-[5px] px-[18px] py-3 bg-[#EF4444] hover:bg-[#EF4444]/90 text-white font-aileron text-[14px]"
+                : "h-10 rounded-[5px] px-[18px] py-3 bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
+            }
           >
-            {loading ? "…" : confirmLabel}
-          </Button>
-        </div>
-      </div>
-    </div>
+            {loading ? "..." : confirmLabel}
+          </AlertDialogAction>
+          <AlertDialogCancel
+            onClick={onClose}
+            disabled={loading}
+            className="h-10 px-[18px] py-3 rounded-[5px] border-[#E2E8F0] font-aileron text-[14px] text-[#2A2C33] mt-0"
+          >
+            Cancel
+          </AlertDialogCancel>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
