@@ -12,18 +12,16 @@ export function PageHeader({
   backHref = "/settings",
 }: PageHeaderProps) {
   return (
-    <div className="mb-8">
-      <nav className="mb-4 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+    <div className="mb-6">
+      {/* Breadcrumb bar - P2 pattern */}
+      <nav className="-mx-6 -mt-4 mb-6 flex items-center gap-2 bg-[#F7F8F9] px-6 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
         <Link href={backHref} className="transition-colors hover:text-foreground">
-          Settings & Configurations
+          Settings &amp; Configurations
         </Link>
         <span aria-hidden>/</span>
         <span className="text-foreground">{title}</span>
       </nav>
-      <h1 className="text-2xl font-bold leading-none tracking-tight text-foreground sm:text-3xl">{title}</h1>
-      {description && (
-        <p className="mt-3 max-w-2xl text-base leading-relaxed text-muted-foreground">{description}</p>
-      )}
+      <h1 className="font-aileron font-bold text-[24px] leading-none tracking-tight text-[#202830]">{title}</h1>
     </div>
   );
 }

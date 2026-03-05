@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { Eye, EyeOff } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { getApiUrl } from "@/lib/api";
@@ -16,6 +17,7 @@ function LoginForm() {
   const redirectTo = searchParams.get("redirect") ?? "/settings";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -84,15 +86,17 @@ function LoginForm() {
     }
   }
 
+  const inputClass = "flex h-[39px] w-full rounded-[5px] border border-[#E2E8F0] bg-background px-4 font-aileron text-[14px] ring-offset-background transition-colors placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] p-6">
-      <Card className="w-full max-w-md animate-fade-in-up overflow-hidden border border-border bg-card p-8 shadow-none">
+      <Card className="w-full max-w-md animate-fade-in-up overflow-hidden border border-border bg-white p-8 shadow-sm rounded-lg">
         <div className="mb-8 flex items-center gap-3">
           <Image src="/logo.png" alt="EzRCM360" width={147} height={32} className="h-10 w-auto shrink-0" priority />
           <span className="text-xl font-semibold tracking-tight text-foreground">EzRCM360</span>
         </div>
-        <h2 className="font-aileron text-2xl font-semibold tracking-tight text-foreground">Sign in</h2>
-        <p className="mt-2 text-base text-muted-foreground">
+        <h2 className="font-aileron text-2xl font-semibold tracking-tight text-[#202830]">Sign in</h2>
+        <p className="mt-2 font-aileron text-base text-muted-foreground">
           Use your credentials to access the settings portal.
         </p>
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
@@ -102,7 +106,7 @@ function LoginForm() {
             </div>
           )}
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-foreground">
+            <label htmlFor="email" className="font-aileron font-normal text-[14px] leading-none text-[#2A2C33]">
               Email
             </label>
             <input
@@ -113,25 +117,39 @@ function LoginForm() {
               required
               autoComplete="email"
               placeholder="you@company.com"
-              className="input-enterprise mt-1.5"
+              className={`${inputClass} mt-1.5`}
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-foreground">
+            <label htmlFor="password" className="font-aileron font-normal text-[14px] leading-none text-[#2A2C33]">
               Password
             </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              placeholder="••••••••"
-              className="input-enterprise mt-1.5"
-            />
+            <div className="relative mt-1.5">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                className={`${inputClass} pr-10`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#64748B] transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
-          <Button type="submit" disabled={loading} className="w-full">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full h-10 rounded-[5px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
+          >
             {loading ? "Signing in…" : "Sign in"}
           </Button>
         </form>

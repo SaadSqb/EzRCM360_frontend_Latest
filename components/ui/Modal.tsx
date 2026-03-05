@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { CloseIcon } from "@/lib/icons/AppIcons";
+import { X } from "lucide-react";
 import { ModalFooter } from "./ModalFooter";
 
 export interface ModalProps {
@@ -48,7 +48,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: ModalProp
             aria-label="Close"
           >
             <span className="sr-only">Close</span>
-            <CloseIcon />
+            <X className="h-4 w-4" />
           </button>
         </div>
         <div className="flex-1 overflow-y-auto px-6 py-4">{children}</div>

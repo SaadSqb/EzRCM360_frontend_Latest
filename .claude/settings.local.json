@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install @radix-ui/react-alert-dialog @radix-ui/react-avatar @radix-ui/react-checkbox @radix-ui/react-collapsible @radix-ui/react-dialog @radix-ui/react-scroll-area @radix-ui/react-select @radix-ui/react-separator @radix-ui/react-slot @radix-ui/react-tooltip class-variance-authority lucide-react --save)",
+      "Bash(npm install tailwindcss-animate --save-dev)",
+      "Bash(npx next build)",
+      "WebFetch(domain:www.figma.com)",
+      "Bash(npm run build)"
+    ]
+  }
+}

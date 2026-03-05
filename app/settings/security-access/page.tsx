@@ -238,7 +238,7 @@ export default function SecurityAccessPage() {
       )}
 
       {form && (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Multi-Factor Authentication (MFA) section - two-column grid */}
           <section>
             <h2 className="mb-4 text-lg font-semibold text-foreground">

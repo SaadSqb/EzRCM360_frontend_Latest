@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Search, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
+import { Pagination } from "@/components/ui/Pagination";
 import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { usersApi } from "@/lib/services/users";
@@ -37,6 +40,8 @@ export default function UsersPage() {
   const [statusOptions, setStatusOptions] = useState<ValueLabelDto[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [search, setSearch] = useState("");
   const [searchDebounced, setSearchDebounced] = useState("");
@@ -73,13 +78,13 @@ export default function UsersPage() {
     api
       .getList({
         pageNumber: page,
-        pageSize: 10,
+        pageSize,
         status: statusParam,
         search: searchDebounced || undefined,
       })
       .then(setData)
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load"));
-  }, [page, statusFilter, searchDebounced]);
+  }, [page, pageSize, statusFilter, searchDebounced]);
 
   useEffect(() => {
     loadList();
@@ -238,183 +243,180 @@ export default function UsersPage() {
       breadcrumbs={[{ label: "Settings & Configurations", href: "/settings" }, { label: "Users Access" }]}
       title="Users Access"
       description="Manage user accounts, roles, and module access."
-      actions={
-        canCreate && (
-          <Button onClick={openCreate} className="inline-flex items-center gap-2">
-            Add New User
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-          </Button>
-        )
-      }
     >
-      <Card className="overflow-hidden p-0 animate-fade-in-up">
-        {/* Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border bg-card px-4 py-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="input-enterprise w-auto min-w-[10rem]"
-            >
-              <option value="">All Status</option>
-              {statusOptions.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-            <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </span>
-              <input
-                type="search"
-                placeholder="Search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="input-enterprise w-48 pl-9 sm:w-56"
-              />
-            </div>
+      {/* Toolbar: search + add button */}
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Select value="" onValueChange={() => {}}>
+            <SelectTrigger className="w-[130px] h-10 border-[#E2E8F0] rounded-[5px] font-aileron text-[14px]">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent className="bg-white z-50">
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-10 w-[300px] rounded-[5px] border border-[#E2E8F0] bg-background pl-9 pr-4 font-aileron text-[14px] placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
           </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="input-enterprise w-auto min-w-[10rem]"
+          >
+            <option value="">All Status</option>
+            {statusOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
         </div>
-
-        {error && (
-          <div className="border-b border-border bg-red-50 px-4 py-2 text-sm text-red-700">
-            {error}
-          </div>
+        {canCreate && (
+          <Button
+            onClick={openCreate}
+            className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
+          >
+            <>Add User <ArrowRight className="ml-1 h-4 w-4" /></>
+          </Button>
         )}
+      </div>
 
-        {data && (
-          <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-border">
-                <thead>
-                  <tr className="bg-primary-50">
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-primary-900">
-                      User ID
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {data && (
+        <>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border">
+              <thead>
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
+                    User ID
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
+                    User Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
+                    Email
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
+                    Organization
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
+                    Role Assignment
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
+                    Module Access
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
+                    User Status
+                  </th>
+                  {(canUpdate || canDelete) && (
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">
+                      Actions
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-primary-900">
-                      User Name
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-primary-900">
-                      Email
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-primary-900">
-                      Organization
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-primary-900">
-                      Role Assignment
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-primary-900">
-                      Module Access
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-primary-900">
-                      User Status
-                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {data.items.map((row) => (
+                  <tr key={row.id} className="hover:bg-muted">
+                    <td className="px-4 py-3 text-sm">
+                      {toUserDisplayId(row.id)}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {row.userName}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {row.email}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {row.organizationName ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {row.roleName ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {moduleNames(row.moduleIds ?? [])}
+                    </td>
+                    <td className="px-4 py-2 text-sm">
+                      <select
+                        value={toStatusNumber(row.status)}
+                        onChange={(e) => handleStatusChange(row, Number(e.target.value))}
+                        disabled={!canUpdate || statusUpdatingId === row.id}
+                        className="input-enterprise w-auto min-w-[8rem] px-2 py-1.5 text-sm disabled:opacity-50"
+                      >
+                        {STATUS_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
                     {(canUpdate || canDelete) && (
-                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-primary-900">
-                        Actions
-                      </th>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex gap-1">
+                          {canUpdate && (
+                            <button
+                              type="button"
+                              onClick={() => openEdit(row)}
+                              className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                              title="Edit"
+                            >
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              type="button"
+                              onClick={() => setDeleteId(row.id)}
+                              className="rounded p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                              title="Delete"
+                            >
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </td>
                     )}
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-border bg-card">
-                  {data.items.map((row) => (
-                    <tr key={row.id} className="hover:bg-muted">
-                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground">
-                        {toUserDisplayId(row.id)}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">
-                        {row.userName}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
-                        {row.email}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
-                        {row.organizationName ?? "—"}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
-                        {row.roleName ?? "—"}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
-                        {moduleNames(row.moduleIds ?? [])}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-2 text-sm">
-                        <select
-                          value={toStatusNumber(row.status)}
-                          onChange={(e) => handleStatusChange(row, Number(e.target.value))}
-                          disabled={!canUpdate || statusUpdatingId === row.id}
-                          className="input-enterprise w-auto min-w-[8rem] px-2 py-1.5 text-sm disabled:opacity-50"
-                        >
-                          {STATUS_OPTIONS.map((o) => (
-                            <option key={o.value} value={o.value}>
-                              {o.name}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      {(canUpdate || canDelete) && (
-                        <td className="whitespace-nowrap px-4 py-3 text-right">
-                          <div className="flex justify-end gap-1">
-                            {canUpdate && (
-                              <button
-                                type="button"
-                                onClick={() => openEdit(row)}
-                                className="rounded p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                                title="Edit"
-                              >
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                </svg>
-                              </button>
-                            )}
-                            {canDelete && (
-                              <button
-                                type="button"
-                                onClick={() => setDeleteId(row.id)}
-                                className="rounded p-1.5 text-muted-foreground hover:bg-red-50 hover:text-red-600"
-                                title="Delete"
-                              >
-                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="flex items-center justify-between border-t border-border px-4 py-3">
-              <p className="text-sm text-muted-foreground">
-                Page {data.pageNumber} of {data.totalPages} ({data.totalCount} total)
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="secondary"
-                  disabled={!data.hasPreviousPage}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  Previous
-                </Button>
-                <Button variant="secondary" disabled={!data.hasNextPage} onClick={() => setPage((p) => p + 1)}>
-                  Next
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
-        {!data && !error && (
-          <div className="py-12 text-center text-sm text-muted-foreground">Loading…</div>
-        )}
-      </Card>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Pagination
+            pageNumber={data.pageNumber}
+            totalPages={data.totalPages}
+            totalCount={data.totalCount}
+            hasPreviousPage={data.hasPreviousPage}
+            hasNextPage={data.hasNextPage}
+            onPrevious={() => setPage((p) => Math.max(1, p - 1))}
+            onNext={() => setPage((p) => p + 1)}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+          />
+        </>
+      )}
+      {!data && !error && (
+        <div className="py-12 text-center text-sm text-muted-foreground">Loading…</div>
+      )}
 
       {/* Add User / Edit User modal */}
       <Modal

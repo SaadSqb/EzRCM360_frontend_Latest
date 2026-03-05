@@ -9,7 +9,7 @@ export interface StepperStep {
 
 export function Stepper({ steps }: { steps: StepperStep[] }) {
   return (
-    <div className="mb-8 animate-fade-in">
+    <div className="mb-6 animate-fade-in">
       <div className="flex items-center justify-between gap-1">
         {steps.map((step, i) => (
           <div key={step.id} className="flex flex-1 items-center">

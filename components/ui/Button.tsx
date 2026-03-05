@@ -1,62 +1,90 @@
+"use client";
+
+import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
 import Link from "next/link";
 
-/** Design system – matches EzRCM360_Design-main button.tsx */
-const baseStyles =
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2";
+import { cn } from "@/lib/utils";
 
-const variantStyles = {
-  primary:
-    "bg-primary text-primary-foreground hover:bg-primary/90",
-  secondary:
-    "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-  ghost:
-    "hover:bg-accent hover:text-accent-foreground",
-  danger:
-    "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-} as const;
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+        /* Backward-compatible aliases from P1's original variants */
+        primary: "bg-primary text-primary-foreground hover:bg-primary/90",
+        danger:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-md px-3",
+        lg: "h-11 rounded-md px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  },
+);
 
-export type ButtonVariant = keyof typeof variantStyles;
+export type ButtonVariant =
+  | "default"
+  | "destructive"
+  | "outline"
+  | "secondary"
+  | "ghost"
+  | "link"
+  | "primary"
+  | "danger";
 
-/** Action button (no navigation). Single Responsibility: trigger actions. */
-export type ButtonProps = {
-  children: React.ReactNode;
-  variant?: ButtonVariant;
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
   href?: string;
-  className?: string;
-  type?: "button" | "submit";
-  disabled?: boolean;
-  onClick?: () => void;
-  "aria-label"?: string;
-};
-
-export function Button({
-  children,
-  variant = "primary",
-  href,
-  className = "",
-  type = "button",
-  disabled = false,
-  onClick,
-  "aria-label": ariaLabel,
-}: ButtonProps) {
-  const cls = `${baseStyles} ${variantStyles[variant]} ${className}`;
-
-  if (href) {
-    return (
-      <Link href={href} className={cls} aria-label={ariaLabel}>
-        {children}
-      </Link>
-    );
-  }
-  return (
-    <button
-      type={type}
-      className={cls}
-      disabled={disabled}
-      onClick={onClick}
-      aria-label={ariaLabel}
-    >
-      {children}
-    </button>
-  );
 }
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    { className, variant, size, asChild = false, href, children, ...props },
+    ref,
+  ) => {
+    if (href) {
+      return (
+        <Link
+          href={href}
+          className={cn(buttonVariants({ variant, size, className }))}
+        >
+          {children}
+        </Link>
+      );
+    }
+
+    const Comp = asChild ? Slot : "button";
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      >
+        {children}
+      </Comp>
+    );
+  },
+);
+Button.displayName = "Button";
+
+export { Button, buttonVariants };

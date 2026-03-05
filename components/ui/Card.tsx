@@ -5,15 +5,17 @@ export interface CardProps {
   className?: string;
   /** Raised elevation for emphasis */
   elevated?: boolean;
+  /** No shadow variant */
+  flat?: boolean;
 }
 
 /** Matches design card.tsx: rounded-lg border bg-card text-card-foreground shadow-sm */
-export function Card({ children, className = "", elevated = false }: CardProps) {
+export function Card({ children, className = "", elevated = false, flat = false }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-lg border bg-card text-card-foreground shadow-sm",
-        elevated && "shadow-md",
+        "rounded-lg border bg-card text-card-foreground",
+        flat ? "shadow-none" : elevated ? "shadow-md" : "shadow-sm",
         className
       )}
     >

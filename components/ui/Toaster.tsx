@@ -1,7 +1,7 @@
 "use client";
 
 import { useToast } from "@/lib/contexts/ToastContext";
-import { CloseIcon } from "@/lib/icons/AppIcons";
+import { X } from "lucide-react";
 
 export function Toaster() {
   const { toasts, dismiss } = useToast();
@@ -30,7 +30,7 @@ export function Toaster() {
             className="ml-2 rounded p-1 opacity-70 hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
             aria-label="Dismiss"
           >
-            <CloseIcon className="h-4 w-4" />
+            <X className="h-4 w-4" />
           </button>
         </div>
       ))}

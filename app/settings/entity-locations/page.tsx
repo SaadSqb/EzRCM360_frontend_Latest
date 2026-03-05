@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Search, ArrowRight } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { PageHeader } from "@/components/settings/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -44,6 +46,8 @@ const defaultForm: CreateEntityLocationRequest = {
 export default function EntityLocationsPage() {
   const [entities, setEntities] = useState<EntityLookupDto[]>([]);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<CreateEntityLocationRequest>(defaultForm);
@@ -58,7 +62,7 @@ export default function EntityLocationsPage() {
 
   const { data, error, loading, reload } = usePaginatedList({
     pageNumber: page,
-    pageSize: 10,
+    pageSize,
     fetch: api.getList,
   });
 
@@ -141,69 +145,98 @@ export default function EntityLocationsPage() {
   return (
     <div>
       <PageHeader title="Entity Locations" description="Manage entity locations." />
-      <Card>
-        {canCreate && (
-          <div className="mb-4 flex justify-end">
-            <Button onClick={openCreate}>Add location</Button>
-          </div>
-        )}
-        {error && (
-          <div className="mb-4">
-            <Alert variant="error">{error}</Alert>
-          </div>
-        )}
-        {data && (
-          <>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableHeaderCell>Entity</TableHeaderCell>
-                  <TableHeaderCell>Location name</TableHeaderCell>
-                  <TableHeaderCell>Type</TableHeaderCell>
-                  <TableHeaderCell>Physical address</TableHeaderCell>
-                  <TableHeaderCell>POS code</TableHeaderCell>
-                  <TableHeaderCell>Active</TableHeaderCell>
-                  {(canUpdate || canDelete) && <TableHeaderCell align="right">Actions</TableHeaderCell>}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {data.items.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell className="whitespace-nowrap">{row.entityDisplayName}</TableCell>
-                    <TableCell className="whitespace-nowrap font-medium text-foreground">
-                      {row.locationName}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">{row.locationType}</TableCell>
-                    <TableCell className="max-w-[200px] truncate">{row.physicalAddress ?? "—"}</TableCell>
-                    <TableCell className="whitespace-nowrap">{row.posCode ?? "—"}</TableCell>
-                    <TableCell className="whitespace-nowrap">{row.isActive ? "Yes" : "No"}</TableCell>
-                    {(canUpdate || canDelete) && (
-                      <TableCell align="right" className="min-w-[180px]">
-                        <TableActionsCell
-                          canEdit={canUpdate}
-                          canDelete={canDelete}
-                          onEdit={() => openEdit(row)}
-                          onDelete={() => setDeleteId(row.id)}
-                        />
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <Pagination
-              pageNumber={data.pageNumber}
-              totalPages={data.totalPages}
-              totalCount={data.totalCount}
-              hasPreviousPage={data.hasPreviousPage}
-              hasNextPage={data.hasNextPage}
-              onPrevious={() => setPage((p) => Math.max(1, p - 1))}
-              onNext={() => setPage((p) => p + 1)}
+
+      {/* Toolbar: search + add button */}
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Select value="" onValueChange={() => {}}>
+            <SelectTrigger className="w-[130px] h-10 border-[#E2E8F0] rounded-[5px] font-aileron text-[14px]">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent className="bg-white z-50">
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-10 w-[300px] rounded-[5px] border border-[#E2E8F0] bg-background pl-9 pr-4 font-aileron text-[14px] placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
-          </>
+          </div>
+        </div>
+        {canCreate && (
+          <Button
+            onClick={openCreate}
+            className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
+          >
+            <>Add Entity Location <ArrowRight className="ml-1 h-4 w-4" /></>
+          </Button>
         )}
-        {loading && !data && !error && <Loader variant="inline" />}
-      </Card>
+      </div>
+
+      {error && (
+        <div className="mb-4">
+          <Alert variant="error">{error}</Alert>
+        </div>
+      )}
+      {data && (
+        <>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell>Entity</TableHeaderCell>
+                <TableHeaderCell>Location name</TableHeaderCell>
+                <TableHeaderCell>Type</TableHeaderCell>
+                <TableHeaderCell>Physical address</TableHeaderCell>
+                <TableHeaderCell>POS code</TableHeaderCell>
+                <TableHeaderCell>Active</TableHeaderCell>
+                {(canUpdate || canDelete) && <TableHeaderCell>Actions</TableHeaderCell>}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {data.items.map((row) => (
+                <TableRow key={row.id}>
+                  <TableCell>{row.entityDisplayName}</TableCell>
+                  <TableCell>{row.locationName}</TableCell>
+                  <TableCell>{row.locationType}</TableCell>
+                  <TableCell>{row.physicalAddress ?? "—"}</TableCell>
+                  <TableCell>{row.posCode ?? "—"}</TableCell>
+                  <TableCell>{row.isActive ? "Yes" : "No"}</TableCell>
+                  {(canUpdate || canDelete) && (
+                    <TableCell>
+                      <TableActionsCell
+                        canEdit={canUpdate}
+                        canDelete={canDelete}
+                        onEdit={() => openEdit(row)}
+                        onDelete={() => setDeleteId(row.id)}
+                      />
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <Pagination
+            pageNumber={data.pageNumber}
+            totalPages={data.totalPages}
+            totalCount={data.totalCount}
+            hasPreviousPage={data.hasPreviousPage}
+            hasNextPage={data.hasNextPage}
+            onPrevious={() => setPage((p) => Math.max(1, p - 1))}
+            onNext={() => setPage((p) => p + 1)}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+          />
+        </>
+      )}
+      {loading && !data && !error && <Loader variant="inline" />}
 
       <EntityLocationFormModal
         open={modalOpen}

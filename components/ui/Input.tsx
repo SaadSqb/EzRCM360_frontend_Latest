@@ -1,6 +1,8 @@
 "use client";
 
+import * as React from "react";
 import { Label } from "./Label";
+import { cn } from "@/lib/utils";
 
 export interface InputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "className"> {
@@ -10,39 +12,55 @@ export interface InputProps
   inputClassName?: string;
 }
 
-const inputBaseClass =
-  "input-enterprise";
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  (
+    {
+      label,
+      error,
+      wrapperClassName = "",
+      inputClassName = "",
+      id,
+      required,
+      ...rest
+    },
+    ref,
+  ) => {
+    const inputId =
+      id ??
+      (label && typeof label === "string"
+        ? label.replace(/\s+/g, "-").toLowerCase()
+        : undefined);
 
-export function Input({
-  label,
-  error,
-  wrapperClassName = "",
-  inputClassName = "",
-  id,
-  required,
-  ...rest
-}: InputProps) {
-  const inputId = id ?? (label && typeof label === "string" ? label.replace(/\s+/g, "-").toLowerCase() : undefined);
-  return (
-    <div className={wrapperClassName}>
-      {label != null && (
-        <Label htmlFor={inputId} required={required} className="mb-1">
-          {label}
-        </Label>
-      )}
-      <input
-        id={inputId}
-        className={`${inputBaseClass} ${error ? "input-enterprise-error" : ""} ${inputClassName}`}
-        required={required}
-        aria-invalid={!!error}
-        aria-describedby={error ? `${inputId}-error` : undefined}
-        {...rest}
-      />
-      {error && (
-        <p id={inputId ? `${inputId}-error` : undefined} className="mt-1 text-sm text-red-600">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
+    return (
+      <div className={wrapperClassName}>
+        {label != null && (
+          <Label htmlFor={inputId} required={required} className="mb-1.5">
+            {label}
+          </Label>
+        )}
+        <input
+          ref={ref}
+          id={inputId}
+          className={cn(
+            "flex h-[39px] w-full rounded-[5px] border border-[#E2E8F0] bg-background px-4 font-aileron text-[14px] ring-offset-background transition-colors placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+            error && "border-destructive focus-visible:ring-destructive/30",
+            inputClassName,
+          )}
+          required={required}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${inputId}-error` : undefined}
+          {...rest}
+        />
+        {error && (
+          <p
+            id={inputId ? `${inputId}-error` : undefined}
+            className="mt-1 text-sm text-red-600"
+          >
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  },
+);
+Input.displayName = "Input";

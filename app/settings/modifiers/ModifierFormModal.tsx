@@ -1,9 +1,10 @@
 "use client";
 
-import { Modal, ModalFooter } from "@/components/ui/Modal";
+import { DrawerForm } from "@/components/ui/DrawerForm";
+import { DrawerFooter } from "@/components/ui/ModalFooter";
 import { Alert } from "@/components/ui/Alert";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
+import { NativeSelect as Select } from "@/components/ui/Select";
 import type { CreateModifierCommand } from "@/lib/services/modifiers";
 import type { SelectOption } from "@/components/ui/Select";
 
@@ -35,7 +36,19 @@ export function ModifierFormModal({
   error,
 }: ModifierFormModalProps) {
   return (
-    <Modal open={open} onClose={onClose} title={editId ? "Edit modifier" : "Add modifier"} size="lg">
+    <DrawerForm
+      open={open}
+      onOpenChange={(v) => !v && onClose()}
+      title={editId ? "Edit Modifier" : "Add Modifier"}
+      footer={
+        <DrawerFooter
+          onCancel={onClose}
+          submitLabel={editId ? "Update" : "Create"}
+          onSubmit={onSubmit}
+          loading={loading}
+        />
+      }
+    >
       <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
         {error && (
           <div className="mb-4">
@@ -73,13 +86,7 @@ export function ModifierFormModal({
             <span className="text-sm text-foreground">Active</span>
           </label>
         </div>
-        <ModalFooter
-          onCancel={onClose}
-          submitLabel={editId ? "Update" : "Create"}
-          onSubmit={onSubmit}
-          loading={loading}
-        />
       </form>
-    </Modal>
+    </DrawerForm>
   );
 }

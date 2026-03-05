@@ -10,6 +10,7 @@ import { SETTINGS_HREF_TO_MODULE_NAME } from "@/lib/constants/routeModuleMap";
 const configSections = [
   {
     title: "Organization & Access",
+    icon: "/icons/svg/organization-access.svg",
     description:
       "Define enterprise-level governance, identity, access control, and security enforcement.",
     links: [
@@ -21,6 +22,7 @@ const configSections = [
   },
   {
     title: "Entity Configurations",
+    icon: "/icons/svg/entity-configurations.svg",
     description:
       "Define Entity identity and structure for access control and downstream operational configuration.",
     links: [
@@ -32,6 +34,7 @@ const configSections = [
   },
   {
     title: "Payers & Plans Configurations",
+    icon: "/icons/svg/payers-plans.svg",
     description: "Centralized payer and plan registry used across all modules.",
     links: [
       { label: "Payer Configuration", href: "/settings/payers" },
@@ -40,6 +43,7 @@ const configSections = [
   },
   {
     title: "Group Provider-Plan Participation",
+    icon: "/icons/svg/group-provider.svg",
     description:
       "Authoritative record of network participation status used by all modules.",
     links: [
@@ -48,6 +52,7 @@ const configSections = [
   },
   {
     title: "Rendering Provider-Plan Participation",
+    icon: "/icons/svg/rendering-provider.svg",
     description:
       "Authoritative record of network participation status used by all modules.",
     links: [
@@ -56,6 +61,7 @@ const configSections = [
   },
   {
     title: "Facilities Configurations",
+    icon: "/icons/svg/facilities.svg",
     description: "Define independent service locations separate from Entity practices.",
     links: [
       { label: "Facility Configuration", href: "/settings/facilities" },
@@ -63,6 +69,7 @@ const configSections = [
   },
   {
     title: "Fee Schedules Configurations",
+    icon: "/icons/svg/fee-schedules.svg",
     description:
       "Centralized valuation datasets for reimbursement calculation and analysis.",
     links: [
@@ -73,6 +80,7 @@ const configSections = [
   },
   {
     title: "Codes & Modifiers Configurations",
+    icon: "/icons/svg/codes-modifiers.svg",
     description: "Standardized coding and financial adjustment logic.",
     links: [
       { label: "ICD Codes", href: "/settings/icd-codes" },
@@ -86,6 +94,7 @@ const configSections = [
   },
   {
     title: "NSA Configuration",
+    icon: "/icons/svg/nsa-configuration.svg",
     description: "Centralized NSA eligibility and valuation governance.",
     links: [
       { label: "NSA Eligibility Rules", href: "/settings/nsa-eligibility" },
@@ -126,7 +135,7 @@ export default function SettingsPage() {
           ))}
         </div>
       ) : filteredSections && filteredSections.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 xl:grid-rows-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredSections.map((section, i) => (
             <div
               key={section.title}
@@ -140,6 +149,7 @@ export default function SettingsPage() {
                 title={section.title}
                 description={section.description}
                 links={section.links}
+                icon={section.icon}
                 className="w-full"
               />
             </div>

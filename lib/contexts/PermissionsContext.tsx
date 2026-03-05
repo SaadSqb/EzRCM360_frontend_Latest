@@ -8,7 +8,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { usePathname } from "next/navigation";
 import { AUTH_TOKEN_KEY } from "@/lib/env";
 import { permissionsApi } from "@/lib/services/permissions";
 import type { PermissionDto } from "@/lib/services/permissions";
@@ -54,10 +53,9 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       .finally(() => setLoading(false));
   }, []);
 
-  const pathname = usePathname();
   useEffect(() => {
     load();
-  }, [load, pathname]);
+  }, [load]); // load once on mount; call reload() explicitly when permissions change
 
   const byModuleName = useMemo(() => {
     const map = new Map<string, PermissionDto>();
