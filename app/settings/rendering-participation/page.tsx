@@ -184,8 +184,8 @@ export default function RenderingParticipationPage() {
                 <tbody className="divide-y divide-border">
                   {data.items.map((row) => (
                     <tr key={row.id} className="hover:bg-muted">
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{row.entityProviderDisplayName ?? row.entityProviderId}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">{row.planDisplayName ?? row.planId}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-foreground">{row.providerName ?? row.entityProviderId}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">{row.planName ?? row.planId}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">{statusLabel(row.participationStatus)}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">{row.effectiveFrom ? toDateInput(row.effectiveFrom) : "—"}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">{row.effectiveTo ? toDateInput(row.effectiveTo) : "—"}</td>

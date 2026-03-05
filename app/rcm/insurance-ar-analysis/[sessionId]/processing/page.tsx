@@ -19,6 +19,50 @@ import {
 const POLL_BASE_MS = 1000; // 1st after 1s, 2nd after 2s, 3rd after 4s, 4th after 8s, 5th after 16s...
 const POLL_MAX_MS = 30000; // Cap at 30s
 
+/** Per-step "Hint: What to do next" content. Column names match backend-generated Excel files. */
+const RESOLUTION_HINTS = {
+  claimIntegrity: (
+    <>
+      <strong>What this file is:</strong> One row per claim group (Client Claim ID) with header conflicts (e.g. conflicting Client Entity Name, Billing Provider, Rendering Provider, Patient Name, DOB, etc.).{" "}
+      <strong>Resolve:</strong> Correct the header values for that row and set the <strong>Action</strong> column to <strong>Resolve</strong>.{" "}
+      <strong>Exclude:</strong> Set <strong>Action</strong> to <strong>Exclude</strong> to remove that claim group from this analysis session.{" "}
+      Then save the file and re-upload the corrected file here.
+    </>
+  ),
+  payerNotFound: (
+    <>
+      <strong>What this file is:</strong> Lists payers from your intake that were not matched to an existing payer. Columns include Primary Payer Name, Client Claim ID, Status, and <strong>Action</strong>.{" "}
+      <strong>Resolve:</strong> Map to an existing payer (or add and map) and set <strong>Action</strong> to <strong>Resolve</strong>.{" "}
+      <strong>Exclude:</strong> Set <strong>Action</strong> to <strong>Exclude</strong> to exclude affected claims from this session.{" "}
+      Then save and re-upload the corrected file.
+    </>
+  ),
+  planNotFound: (
+    <>
+      <strong>What this file is:</strong> Lists unmatched plan identifiers (Primary Payer Name, Plan Name, Plan ID #, Client Claim ID, Status, <strong>Action</strong>).{" "}
+      <strong>Resolve:</strong> Map to an existing plan and set <strong>Action</strong> to <strong>Resolve</strong>.{" "}
+      <strong>Exclude:</strong> Set <strong>Action</strong> to <strong>Exclude</strong> to exclude affected claims.{" "}
+      Then save and re-upload the corrected file.
+    </>
+  ),
+  providerParticipation: (
+    <>
+      <strong>What this file is:</strong> Lists Rendering Provider × Payer × Plan combinations that need participation status. Columns: Client Claim ID, Rendering Provider Name, Primary Payer Name, Plan Name, <strong>Action</strong>.{" "}
+      <strong>Resolve:</strong> Set participation status (e.g. IN or OON) where applicable and set <strong>Action</strong> to <strong>Resolve</strong>.{" "}
+      <strong>Exclude:</strong> Set <strong>Action</strong> to <strong>Exclude</strong> to exclude affected claims.{" "}
+      Then save and re-upload the corrected file.
+    </>
+  ),
+  facilityParticipation: (
+    <>
+      <strong>What this file is:</strong> Lists facility × payer × plan combinations that need participation. Same idea as Provider Participation; columns include Client Claim ID and <strong>Action</strong>.{" "}
+      <strong>Resolve:</strong> Set participation or correct data and set <strong>Action</strong> to <strong>Resolve</strong>.{" "}
+      <strong>Exclude:</strong> Set <strong>Action</strong> to <strong>Exclude</strong> to exclude affected claims.{" "}
+      Then save and re-upload the corrected file.
+    </>
+  ),
+};
+
 function PipelineStep({
   step,
   index,
@@ -187,8 +231,8 @@ export default function InsuranceArAnalysisProcessingPage() {
     };
   }, [sessionId]); // sessionId only - stable deps prevent effect re-runs
 
-  const refreshStatus = useCallback(async () => {
-    if (!sessionId) return;
+  const refreshStatus = useCallback(async (): Promise<ArAnalysisProcessingStatusDto | null> => {
+    if (!sessionId) return null;
     try {
       const [s, sess] = await Promise.all([
         apiRef.current.getStatus(sessionId),
@@ -196,10 +240,24 @@ export default function InsuranceArAnalysisProcessingPage() {
       ]);
       setStatus(s);
       setSession(sess);
+      if (s.sessionStatus === "Completed") {
+        routerRef.current.push(`/rcm/insurance-ar-analysis/${sessionId}/report`);
+      }
+      return s;
     } catch {
-      /* ignore */
+      return null;
     }
   }, [sessionId]);
+
+  /** Poll status every 2s until Completed/Failed or max 60s. Use after resolution upload while pipeline runs in background. */
+  const pollUntilSettled = useCallback(async () => {
+    if (!sessionId) return;
+    for (let i = 0; i < 30; i++) {
+      await new Promise((r) => setTimeout(r, 2000));
+      const s = await refreshStatus();
+      if (s?.sessionStatus === "Completed" || s?.sessionStatus === "Failed") return;
+    }
+  }, [sessionId, refreshStatus]);
 
   const needsResolution = (val: string | null | undefined) =>
     val && /NotFound|Pending|ActionRequired|Failed/i.test(val);
@@ -242,8 +300,9 @@ export default function InsuranceArAnalysisProcessingPage() {
     try {
       await apiRef.current.uploadClaimIntegrityConflicts(sessionId, conflictFile);
       setConflictFile(null);
-      toast.success("Conflict file uploaded.");
-      refreshStatus();
+      toast.success("File uploaded. Pipeline resuming—page will update when ready.");
+      await refreshStatus();
+      pollUntilSettled(); // poll in background; don't await
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed.");
     } finally {
@@ -278,8 +337,9 @@ export default function InsuranceArAnalysisProcessingPage() {
     try {
       await uploadFn(file);
       setFile(null);
-      toast.success(`${name} file uploaded.`);
-      refreshStatus();
+      toast.success("File uploaded. Pipeline resuming—page will update when ready.");
+      await refreshStatus();
+      pollUntilSettled(); // poll in background; don't await
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed.");
     } finally {
@@ -300,6 +360,7 @@ export default function InsuranceArAnalysisProcessingPage() {
   const ResolutionBlock = ({
     title,
     description,
+    hint,
     downloadLabel,
     filename,
     onDownload,
@@ -310,6 +371,7 @@ export default function InsuranceArAnalysisProcessingPage() {
   }: {
     title: string;
     description: string;
+    hint?: React.ReactNode;
     downloadLabel: string;
     filename: string;
     onDownload: () => Promise<void>;
@@ -321,6 +383,12 @@ export default function InsuranceArAnalysisProcessingPage() {
     <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
       <h4 className="text-base font-semibold text-amber-900">{title}</h4>
       <p className="mt-2 text-sm text-amber-800">{description}</p>
+      {hint != null && (
+        <div className="mt-4 rounded-lg border border-amber-300 bg-amber-100/80 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">Hint: What to do next</p>
+          <p className="mt-1.5 text-sm text-amber-900">{hint}</p>
+        </div>
+      )}
       <div className="mt-4 flex flex-wrap gap-3">
         <Button onClick={onDownload} disabled={disabled} variant="secondary">
           {disabled ? "Downloading…" : downloadLabel}
@@ -328,6 +396,8 @@ export default function InsuranceArAnalysisProcessingPage() {
       </div>
       <div className="mt-6">
         <h5 className="text-sm font-medium text-amber-900">Upload corrected file</h5>
+        <p className="mt-0.5 text-xs text-amber-800">Re-upload the same file after you correct it or mark rows to exclude.</p>
+        <p className="mt-1 text-xs text-amber-700">After you upload, the pipeline will resume automatically; the page will update to the next step or redirect to the report when complete.</p>
         <div className="mt-2">
           <FileUploadZone
             label={`Drop ${filename} here`}
@@ -445,7 +515,7 @@ export default function InsuranceArAnalysisProcessingPage() {
               <p className="text-sm text-muted-foreground">
                 {isEnrichmentPending
                   ? status?.overallMessage ??
-                    "Download the file for this step, resolve or exclude, then re-upload."
+                    "Download the report, correct data or mark rows as Exclude, then re-upload that same corrected file."
                   : isProcessing
                     ? "Running validation, enrichment, and recovery calculations. This typically takes 1–3 minutes."
                     : status?.overallMessage}
@@ -484,9 +554,12 @@ export default function InsuranceArAnalysisProcessingPage() {
               <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-6">
                 <h4 className="text-base font-semibold text-amber-900">Claim integrity conflicts</h4>
                 <p className="mt-2 text-sm text-amber-800">
-                  We detected claim integrity conflicts. Download the report, correct
-                  the issues, and re-upload to continue the analysis.
+                  We detected claim integrity conflicts. Download the report, correct header inconsistencies or mark claim groups as <strong>Exclude</strong> in the Action column, then re-upload that same corrected file to continue.
                 </p>
+                <div className="mt-4 rounded-lg border border-amber-300 bg-amber-100/80 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">Hint: What to do next</p>
+                  <p className="mt-1.5 text-sm text-amber-900">{RESOLUTION_HINTS.claimIntegrity}</p>
+                </div>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <Button
                     onClick={handleDownloadConflicts}
@@ -498,6 +571,8 @@ export default function InsuranceArAnalysisProcessingPage() {
                 </div>
                 <div className="mt-6">
                   <h5 className="text-sm font-medium text-amber-900">Upload corrected file</h5>
+                  <p className="mt-0.5 text-xs text-amber-800">Re-upload the same file after you correct it or mark rows to exclude.</p>
+                  <p className="mt-1 text-xs text-amber-700">After you upload, the pipeline will resume automatically; the page will update to the next step or redirect to the report when complete.</p>
                   <div className="mt-2">
                     <FileUploadZone
                       label="Drop corrected file here"
@@ -524,7 +599,8 @@ export default function InsuranceArAnalysisProcessingPage() {
               <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
               <ResolutionBlock
                 title="Payer not found"
-                description="Some payers in your intake file were not found. Download the report, map or add the payers, and re-upload to continue."
+                description="Some payers in your intake were not matched. Download the report, correct the data (map or add payers) or mark rows as Exclude in the Action column, then re-upload that same corrected file."
+                hint={RESOLUTION_HINTS.payerNotFound}
                 downloadLabel="Download Payer-NotFound.xlsx"
                 filename="Payer-NotFound.xlsx"
                 onDownload={handleDownloadPayer}
@@ -541,7 +617,8 @@ export default function InsuranceArAnalysisProcessingPage() {
               <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
               <ResolutionBlock
                 title="Plan not found"
-                description="Some plans in your intake file were not found. Download the report, map or add the plans, and re-upload to continue."
+                description="Some plans in your intake were not matched. Download the report, correct the data (map to existing plan) or mark rows as Exclude in the Action column, then re-upload that same corrected file."
+                hint={RESOLUTION_HINTS.planNotFound}
                 downloadLabel="Download Plan-NotFound.xlsx"
                 filename="Plan-NotFound.xlsx"
                 onDownload={handleDownloadPlan}
@@ -558,7 +635,8 @@ export default function InsuranceArAnalysisProcessingPage() {
               <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
               <ResolutionBlock
                 title="Provider participation not found"
-                description="Provider participation could not be resolved for some claims. Download the report, correct the data, and re-upload to continue."
+                description="Rendering provider × payer × plan combinations need participation status. Download the report, set participation status or mark rows as Exclude in the Action column, then re-upload that same corrected file."
+                hint={RESOLUTION_HINTS.providerParticipation}
                 downloadLabel="Download ProviderParticipation-NotFound.xlsx"
                 filename="ProviderParticipation-NotFound.xlsx"
                 onDownload={handleDownloadProvider}
@@ -575,7 +653,8 @@ export default function InsuranceArAnalysisProcessingPage() {
               <h3 className="mb-4 text-base font-semibold text-amber-900">Action required</h3>
               <ResolutionBlock
                 title="Facility participation not found"
-                description="Facility participation could not be resolved for some claims. Download the report, correct the data, and re-upload to continue."
+                description="Facility × payer × plan combinations need resolution. Download the report, correct the data or mark rows as Exclude in the Action column, then re-upload that same corrected file."
+                hint={RESOLUTION_HINTS.facilityParticipation}
                 downloadLabel="Download FacilityParticipation-NotFound.xlsx"
                 filename="FacilityParticipation-NotFound.xlsx"
                 onDownload={handleDownloadFacility}

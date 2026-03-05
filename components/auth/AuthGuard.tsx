@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AUTH_TOKEN_KEY } from "@/lib/env";
 
-const PUBLIC_PATHS = ["/login", "/authentication/verify", "/authentication/setup"];
+const PUBLIC_PATHS = ["/login", "/set-password", "/authentication/verify", "/authentication/setup"];
 const LOGIN_PATH = "/login";
 
 function isPublicPath(pathname: string | null) {

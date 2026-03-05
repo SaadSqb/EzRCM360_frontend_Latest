@@ -219,7 +219,7 @@ export default function PayersPage() {
                     <TableCell className="whitespace-nowrap">
                       {entityTypeLabel(row.entityType)}
                     </TableCell>
-                    <TableCell className="whitespace-nowrap">{row.status === 1 ? "Active" : "Inactive"}</TableCell>
+                    <TableCell className="whitespace-nowrap">{row.status === 1 || String(row.status).toLowerCase() === "active" ? "Active" : "Inactive"}</TableCell>
                     {(canUpdate || canDelete) && (
                       <TableCell align="right" className="min-w-[180px]">
                         <TableActionsCell

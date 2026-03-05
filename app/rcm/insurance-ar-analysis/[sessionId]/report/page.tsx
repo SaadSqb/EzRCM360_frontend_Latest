@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { PageShell } from "@/components/layout/PageShell";
@@ -27,24 +27,24 @@ export default function InsuranceArAnalysisReportPage() {
   const params = useParams();
   const sessionId = params.sessionId as string;
   const toast = useToast();
-  const api = insuranceArAnalysisApi();
+  const apiRef = useRef(insuranceArAnalysisApi());
   const [report, setReport] = useState<ArAnalysisReportDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     if (!sessionId) return;
-    api
+    apiRef.current
       .getReport(sessionId)
       .then(setReport)
       .catch(() => toast.error("Failed to load report."))
       .finally(() => setLoading(false));
-  }, [sessionId, api, toast]);
+  }, [sessionId]);
 
   const handleExport = async () => {
     setExporting(true);
     try {
-      const blob = await api.downloadReportExport(sessionId);
+      const blob = await apiRef.current.downloadReportExport(sessionId);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

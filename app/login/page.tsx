@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Card } from "@/components/ui/Card";
@@ -18,6 +18,13 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("activated") === "1") {
+      toast.success("Password Set Successfully. Your account has been activated successfully!");
+      router.replace("/login");
+    }
+  }, [searchParams, toast, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

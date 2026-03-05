@@ -4,9 +4,11 @@ import type { PaginatedList } from "@/lib/types";
 export interface RenderingProviderPlanParticipationListItemDto {
   id: string;
   entityProviderId: string;
-  entityProviderDisplayName?: string | null;
   planId: string;
-  planDisplayName?: string | null;
+  /** From API: provider display name */
+  providerName?: string | null;
+  /** From API: plan display name */
+  planName?: string | null;
   participationStatus: number;
   effectiveFrom?: string | null;
   effectiveTo?: string | null;

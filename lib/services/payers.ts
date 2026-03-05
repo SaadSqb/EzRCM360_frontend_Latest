@@ -1,12 +1,13 @@
 import { apiRequest } from "@/lib/api";
 import type { PaginatedList } from "@/lib/types";
 
+/** API may return status as number (0/1) or string ("Active"/"Inactive") depending on serialization. */
 export interface PayerListItemDto {
   id: string;
   payerName: string;
   aliases?: string | null;
   entityType: number;
-  status: number;
+  status: number | string;
   organizationId: string;
   organizationName?: string | null;
 }
