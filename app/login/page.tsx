@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/Button";
 import { getApiUrl } from "@/lib/api";
 import { AUTH_TOKEN_KEY, REFRESH_TOKEN_KEY, MFA_USER_ID_KEY, MFA_SETUP_USER_ID_KEY, AUTH_COOKIE } from "@/lib/env";
 import { useToast } from "@/lib/contexts/ToastContext";
+import { usePermissionsOptional } from "@/lib/contexts/PermissionsContext";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const toast = useToast();
+  const permissions = usePermissionsOptional();
   const redirectTo = searchParams.get("redirect") ?? "/settings";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -65,6 +67,7 @@ function LoginForm() {
         document.cookie = `${AUTH_COOKIE}=1; path=/; max-age=86400; SameSite=Lax`;
         sessionStorage.setItem(MFA_SETUP_USER_ID_KEY, userId);
         sessionStorage.setItem("mfa_redirect", redirectTo);
+        await permissions?.reload();
         toast.success("Please set up Multi-Factor Authentication.");
         router.push("/authentication/setup");
         router.refresh();
@@ -75,6 +78,7 @@ function LoginForm() {
         localStorage.setItem(AUTH_TOKEN_KEY, token);
         if (refresh) localStorage.setItem(REFRESH_TOKEN_KEY, refresh);
         document.cookie = `${AUTH_COOKIE}=1; path=/; max-age=86400; SameSite=Lax`;
+        await permissions?.reload();
       }
       toast.success("Signed in successfully.");
       router.push(redirectTo.startsWith("/") ? redirectTo : "/settings");
