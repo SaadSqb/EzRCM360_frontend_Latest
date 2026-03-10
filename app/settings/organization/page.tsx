@@ -5,10 +5,12 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { getApiUrl } from "@/lib/api";
+import { PhoneCall } from "lucide-react";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { useModulePermission } from "@/lib/contexts/PermissionsContext";
 import { AccessRestrictedContent } from "@/components/auth/AccessRestrictedContent";
 import { organizationsApi } from "@/lib/services/organizations";
+import { OrganizationIcon } from "@/lib/icons/OrganizationIcon";
 import type {
   OrganizationProfileDto,
   UpdateCurrentOrganizationRequest,
@@ -21,6 +23,17 @@ function getInitials(name: string): string {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
   return name.slice(0, 2).toUpperCase() || "—";
+}
+
+/** First letter of first two words only (e.g. "PrimeCare Billing Solutions" → "PB"). */
+function getAvatarInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "—";
+  const chars = parts
+    .slice(0, 2)
+    .map((p) => p[0] ?? "")
+    .join("");
+  return chars.toUpperCase() || "—";
 }
 
 function formatId(id: string | null | undefined): string {
@@ -197,96 +210,87 @@ export default function OrganizationPage() {
     <PageShell
       breadcrumbs={[{ label: "Settings & Configurations", href: "/settings" }, { label: "Organization" }]}
       title="Organization"
-      description="Manage organization profile and preferences."
+      titleWrapperClassName="mb-5"
     >
-      {/* Summary card - design: bg-[#F7F8F9] rounded-[5px] h-[120px] */}
-      <Card className="mb-6 overflow-hidden animate-fade-in-up rounded-[5px] border border-border bg-[#F7F8F9]">
-        <div className="flex flex-col sm:flex-row">
-          <div className="flex min-h-[120px] min-w-[140px] items-center justify-center p-6">
-            <div className="flex h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-primary-600 text-2xl font-semibold text-white shadow-lg shadow-primary-600/20">
-              {profile.logoUrl ? (
-                <img
-                  src={
-                    profile.logoUrl.startsWith("http")
-                      ? profile.logoUrl
-                      : getApiUrl(`/api/files/${profile.logoUrl}`)
-                  }
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center">{getInitials(profile.name)}</span>
-              )}
-            </div>
+      {/* Organization summary card - light grey bg, avatar light blue circle with dark blue initials */}
+      <Card className="mb-5 overflow-hidden rounded-[5px] border-none bg-[#F8FAFC] shadow-none">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-5">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#DBEAFE] text-2xl font-semibold text-[#0066CC]">
+            <span className="flex h-full w-full items-center justify-center">
+              {getAvatarInitials(profile.name)}
+            </span>
           </div>
-          <div className="flex flex-1 flex-col justify-center px-6 py-5">
-            <h2 className="font-aileron text-xl font-bold leading-none text-[#202830]">{profile.name}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Organization profile and settings
-            </p>
+          <div className="flex flex-1 flex-col justify-center min-h-[64px]">
+            <h2 className="font-aileron text-lg font-semibold leading-tight text-[#1F2937]">
+              {profile.name}
+            </h2>
+            {(profile.phoneNumber != null && profile.phoneNumber !== "") && (
+              <p className="mt-1.5 flex items-center gap-1.5 text-sm font-normal text-[#6B7280]">
+                <PhoneCall className="h-4 w-4 shrink-0" aria-hidden />
+                {profile.phoneNumber}
+              </p>
+            )}
           </div>
         </div>
       </Card>
 
-      {/* Organization Information - design style */}
-      <Card className="overflow-hidden animate-fade-in-up stagger-1 border border-border bg-card">
-        <div className="flex min-h-[80px] items-center gap-3 px-6 py-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-100">
-            <svg className="h-5 w-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+      {/* Organization Information */}
+      <Card className="overflow-hidden border-none  shadow-none">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center">
+            <OrganizationIcon className="h-5 w-5 text-[#6B7280]" />
           </div>
-          <h3 className="text-base font-semibold text-foreground">Organization Information</h3>
+          <h3 className="text-[18px] font-semibold text-[#1F2937]">Organization Information</h3>
         </div>
         <div className="grid gap-x-10 gap-y-6 p-6 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <dt className="text-xs font-medium uppercase tracking-wide text-[#6B7280]">
               Organization Name
             </dt>
-            <dd className="mt-1 text-sm font-medium text-foreground">{profile.name}</dd>
+            <dd className="mt-1 text-sm font-medium text-[#1F2937]">{profile.name}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <dt className="text-xs font-medium uppercase tracking-wide text-[#6B7280]">
               Primary Administrator
             </dt>
-            <dd className="mt-1 text-sm font-medium text-foreground" title={profile.primaryAdministratorUserId ?? undefined}>
+            <dd className="mt-1 text-sm font-medium text-[#1F2937]" title={profile.primaryAdministratorUserId ?? undefined}>
               {formatId(profile.primaryAdministratorUserId)}
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <dt className="text-xs font-medium uppercase tracking-wide text-[#6B7280]">
               Default Time Zone
             </dt>
-            <dd className="mt-1 text-sm text-foreground">
+            <dd className="mt-1 text-sm text-[#1F2937]">
               {profile.defaultTimeZone ?? "Not set"}
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <dt className="text-xs font-medium uppercase tracking-wide text-[#6B7280]">
               System Date Format
             </dt>
-            <dd className="mt-1 text-sm text-foreground">
+            <dd className="mt-1 text-sm text-[#1F2937]">
               {profile.systemDateFormat
-                ? `${profile.systemDateFormat} (e.g. ${formatDateExample(profile.systemDateFormat)})`
+                ? `${profile.systemDateFormat} → ${formatDateExample(profile.systemDateFormat)}`
                 : "Not set"}
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <dt className="text-xs font-medium uppercase tracking-wide text-[#6B7280]">
               System Time Format
             </dt>
-            <dd className="mt-1 text-sm text-foreground">
+            <dd className="mt-1 text-sm text-[#1F2937]">
               {profile.systemTimeFormat
-                ? `${profile.systemTimeFormat} (e.g. ${formatTimeExample(profile.systemTimeFormat)})`
+                ? `${profile.systemTimeFormat} → ${formatTimeExample(profile.systemTimeFormat)}`
                 : "Not set"}
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <dt className="text-xs font-medium uppercase tracking-wide text-[#6B7280]">
               Organization Status
             </dt>
             <dd className="mt-1">
-              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${profile.isActive ? "bg-emerald-50 text-emerald-700" : "bg-muted text-muted-foreground"}`}>
+              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${profile.isActive ? "bg-emerald-50 text-emerald-700" : "bg-[#F3F4F6] text-[#6B7280]"}`}>
                 {profile.isActive ? "Active" : "Inactive"}
               </span>
             </dd>
@@ -294,21 +298,12 @@ export default function OrganizationPage() {
         </div>
         {canUpdate && (
           <div className="border-t border-border px-6 py-5">
-            <Button onClick={openEdit} className="inline-flex items-center gap-2">
-              Edit Organization
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+            <Button
+              onClick={openEdit}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#2563EB] px-4 py-2 text-sm font-medium text-white hover:bg-[#1d4ed8]"
+            >
+              Edit
+              <span aria-hidden>→</span>
             </Button>
           </div>
         )}

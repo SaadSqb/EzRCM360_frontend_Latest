@@ -116,9 +116,9 @@ export default function SettingsPage() {
           if (!moduleName) return false;
           return permissions.canView(moduleName);
         });
-        // Always show NSA Configuration card with all links (permission checked on target pages)
+        // Always show NSA Configuration and Facilities Configurations card with all links (permission checked on target pages)
         const links =
-          section.title === "NSA Configuration"
+          section.title === "NSA Configuration" || section.title === "Facilities Configurations"
             ? section.links
             : filteredLinks;
         return { ...section, links };
