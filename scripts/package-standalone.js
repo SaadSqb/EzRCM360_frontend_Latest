@@ -10,7 +10,7 @@ const { execSync } = require("child_process");
 
 const root = path.resolve(__dirname, "..");
 const standalone = path.join(root, ".next", "standalone");
-const zipPath = path.join(root, "deploy.zip");
+const zipPath = path.join(root, ".next", "deploy.zip");
 
 // 1. Copy .next/static -> .next/standalone/.next/static
 const srcStatic = path.join(root, ".next", "static");
