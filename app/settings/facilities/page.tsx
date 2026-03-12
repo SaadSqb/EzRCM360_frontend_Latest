@@ -23,7 +23,7 @@ import { facilitiesApi } from "@/lib/services/facilities";
 import { lookupsApi } from "@/lib/services/lookups";
 import { BulkImportActions } from "@/components/settings/BulkImportActions";
 import { OverlayLoader } from "@/components/ui/OverlayLoader";
-import { usePaginatedList } from "@/lib/hooks";
+import { usePaginatedList, useDebounce } from "@/lib/hooks";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { useModulePermission } from "@/lib/contexts/PermissionsContext";
 import { AccessRestrictedContent } from "@/components/auth/AccessRestrictedContent";
@@ -57,10 +57,14 @@ export default function FacilitiesPage() {
   const api = facilitiesApi();
   const toast = useToast();
   const { canView, canCreate, canUpdate, canDelete } = useModulePermission(MODULE_NAME);
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
+  useEffect(() => { setPage(1); }, [debouncedSearch]);
 
   const { data, error, loading, reload } = usePaginatedList({
     pageNumber: page,
     pageSize,
+    extraParams: { search: debouncedSearch || undefined },
     fetch: api.getList,
   });
 

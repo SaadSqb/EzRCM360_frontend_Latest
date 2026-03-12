@@ -25,6 +25,7 @@ import type {
 import type { EntityProviderLookupDto, PlanLookupDto } from "@/lib/services/lookups";
 import type { ValueLabelDto } from "@/lib/services/lookups";
 import type { PaginatedList } from "@/lib/types";
+import { useDebounce } from "@/lib/hooks";
 import { toDateInput } from "@/lib/utils";
 
 const defaultForm: CreateRenderingProviderPlanParticipationRequest = {
@@ -59,11 +60,14 @@ export default function RenderingParticipationPage() {
   const api = renderingParticipationsApi();
   const toast = useToast();
   const { canView, canCreate, canUpdate, canDelete } = useModulePermission("Rendering Provider Plan Participations");
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
+  useEffect(() => { setPage(1); }, [debouncedSearch]);
 
   const loadList = useCallback(async () => {
     setError(null);
-    await api.getList({ pageNumber: page, pageSize }).then(setData).catch((err) => setError(err instanceof Error ? err.message : "Failed to load"));
-  }, [page, pageSize]);
+    await api.getList({ pageNumber: page, pageSize, search: debouncedSearch || undefined }).then(setData).catch((err) => setError(err instanceof Error ? err.message : "Failed to load"));
+  }, [page, pageSize, debouncedSearch]);
 
   useEffect(() => {
     loadList();
