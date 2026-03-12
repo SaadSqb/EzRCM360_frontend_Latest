@@ -33,7 +33,7 @@ export function PageShell({
     <div className={`animate-fade-in ${className}`}>
       {/* Breadcrumbs - P2 design: bg-[#F7F8F9] bar */}
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav className="-mx-6 -mt-4 mb-3 flex items-center gap-2 bg-[#F7F8F9] px-6 py-3 text-sm" aria-label="Breadcrumb">
+        <nav className="-mx-6 mb-3 flex items-center gap-2 bg-[#F7F8F9] px-6 py-3 text-sm" aria-label="Breadcrumb">
           {breadcrumbs.map((b, i) => (
             <span key={i} className="flex items-center gap-2">
               {i > 0 && (
@@ -57,7 +57,7 @@ export function PageShell({
       )}
 
       {/* Title row - P2 design: font-aileron font-bold text-[24px] text-[#202830] */}
-      <div className={titleWrapperClassName ? `flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ${titleWrapperClassName}` : "mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"}>
+      <div className={titleWrapperClassName ? `flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ${titleWrapperClassName}` : "mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"}>
         <div>
           <h1 className="font-aileron font-bold text-[24px] leading-none tracking-tight text-[#202830]">
             {title}

@@ -662,6 +662,7 @@ export default function RolesPermissionsPage() {
         onClose={() => setModalOpen(false)}
         title={editId ? "Edit Role" : "Create Role"}
         size="md"
+        position="top-right"
       >
         <form onSubmit={(e) => { e.preventDefault(); handleSubmitRole(); }}>
           {formError && (

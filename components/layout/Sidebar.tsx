@@ -181,6 +181,10 @@ export function Sidebar() {
             pathname={pathname}
             defaultOpen={isModules}
           />
+                    {/* Separator */}
+                    <div className="mt-4 mb-4">
+            <div className="w-full h-px bg-sidebar-border" />
+          </div>
 
           {/* RCM Intelligence - Collapsible */}
           {visibleRcm.length > 0 && (

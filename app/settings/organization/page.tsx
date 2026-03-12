@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { getApiUrl } from "@/lib/api";
-import { PhoneCall } from "lucide-react";
+import { PhoneCall, Upload } from "lucide-react";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { useModulePermission } from "@/lib/contexts/PermissionsContext";
 import { AccessRestrictedContent } from "@/components/auth/AccessRestrictedContent";
@@ -314,7 +314,16 @@ export default function OrganizationPage() {
         open={editOpen}
         onClose={() => setEditOpen(false)}
         title="Update Organization"
-        size="lg"
+        size="sm"
+        position="right"
+        footer={
+          <ModalFooter
+            onCancel={() => setEditOpen(false)}
+            submitLabel="Update"
+            onSubmit={handleSubmit}
+            loading={submitLoading}
+          />
+        }
       >
         <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
           {formError && (
@@ -399,9 +408,9 @@ export default function OrganizationPage() {
                     </option>
                   ))}
                 </select>
-                <span className="text-sm text-muted-foreground">
+                {/* <span className="text-sm text-muted-foreground">
                   → {formatDateExample(form.systemDateFormat)}
-                </span>
+                </span> */}
               </div>
             </div>
             <div>
@@ -426,23 +435,23 @@ export default function OrganizationPage() {
                     </option>
                   ))}
                 </select>
-                <span className="text-sm text-muted-foreground">
+                {/* <span className="text-sm text-muted-foreground">
                   → {formatTimeExample(form.systemTimeFormat)}
-                </span>
+                </span> */}
               </div>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">
+              <h3 className="mb-1.5 text-sm font-semibold text-foreground">
                 Upload Logo
-              </label>
-              <p className="mb-2 text-xs text-muted-foreground">
-                Supported Formats (PNG, JPG, PDF) | Maximum file size: {MAX_LOGO_MB} MB
-              </p>
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-muted px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500">
-                <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                Upload File(s)
+              </h3>
+              <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
+                <span>Supported Formats (PNG, JPG, PDF)</span>
+                <span className="h-3 w-px bg-border" aria-hidden />
+                <span>Maximum file size: {MAX_LOGO_MB} MB</span>
+              </div>
+              <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] py-8 transition-colors hover:bg-[#F1F5F9] focus-within:border-primary-500 focus-within:outline-none focus-within:ring-1 focus-within:ring-primary-500">
+                <Upload className="h-8 w-8 text-[#0066CC]" />
+                <span className="text-sm font-medium text-[#0066CC]">Upload File(s)</span>
                 <input
                   type="file"
                   accept={ALLOWED_LOGO_TYPES}
@@ -451,18 +460,12 @@ export default function OrganizationPage() {
                 />
               </label>
               {logoFile && (
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-2 text-xs text-muted-foreground">
                   Selected: {logoFile.name}
                 </p>
               )}
             </div>
           </div>
-          <ModalFooter
-            onCancel={() => setEditOpen(false)}
-            submitLabel="Update"
-            onSubmit={handleSubmit}
-            loading={submitLoading}
-          />
         </form>
       </Modal>
     </PageShell>
