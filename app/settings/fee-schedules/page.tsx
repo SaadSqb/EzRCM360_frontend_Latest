@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, ArrowRight, Upload, Download, FileSpreadsheet } from "lucide-react";
+import { Search, ArrowRight, ArrowLeft, Upload, Download, FileSpreadsheet } from "lucide-react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
 import { PageHeader } from "@/components/settings/PageHeader";
 import { Card } from "@/components/ui/Card";
@@ -10,14 +10,13 @@ import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { TableActionsCell } from "@/components/ui/TableActionsCell";
 import { Pagination } from "@/components/ui/Pagination";
+import { BulkImportActions } from "@/components/settings/BulkImportActions";
 import { feeSchedulesApi } from "@/lib/services/feeSchedules";
 import { useToast } from "@/lib/contexts/ToastContext";
 import { useModulePermission } from "@/lib/contexts/PermissionsContext";
 import { AccessRestrictedContent } from "@/components/auth/AccessRestrictedContent";
 import type { FeeScheduleDto, FeeScheduleDetailDto, FeeScheduleLineDto, CreateFeeScheduleCommand } from "@/lib/services/feeSchedules";
 import type { PaginatedList } from "@/lib/types";
-
-const CATEGORY_TEMPLATE_MAP: Record<number, string> = { 0: "Medicare", 1: "UCR", 2: "MVA", 3: "WC" };
 
 const STATUS_OPTIONS = [{ value: 0, name: "Active" }, { value: 1, name: "Inactive" }];
 
@@ -40,6 +39,17 @@ const defaultForm: CreateFeeScheduleCommand = {
   notes: "",
 };
 
+function resolveCategoryStr(category: number | string): string {
+  const catStr = String(category);
+  const catMap: Record<string, string> = {
+    "0": "Medicare", "Medicare": "Medicare",
+    "1": "UCR", "UCR": "UCR",
+    "2": "MVA", "MVA": "MVA",
+    "3": "WC", "WC": "WC",
+  };
+  return catMap[catStr] ?? "Medicare";
+}
+
 export default function FeeSchedulesPage() {
   const [data, setData] = useState<PaginatedList<FeeScheduleDto> | null>(null);
   const [lookups, setLookups] = useState<Awaited<ReturnType<ReturnType<typeof feeSchedulesApi>["getLookups"]>> | null>(null);
@@ -55,6 +65,8 @@ export default function FeeSchedulesPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [createdScheduleId, setCreatedScheduleId] = useState<string | null>(null);
 
   // Fee schedule options for adoptFeeScheduleId dropdown
   const [fsOptions, setFsOptions] = useState<FeeScheduleDto[]>([]);
@@ -66,6 +78,10 @@ export default function FeeSchedulesPage() {
   const [linesLoading, setLinesLoading] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const wizardFileRef = useRef<HTMLInputElement>(null);
+  const [wizardLinesData, setWizardLinesData] = useState<PaginatedList<FeeScheduleLineDto> | null>(null);
+  const [wizardLinesLoading, setWizardLinesLoading] = useState(false);
+  const [wizardImportLoading, setWizardImportLoading] = useState(false);
 
   const api = feeSchedulesApi();
   const toast = useToast();
@@ -90,15 +106,19 @@ export default function FeeSchedulesPage() {
 
   const openCreate = () => {
     setEditId(null);
+    setCreatedScheduleId(null);
+    setWizardStep(1);
     setForm({
       ...defaultForm,
       year: lookups?.years?.[0] ?? new Date().getFullYear(),
     });
     setFormError(null);
+    setWizardLinesData(null);
     setModalOpen(true);
   };
   const openEdit = (row: FeeScheduleDto) => {
     setEditId(row.id);
+    setWizardStep(2); // Edit goes directly to fields step
     setFormError(null);
     setModalOpen(true);
     api.getById(row.id).then((detail: FeeScheduleDetailDto) => {
@@ -129,12 +149,16 @@ export default function FeeSchedulesPage() {
     try {
       if (editId) {
         await api.update(editId, form);
+        setModalOpen(false);
+        loadList();
+        toast.success("Updated successfully.");
       } else {
-        await api.create(form);
+        const newId = await api.create(form);
+        setCreatedScheduleId(newId);
+        loadList();
+        toast.success("Fee schedule created. You can now import lines.");
+        setWizardStep(3);
       }
-      setModalOpen(false);
-      loadList();
-      toast.success("Saved successfully.");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Save failed.";
       setFormError(msg);
@@ -174,44 +198,51 @@ export default function FeeSchedulesPage() {
       .finally(() => setLinesLoading(false));
   };
 
-  const handleImportLines = async (file: File) => {
-    if (!linesSchedule) return;
-    setImportLoading(true);
+  const handleImportLines = async (file: File, scheduleId: string, isWizard = false) => {
+    const setLoading = isWizard ? setWizardImportLoading : setImportLoading;
+    setLoading(true);
     try {
-      const result = await api.importLines(linesSchedule.id, file);
+      const result = await api.importLines(scheduleId, file);
       if (result.success) {
         toast.success(`Imported ${result.importedCount} lines.`);
-        loadLines(linesSchedule.id, 1);
-        setLinesPage(1);
+        if (isWizard) {
+          loadWizardLines(scheduleId);
+        } else {
+          loadLines(scheduleId, 1);
+          setLinesPage(1);
+        }
       } else {
         toast.error(result.errors?.join("; ") || "Import failed.");
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Import failed.");
     } finally {
-      setImportLoading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      setLoading(false);
+      if (isWizard && wizardFileRef.current) wizardFileRef.current.value = "";
+      if (!isWizard && fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
+  const loadWizardLines = (id: string) => {
+    setWizardLinesLoading(true);
+    api.getLines(id, { pageNumber: 1, pageSize: 20 })
+      .then(setWizardLinesData)
+      .catch(() => {})
+      .finally(() => setWizardLinesLoading(false));
+  };
+
   const downloadTemplateForCategory = async (category: number | string) => {
-    // Backend uses JsonStringEnumConverter, so category may be string "UCR" or number 1
-    const catStr = String(category);
-    const catMap: Record<string, string> = {
-      "0": "Medicare", "Medicare": "Medicare",
-      "1": "UCR", "UCR": "UCR",
-      "2": "MVA", "MVA": "MVA",
-      "3": "WC", "WC": "WC",
-    };
-    const tpl = catMap[catStr] ?? "Medicare";
     try {
-      await api.downloadLinesTemplate(tpl);
+      await api.downloadLinesTemplate(resolveCategoryStr(category));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Download failed.");
     }
   };
 
-  const categoryLabel = (n: number) => lookups?.categories?.find((c) => c.value === n)?.name ?? String(n);
+  const categoryLabel = (n: number | string) => {
+    const num = typeof n === "string" ? lookups?.categories?.find((c) => c.name === n)?.value : n;
+    return lookups?.categories?.find((c) => c.value === num)?.name ?? String(n);
+  };
   const statusLabel = (n: number) => STATUS_OPTIONS.find((o) => o.value === n)?.name ?? String(n);
 
   const filteredItems = data?.items.filter((row) => {
@@ -221,6 +252,15 @@ export default function FeeSchedulesPage() {
       (row.state?.toLowerCase().includes(q)) ||
       categoryLabel(row.category).toLowerCase().includes(q);
   }) ?? [];
+
+  // Wizard step titles
+  const wizardTitle = editId
+    ? "Edit fee schedule"
+    : wizardStep === 1
+      ? "Step 1: Select Category"
+      : wizardStep === 2
+        ? `Step 2: ${resolveCategoryStr(form.category)} Configuration`
+        : `Step 3: Import Lines (${resolveCategoryStr(form.category)})`;
 
   if (!canView) {
     return (
@@ -237,7 +277,7 @@ export default function FeeSchedulesPage() {
     <div>
       <PageHeader title="Fee Schedules" description="Centralized valuation datasets." />
 
-      {/* Toolbar: search + add button */}
+      {/* Toolbar */}
       <div className="mb-6 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
@@ -261,14 +301,23 @@ export default function FeeSchedulesPage() {
             />
           </div>
         </div>
-        {canCreate && (
-          <Button
-            onClick={openCreate}
-            className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
-          >
-            <>Add Fee Schedule <ArrowRight className="ml-1 h-4 w-4" /></>
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canCreate && (
+            <BulkImportActions
+              apiBase="/api/FeeSchedules"
+              templateFileName="FeeSchedules_BulkImport_Template.xlsx"
+              onImportSuccess={loadList}
+            />
+          )}
+          {canCreate && (
+            <Button
+              onClick={openCreate}
+              className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
+            >
+              <>Add Fee Schedule <ArrowRight className="ml-1 h-4 w-4" /></>
+            </Button>
+          )}
+        </div>
       </div>
 
       {error && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
@@ -332,123 +381,257 @@ export default function FeeSchedulesPage() {
       )}
       {!data && !error && <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editId ? "Edit fee schedule" : "Add fee schedule"} size="lg">
-        <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-          {formError && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</div>}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Schedule code</label>
-              <input type="text" value={form.scheduleCode ?? ""} onChange={(e) => setForm((f) => ({ ...f, scheduleCode: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
+      {/* 3-step wizard / edit modal */}
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={wizardTitle} size="lg">
+        {formError && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</div>}
+
+        {/* Step indicator for create */}
+        {!editId && (
+          <div className="mb-6 flex items-center gap-2">
+            {[1, 2, 3].map((s) => (
+              <div key={s} className="flex items-center gap-2">
+                <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+                  wizardStep === s ? "bg-[#0066CC] text-white" : wizardStep > s ? "bg-green-500 text-white" : "bg-gray-200 text-gray-500"
+                }`}>
+                  {wizardStep > s ? "✓" : s}
+                </div>
+                <span className={`text-sm ${wizardStep === s ? "font-medium text-foreground" : "text-muted-foreground"}`}>
+                  {s === 1 ? "Category" : s === 2 ? "Configuration" : "Lines"}
+                </span>
+                {s < 3 && <div className={`h-0.5 w-8 ${wizardStep > s ? "bg-green-500" : "bg-gray-200"}`} />}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* STEP 1: Category selection (create only) */}
+        {!editId && wizardStep === 1 && (
+          <div>
+            <p className="mb-4 text-sm text-muted-foreground">Select the fee schedule category to configure.</p>
+            <div className="grid grid-cols-2 gap-3">
+              {lookups?.categories?.filter((c) => c.name !== "Custom").map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, category: c.value }))}
+                  className={`rounded-lg border-2 p-4 text-left transition-colors ${
+                    form.category === c.value ? "border-[#0066CC] bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div className="text-sm font-medium">{c.name}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {c.name === "Medicare" && "CMS Medicare Physician Fee Schedule"}
+                    {c.name === "UCR" && "Usual, Customary & Reasonable (percentile-based)"}
+                    {c.name === "MVA" && "Motor Vehicle Accident fee schedule"}
+                    {c.name === "WC" && "Workers' Compensation fee schedule"}
+                  </div>
+                </button>
+              ))}
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Category</label>
-              <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
-                {lookups?.categories?.map((c) => (
-                  <option key={c.value} value={c.value}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">State</label>
-              <select value={form.state ?? ""} onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
-                <option value="">—</option>
-                {lookups?.states?.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Geo type</label>
-              <select value={form.geoType} onChange={(e) => setForm((f) => ({ ...f, geoType: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
-                {lookups?.geoTypes?.map((g) => (
-                  <option key={g.value} value={g.value}>{g.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Geo code</label>
-              <input type="text" value={form.geoCode ?? ""} onChange={(e) => setForm((f) => ({ ...f, geoCode: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" placeholder="e.g. 01, 99" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Geo name</label>
-              <input type="text" value={form.geoName ?? ""} onChange={(e) => setForm((f) => ({ ...f, geoName: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Billing type</label>
-              <select value={form.billingType} onChange={(e) => setForm((f) => ({ ...f, billingType: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
-                {lookups?.billingTypes?.map((b) => (
-                  <option key={b.value} value={b.value}>{b.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Year</label>
-              <select value={form.year} onChange={(e) => setForm((f) => ({ ...f, year: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
-                {lookups?.years?.map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Quarter</label>
-              <input type="number" min={1} max={4} value={form.quarter} onChange={(e) => setForm((f) => ({ ...f, quarter: Number(e.target.value) || 1 }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Calculation model</label>
-              <select value={form.calculationModel} onChange={(e) => setForm((f) => ({ ...f, calculationModel: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
-                {lookups?.calculationModels?.map((c) => (
-                  <option key={c.value} value={c.value}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Multiplier %</label>
-              <input type="number" step={0.01} value={form.multiplierPct} onChange={(e) => setForm((f) => ({ ...f, multiplierPct: Number(e.target.value) || 0 }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Status</label>
-              <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
-                {STATUS_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Fallback category</label>
-              <select value={form.fallbackCategory ?? ""} onChange={(e) => setForm((f) => ({ ...f, fallbackCategory: e.target.value === "" ? null : Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
-                <option value="">None</option>
-                {lookups?.categories?.map((c) => (
-                  <option key={c.value} value={c.value}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Adopt fee schedule</label>
-              <select value={form.adoptFeeScheduleId ?? ""} onChange={(e) => setForm((f) => ({ ...f, adoptFeeScheduleId: e.target.value || null }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
-                <option value="">None</option>
-                {fsOptions.filter((fs) => fs.id !== editId).map((fs) => (
-                  <option key={fs.id} value={fs.id}>
-                    {fs.scheduleCode ?? "—"} — {categoryLabel(fs.category)} {fs.state ? `(${fs.state})` : ""} {fs.year}/Q{fs.quarter}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-foreground">Source</label>
-              <input type="text" value={form.source ?? ""} onChange={(e) => setForm((f) => ({ ...f, source: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" placeholder="e.g. CMS Medicare PFS" />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="mb-1 block text-sm font-medium text-foreground">Notes</label>
-              <textarea rows={2} value={form.notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => setWizardStep(2)} className="bg-[#0066CC] hover:bg-[#0066CC]/90 text-white">
+                Next <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
             </div>
           </div>
-          <ModalFooter onCancel={() => setModalOpen(false)} submitLabel={editId ? "Update" : "Create"} onSubmit={handleSubmit} loading={submitLoading} />
-        </form>
+        )}
+
+        {/* STEP 2: Configuration fields */}
+        {wizardStep === 2 && (
+          <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Schedule code</label>
+                <input type="text" value={form.scheduleCode ?? ""} onChange={(e) => setForm((f) => ({ ...f, scheduleCode: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
+              </div>
+              {editId && (
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground">Category</label>
+                  <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+                    {lookups?.categories?.map((c) => (
+                      <option key={c.value} value={c.value}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {!editId && (
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground">Category</label>
+                  <div className="w-full rounded-lg border border-input bg-muted/50 px-3 py-2 text-sm text-foreground">{resolveCategoryStr(form.category)}</div>
+                </div>
+              )}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">State</label>
+                <select value={form.state ?? ""} onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+                  <option value="">—</option>
+                  {lookups?.states?.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Geo type</label>
+                <select value={form.geoType} onChange={(e) => setForm((f) => ({ ...f, geoType: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+                  {lookups?.geoTypes?.map((g) => (
+                    <option key={g.value} value={g.value}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Geo code</label>
+                <input type="text" value={form.geoCode ?? ""} onChange={(e) => setForm((f) => ({ ...f, geoCode: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" placeholder="e.g. 01, 99" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Geo name</label>
+                <input type="text" value={form.geoName ?? ""} onChange={(e) => setForm((f) => ({ ...f, geoName: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Billing type</label>
+                <select value={form.billingType} onChange={(e) => setForm((f) => ({ ...f, billingType: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+                  {lookups?.billingTypes?.map((b) => (
+                    <option key={b.value} value={b.value}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Year</label>
+                <select value={form.year} onChange={(e) => setForm((f) => ({ ...f, year: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+                  {lookups?.years?.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Quarter</label>
+                <input type="number" min={1} max={4} value={form.quarter} onChange={(e) => setForm((f) => ({ ...f, quarter: Number(e.target.value) || 1 }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Calculation model</label>
+                <select value={form.calculationModel} onChange={(e) => setForm((f) => ({ ...f, calculationModel: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+                  {lookups?.calculationModels?.map((c) => (
+                    <option key={c.value} value={c.value}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Multiplier %</label>
+                <input type="number" step={0.01} value={form.multiplierPct} onChange={(e) => setForm((f) => ({ ...f, multiplierPct: Number(e.target.value) || 0 }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Status</label>
+                <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+                  {STATUS_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Fallback category</label>
+                <select value={form.fallbackCategory ?? ""} onChange={(e) => setForm((f) => ({ ...f, fallbackCategory: e.target.value === "" ? null : Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+                  <option value="">None</option>
+                  {lookups?.categories?.map((c) => (
+                    <option key={c.value} value={c.value}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Adopt fee schedule</label>
+                <select value={form.adoptFeeScheduleId ?? ""} onChange={(e) => setForm((f) => ({ ...f, adoptFeeScheduleId: e.target.value || null }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+                  <option value="">None</option>
+                  {fsOptions.filter((fs) => fs.id !== editId).map((fs) => (
+                    <option key={fs.id} value={fs.id}>
+                      {fs.scheduleCode ?? "—"} — {categoryLabel(fs.category)} {fs.state ? `(${fs.state})` : ""} {fs.year}/Q{fs.quarter}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-foreground">Source</label>
+                <input type="text" value={form.source ?? ""} onChange={(e) => setForm((f) => ({ ...f, source: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" placeholder="e.g. CMS Medicare PFS" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="mb-1 block text-sm font-medium text-foreground">Notes</label>
+                <textarea rows={2} value={form.notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
+              </div>
+            </div>
+            <div className="mt-6 flex items-center justify-between">
+              {!editId && (
+                <Button type="button" variant="outline" onClick={() => setWizardStep(1)}>
+                  <ArrowLeft className="mr-1 h-4 w-4" /> Back
+                </Button>
+              )}
+              {editId && <div />}
+              <div className="flex gap-2">
+                <Button type="button" variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
+                <Button type="submit" onClick={handleSubmit} disabled={submitLoading} className="bg-[#0066CC] hover:bg-[#0066CC]/90 text-white">
+                  {submitLoading ? "Saving…" : editId ? "Update" : <>Next: Import Lines <ArrowRight className="ml-1 h-4 w-4" /></>}
+                </Button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {/* STEP 3: Lines import (create flow only) */}
+        {!editId && wizardStep === 3 && createdScheduleId && (
+          <div>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Fee schedule created. Download the template, fill in your CPT/HCPCS lines, and import.
+            </p>
+            <div className="mb-4 flex items-center gap-3">
+              <Button onClick={() => downloadTemplateForCategory(form.category)} variant="outline" className="h-9 text-sm gap-1.5">
+                <Download className="h-4 w-4" /> Download Template
+              </Button>
+              <Button onClick={() => wizardFileRef.current?.click()} disabled={wizardImportLoading} className="h-9 text-sm gap-1.5 bg-[#0066CC] hover:bg-[#0066CC]/90 text-white">
+                <Upload className="h-4 w-4" /> {wizardImportLoading ? "Importing…" : "Import Lines"}
+              </Button>
+              <input ref={wizardFileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f && createdScheduleId) handleImportLines(f, createdScheduleId, true);
+              }} />
+              {wizardLinesData && <span className="text-xs text-muted-foreground ml-auto">{wizardLinesData.totalCount} total lines</span>}
+            </div>
+
+            {wizardLinesLoading && <div className="py-6 text-center text-sm text-muted-foreground">Loading lines…</div>}
+            {!wizardLinesLoading && wizardLinesData && wizardLinesData.items.length > 0 && (
+              <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
+                <table className="min-w-full divide-y divide-border text-sm">
+                  <thead className="sticky top-0 bg-background">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-xs font-medium uppercase text-muted-foreground">CPT/HCPCS</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Modifier</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium uppercase text-muted-foreground">Fee Amount</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium uppercase text-muted-foreground">RV</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {wizardLinesData.items.map((line) => (
+                      <tr key={line.id} className="hover:bg-muted">
+                        <td className="px-3 py-2 font-mono">{line.cptHcpcs}</td>
+                        <td className="px-3 py-2">{line.modifier ?? "—"}</td>
+                        <td className="px-3 py-2 text-right">{line.feeAmount.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right">{line.rv?.toFixed(4) ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {!wizardLinesLoading && (!wizardLinesData || wizardLinesData.items.length === 0) && (
+              <div className="py-6 text-center text-sm text-muted-foreground">No lines imported yet. Download the template and upload to add lines.</div>
+            )}
+
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => { setModalOpen(false); loadList(); }} className="bg-[#0066CC] hover:bg-[#0066CC]/90 text-white">
+                Done
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} title="Delete fee schedule" message="Are you sure you want to delete this fee schedule?" confirmLabel="Delete" variant="danger" loading={deleteLoading} />
 
-      {/* Lines management modal */}
+      {/* Lines management modal (from table Actions) */}
       <Modal open={!!linesSchedule} onClose={() => setLinesSchedule(null)} title={`Fee Schedule Lines — ${linesSchedule?.scheduleCode ?? ""} (${categoryLabel(linesSchedule?.category ?? 0)})`} size="lg">
         <div className="mb-4 flex items-center gap-3">
           <Button onClick={() => linesSchedule && downloadTemplateForCategory(linesSchedule.category)} variant="outline" className="h-9 text-sm gap-1.5">
@@ -457,7 +640,7 @@ export default function FeeSchedulesPage() {
           <Button onClick={() => fileInputRef.current?.click()} disabled={importLoading} className="h-9 text-sm gap-1.5 bg-[#0066CC] hover:bg-[#0066CC]/90 text-white">
             <Upload className="h-4 w-4" /> {importLoading ? "Importing…" : "Import Lines"}
           </Button>
-          <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportLines(f); }} />
+          <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f && linesSchedule) handleImportLines(f, linesSchedule.id); }} />
           {linesData && <span className="text-xs text-muted-foreground ml-auto">{linesData.totalCount} total lines</span>}
         </div>
         {linesLoading && <div className="py-6 text-center text-sm text-muted-foreground">Loading lines…</div>}
@@ -470,13 +653,13 @@ export default function FeeSchedulesPage() {
               <table className="min-w-full divide-y divide-border text-sm">
                 <thead className="sticky top-0 bg-background">
                   <tr>
-                    {linesSchedule?.category === 1 && <th className="px-3 py-2 text-left text-xs font-medium uppercase text-muted-foreground">ZIP</th>}
+                    {String(linesSchedule?.category) === "1" || String(linesSchedule?.category) === "UCR" ? <th className="px-3 py-2 text-left text-xs font-medium uppercase text-muted-foreground">ZIP</th> : null}
                     <th className="px-3 py-2 text-left text-xs font-medium uppercase text-muted-foreground">CPT/HCPCS</th>
                     <th className="px-3 py-2 text-left text-xs font-medium uppercase text-muted-foreground">Modifier</th>
                     <th className="px-3 py-2 text-right text-xs font-medium uppercase text-muted-foreground">Fee Amount</th>
                     <th className="px-3 py-2 text-right text-xs font-medium uppercase text-muted-foreground">RV</th>
-                    {linesSchedule?.category === 3 && <th className="px-3 py-2 text-left text-xs font-medium uppercase text-muted-foreground">PC/TC</th>}
-                    {linesSchedule?.category === 1 && (
+                    {String(linesSchedule?.category) === "3" || String(linesSchedule?.category) === "WC" ? <th className="px-3 py-2 text-left text-xs font-medium uppercase text-muted-foreground">PC/TC</th> : null}
+                    {(String(linesSchedule?.category) === "1" || String(linesSchedule?.category) === "UCR") && (
                       <>
                         <th className="px-3 py-2 text-right text-xs font-medium uppercase text-muted-foreground">50th</th>
                         <th className="px-3 py-2 text-right text-xs font-medium uppercase text-muted-foreground">75th</th>
@@ -486,23 +669,27 @@ export default function FeeSchedulesPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {linesData.items.map((line) => (
-                    <tr key={line.id} className="hover:bg-muted">
-                      {linesSchedule?.category === 1 && <td className="px-3 py-2">{line.zip ?? "—"}</td>}
-                      <td className="px-3 py-2 font-mono">{line.cptHcpcs}</td>
-                      <td className="px-3 py-2">{line.modifier ?? "—"}</td>
-                      <td className="px-3 py-2 text-right">{line.feeAmount.toFixed(2)}</td>
-                      <td className="px-3 py-2 text-right">{line.rv?.toFixed(4) ?? "—"}</td>
-                      {linesSchedule?.category === 3 && <td className="px-3 py-2">{line.pctcIndicator === 0 ? "P" : line.pctcIndicator === 1 ? "T" : "—"}</td>}
-                      {linesSchedule?.category === 1 && (
-                        <>
-                          <td className="px-3 py-2 text-right">{line.fee50th?.toFixed(2) ?? "—"}</td>
-                          <td className="px-3 py-2 text-right">{line.fee75th?.toFixed(2) ?? "—"}</td>
-                          <td className="px-3 py-2 text-right">{line.fee90th?.toFixed(2) ?? "—"}</td>
-                        </>
-                      )}
-                    </tr>
-                  ))}
+                  {linesData.items.map((line) => {
+                    const isUCR = String(linesSchedule?.category) === "1" || String(linesSchedule?.category) === "UCR";
+                    const isWC = String(linesSchedule?.category) === "3" || String(linesSchedule?.category) === "WC";
+                    return (
+                      <tr key={line.id} className="hover:bg-muted">
+                        {isUCR && <td className="px-3 py-2">{line.zip ?? "—"}</td>}
+                        <td className="px-3 py-2 font-mono">{line.cptHcpcs}</td>
+                        <td className="px-3 py-2">{line.modifier ?? "—"}</td>
+                        <td className="px-3 py-2 text-right">{line.feeAmount.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right">{line.rv?.toFixed(4) ?? "—"}</td>
+                        {isWC && <td className="px-3 py-2">{line.pctcIndicator === 0 ? "P" : line.pctcIndicator === 1 ? "T" : "—"}</td>}
+                        {isUCR && (
+                          <>
+                            <td className="px-3 py-2 text-right">{line.fee50th?.toFixed(2) ?? "—"}</td>
+                            <td className="px-3 py-2 text-right">{line.fee75th?.toFixed(2) ?? "—"}</td>
+                            <td className="px-3 py-2 text-right">{line.fee90th?.toFixed(2) ?? "—"}</td>
+                          </>
+                        )}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

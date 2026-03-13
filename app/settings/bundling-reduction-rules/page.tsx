@@ -16,6 +16,8 @@ import { useModulePermission } from "@/lib/contexts/PermissionsContext";
 import { AccessRestrictedContent } from "@/components/auth/AccessRestrictedContent";
 import type { BundlingReductionRuleDto, CreateBundlingReductionRuleCommand } from "@/lib/services/bundlingReductionRules";
 import type { PaginatedList } from "@/lib/types";
+import { BulkImportActions } from "@/components/settings/BulkImportActions";
+import { OverlayLoader } from "@/components/ui/OverlayLoader";
 import { toDateInput } from "@/lib/utils";
 
 const RULE_TYPE_OPTIONS = [
@@ -48,6 +50,7 @@ export default function BundlingReductionRulesPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [overlayLoading, setOverlayLoading] = useState(false);
 
   const api = bundlingReductionRulesApi();
   const toast = useToast();
@@ -166,14 +169,24 @@ export default function BundlingReductionRulesPage() {
             />
           </div>
         </div>
-        {canCreate && (
-          <Button
-            onClick={openCreate}
-            className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
-          >
-            <>Add Bundling Reduction Rule <ArrowRight className="ml-1 h-4 w-4" /></>
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canCreate && (
+            <BulkImportActions
+              apiBase="/api/BundlingReductionRules"
+              templateFileName="BundlingReductionRules_Import_Template.xlsx"
+              onImportSuccess={loadList}
+              onLoadingChange={setOverlayLoading}
+            />
+          )}
+          {canCreate && (
+            <Button
+              onClick={openCreate}
+              className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
+            >
+              <>Add Bundling Reduction Rule <ArrowRight className="ml-1 h-4 w-4" /></>
+            </Button>
+          )}
+        </div>
       </div>
 
       {error && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
@@ -286,6 +299,7 @@ export default function BundlingReductionRulesPage() {
       </Modal>
 
       <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} title="Delete rule" message="Are you sure you want to delete this rule?" confirmLabel="Delete" variant="danger" loading={deleteLoading} />
+      <OverlayLoader visible={overlayLoading} />
     </div>
   );
 }

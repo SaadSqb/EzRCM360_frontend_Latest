@@ -16,6 +16,8 @@ import { useModulePermission } from "@/lib/contexts/PermissionsContext";
 import { AccessRestrictedContent } from "@/components/auth/AccessRestrictedContent";
 import type { CptHcpcsCodeDto, CreateCptHcpcsCodeCommand } from "@/lib/services/cptHcpcsCodes";
 import type { PaginatedList } from "@/lib/types";
+import { BulkImportActions } from "@/components/settings/BulkImportActions";
+import { OverlayLoader } from "@/components/ui/OverlayLoader";
 import { toDateInput } from "@/lib/utils";
 
 const CODE_TYPE_OPTIONS = [{ value: 0, label: "CPT" }, { value: 1, label: "HCPCS" }];
@@ -44,6 +46,7 @@ export default function CptHcpcsCodesPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [overlayLoading, setOverlayLoading] = useState(false);
 
   const api = cptHcpcsCodesApi();
   const toast = useToast();
@@ -162,14 +165,24 @@ export default function CptHcpcsCodesPage() {
             />
           </div>
         </div>
-        {canCreate && (
-          <Button
-            onClick={openCreate}
-            className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
-          >
-            <>Add CPT/HCPCS Code <ArrowRight className="ml-1 h-4 w-4" /></>
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canCreate && (
+            <BulkImportActions
+              apiBase="/api/CptHcpcsCodes"
+              templateFileName="CptHcpcsCodes_Import_Template.xlsx"
+              onImportSuccess={loadList}
+              onLoadingChange={setOverlayLoading}
+            />
+          )}
+          {canCreate && (
+            <Button
+              onClick={openCreate}
+              className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
+            >
+              <>Add CPT/HCPCS Code <ArrowRight className="ml-1 h-4 w-4" /></>
+            </Button>
+          )}
+        </div>
       </div>
 
       {error && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
@@ -276,6 +289,7 @@ export default function CptHcpcsCodesPage() {
       </Modal>
 
       <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} title="Delete code" message="Are you sure you want to delete this code?" confirmLabel="Delete" variant="danger" loading={deleteLoading} />
+      <OverlayLoader visible={overlayLoading} />
     </div>
   );
 }

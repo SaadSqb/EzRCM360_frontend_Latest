@@ -20,6 +20,8 @@ import type {
   CreateApplicabilityRuleCommand,
 } from "@/lib/services/applicabilityRules";
 import type { PaginatedList } from "@/lib/types";
+import { BulkImportActions } from "@/components/settings/BulkImportActions";
+import { OverlayLoader } from "@/components/ui/OverlayLoader";
 
 const PROVIDER_PARTICIPATION = [
   { value: 0, name: "In Network" },
@@ -97,6 +99,7 @@ export default function ApplicabilityRulesPage() {
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [overlayLoading, setOverlayLoading] = useState(false);
 
   const [feeScheduleOptions, setFeeScheduleOptions] = useState<FeeScheduleDto[]>([]);
   const [fsCategoryLookup, setFsCategoryLookup] = useState<Record<number, string>>({});
@@ -267,14 +270,24 @@ export default function ApplicabilityRulesPage() {
             />
           </div>
         </div>
-        {canCreate && (
-          <Button
-            onClick={openCreate}
-            className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
-          >
-            <>Add Applicability Rule <ArrowRight className="ml-1 h-4 w-4" /></>
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canCreate && (
+            <BulkImportActions
+              apiBase="/api/ApplicabilityRules"
+              templateFileName="ApplicabilityRules_Import_Template.xlsx"
+              onImportSuccess={loadList}
+              onLoadingChange={setOverlayLoading}
+            />
+          )}
+          {canCreate && (
+            <Button
+              onClick={openCreate}
+              className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
+            >
+              <>Add Applicability Rule <ArrowRight className="ml-1 h-4 w-4" /></>
+            </Button>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -676,6 +689,7 @@ export default function ApplicabilityRulesPage() {
         variant="danger"
         loading={deleteLoading}
       />
+      <OverlayLoader visible={overlayLoading} />
     </div>
   );
 }

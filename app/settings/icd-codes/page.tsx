@@ -17,6 +17,8 @@ import { AccessRestrictedContent } from "@/components/auth/AccessRestrictedConte
 import type { CreateIcdCodeCommand } from "@/lib/services/icdCodes";
 import type { IcdCodeDto } from "@/lib/types";
 import type { PaginatedList } from "@/lib/types";
+import { BulkImportActions } from "@/components/settings/BulkImportActions";
+import { OverlayLoader } from "@/components/ui/OverlayLoader";
 
 const defaultForm: CreateIcdCodeCommand = {
   code: "",
@@ -53,6 +55,7 @@ export default function IcdCodesPage() {
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [overlayLoading, setOverlayLoading] = useState(false);
 
   const api = icdCodesApi();
   const toast = useToast();
@@ -176,14 +179,24 @@ export default function IcdCodesPage() {
             />
           </div>
         </div>
-        {canCreate && (
-          <Button
-            onClick={openCreate}
-            className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
-          >
-            <>Add ICD Code <ArrowRight className="ml-1 h-4 w-4" /></>
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canCreate && (
+            <BulkImportActions
+              apiBase="/api/IcdCodes"
+              templateFileName="IcdCodes_Import_Template.xlsx"
+              onImportSuccess={loadList}
+              onLoadingChange={setOverlayLoading}
+            />
+          )}
+          {canCreate && (
+            <Button
+              onClick={openCreate}
+              className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
+            >
+              <>Add ICD Code <ArrowRight className="ml-1 h-4 w-4" /></>
+            </Button>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -408,6 +421,7 @@ export default function IcdCodesPage() {
         variant="danger"
         loading={deleteLoading}
       />
+      <OverlayLoader visible={overlayLoading} />
     </div>
   );
 }
