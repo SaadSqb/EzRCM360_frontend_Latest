@@ -295,19 +295,36 @@ export default function InsuranceArAnalysisProcessingPage() {
   const routerRef = useRef(router);
   routerRef.current = router;
 
-  // SignalR: real-time pipeline updates — triggers refreshStatus on each stage change.
-  // When connected, polling is suppressed. When not connected (or fails), polling fallback kicks in.
+  // SignalR: real-time pipeline updates. Updates UI directly from events — NO status API calls.
+  // Only falls back to polling when SignalR is not connected.
   const signalRConnectedRef = useRef(false);
-  const refreshStatusRef = useRef<() => Promise<ArAnalysisProcessingStatusDto | null>>(() => Promise.resolve(null));
-  const signalRDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { connected: signalRConnected } = usePipelineSignalR(sessionId, () => {
-    // Debounce: multiple StageChanged events can fire in quick succession.
-    // Wait 300ms so we make one refreshStatus call instead of many.
-    if (signalRDebounceRef.current) clearTimeout(signalRDebounceRef.current);
-    signalRDebounceRef.current = setTimeout(() => {
-      signalRDebounceRef.current = null;
-      refreshStatusRef.current();
-    }, 300);
+  const { connected: signalRConnected } = usePipelineSignalR(sessionId, (event) => {
+    // Update status state directly from SignalR event — no API call needed
+    setStatus((prev) => {
+      if (!prev) return prev;
+      // Terminal: pipeline completed — redirect to report
+      if (event.stageName === "Completed" && event.status === "Completed") {
+        routerRef.current.push(`/rcm/insurance-ar-analysis/${sessionId}/report`);
+        return { ...prev, sessionStatus: "Completed", currentStage: "Completed" };
+      }
+      // Terminal: pipeline failed
+      if (event.status === "Failed") {
+        return { ...prev, sessionStatus: "Failed", currentStage: event.message ?? event.stageName };
+      }
+      // Action required (pause step) — update session status + step
+      if (event.status === "ActionRequired") {
+        const updatedSteps = prev.steps.map((s) =>
+          s.name === event.stageName ? { ...s, status: "Failed", message: event.message } : s
+        );
+        const sessionStatus = event.stageName.includes("Claim integrity") ? "ConflictResolution" : "EnrichmentPending";
+        return { ...prev, steps: updatedSteps, sessionStatus, currentStage: event.message ?? event.stageName };
+      }
+      // Stage completed — mark it and advance
+      const updatedSteps = prev.steps.map((s) =>
+        s.name === event.stageName ? { ...s, status: "Completed" } : s
+      );
+      return { ...prev, steps: updatedSteps, currentStage: event.stageName };
+    });
   });
   signalRConnectedRef.current = signalRConnected;
 
@@ -400,9 +417,6 @@ export default function InsuranceArAnalysisProcessingPage() {
       return null;
     }
   }, [sessionId]);
-
-  // Keep refreshStatusRef in sync so SignalR callback can call it
-  refreshStatusRef.current = refreshStatus;
 
   /** Poll status every 2s until Completed/Failed or max 60s. Skipped when SignalR is connected (real-time events handle it). */
   const pollUntilSettled = useCallback(async () => {
