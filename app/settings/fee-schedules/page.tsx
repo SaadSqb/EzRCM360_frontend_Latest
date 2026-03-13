@@ -194,7 +194,7 @@ export default function FeeSchedulesPage() {
     }
   };
 
-  const handleDownloadTemplate = async () => {
+  const handleDownloadTemplate = useCallback(async () => {
     if (!linesSchedule) return;
     const tpl = CATEGORY_TEMPLATE_MAP[linesSchedule.category] ?? "Medicare";
     try {
@@ -202,7 +202,7 @@ export default function FeeSchedulesPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Download failed.");
     }
-  };
+  }, [linesSchedule]);
 
   const categoryLabel = (n: number) => lookups?.categories?.find((c) => c.value === n)?.name ?? String(n);
   const statusLabel = (n: number) => STATUS_OPTIONS.find((o) => o.value === n)?.name ?? String(n);
