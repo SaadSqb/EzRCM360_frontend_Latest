@@ -299,9 +299,15 @@ export default function InsuranceArAnalysisProcessingPage() {
   // When connected, polling is suppressed. When not connected (or fails), polling fallback kicks in.
   const signalRConnectedRef = useRef(false);
   const refreshStatusRef = useRef<() => Promise<ArAnalysisProcessingStatusDto | null>>(() => Promise.resolve(null));
+  const signalRDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { connected: signalRConnected } = usePipelineSignalR(sessionId, () => {
-    // On any stage change from SignalR, immediately fetch the full status
-    refreshStatusRef.current();
+    // Debounce: multiple StageChanged events can fire in quick succession.
+    // Wait 300ms so we make one refreshStatus call instead of many.
+    if (signalRDebounceRef.current) clearTimeout(signalRDebounceRef.current);
+    signalRDebounceRef.current = setTimeout(() => {
+      signalRDebounceRef.current = null;
+      refreshStatusRef.current();
+    }, 300);
   });
   signalRConnectedRef.current = signalRConnected;
 
@@ -385,11 +391,14 @@ export default function InsuranceArAnalysisProcessingPage() {
   // Keep refreshStatusRef in sync so SignalR callback can call it
   refreshStatusRef.current = refreshStatus;
 
-  /** Poll status every 2s until Completed/Failed or max 60s. Use after resolution upload while pipeline runs in background. */
+  /** Poll status every 2s until Completed/Failed or max 60s. Skipped when SignalR is connected (real-time events handle it). */
   const pollUntilSettled = useCallback(async () => {
     if (!sessionId) return;
+    // When SignalR is connected, StageChanged events will trigger refreshStatus automatically — no need to poll.
+    if (signalRConnectedRef.current) return;
     for (let i = 0; i < 30; i++) {
       await new Promise((r) => setTimeout(r, 2000));
+      if (signalRConnectedRef.current) return; // SignalR connected mid-poll, stop
       const s = await refreshStatus();
       if (s?.sessionStatus === "Completed" || s?.sessionStatus === "Failed") return;
     }
