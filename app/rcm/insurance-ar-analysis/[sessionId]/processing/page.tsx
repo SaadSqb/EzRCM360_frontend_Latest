@@ -319,19 +319,17 @@ export default function InsuranceArAnalysisProcessingPage() {
     let pollCount = 0;
 
     const scheduleNext = () => {
-      if (cancelled) return;
-      // When SignalR is connected, skip polling — real-time updates handle it
-      if (signalRConnectedRef.current) return;
+      if (cancelled || signalRConnectedRef.current) return;
       const delay = Math.min(POLL_BASE_MS * Math.pow(2, pollCount), POLL_MAX_MS);
       pollCount += 1;
       timeoutId = setTimeout(() => {
         timeoutId = null;
-        fetchStatus();
+        pollOnce();
       }, delay);
     };
 
-    const fetchStatus = async () => {
-      if (cancelled) return;
+    const pollOnce = async () => {
+      if (cancelled || signalRConnectedRef.current) return;
       if (typeof document !== "undefined" && document.hidden) {
         scheduleNext();
         return;
@@ -351,18 +349,33 @@ export default function InsuranceArAnalysisProcessingPage() {
       }
     };
 
-    const fetchSession = async () => {
-      if (cancelled) return;
+    // 1. Always do ONE initial fetch for status + session
+    const initialFetch = async () => {
       try {
-        const s = await apiRef.current.getSession(sessionId);
-        if (!cancelled) setSession(s);
-      } catch {
-        /* ignore */
+        const [s, sess] = await Promise.all([
+          apiRef.current.getStatus(sessionId),
+          apiRef.current.getSession(sessionId),
+        ]);
+        if (cancelled) return;
+        setStatus(s);
+        setSession(sess);
+        if (s.sessionStatus === "Completed") {
+          routerRef.current.push(`/rcm/insurance-ar-analysis/${sessionId}/report`);
+          return;
+        }
+        if (s.sessionStatus === "Failed") return;
+      } catch { /* ignore */ }
+
+      // 2. Wait 2s for SignalR to connect before starting polling fallback
+      await new Promise((r) => setTimeout(r, 2000));
+      if (cancelled) return;
+      if (!signalRConnectedRef.current) {
+        // SignalR did not connect — start polling fallback
+        scheduleNext();
       }
     };
 
-    fetchStatus();
-    fetchSession();
+    initialFetch();
 
     return () => {
       cancelled = true;
