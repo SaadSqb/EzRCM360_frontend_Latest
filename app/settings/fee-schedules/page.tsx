@@ -442,7 +442,7 @@ export default function FeeSchedulesPage() {
       <ConfirmDialog open={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={handleDelete} title="Delete fee schedule" message="Are you sure you want to delete this fee schedule?" confirmLabel="Delete" variant="danger" loading={deleteLoading} />
 
       {/* Lines management modal */}
-      <Modal open={!!linesSchedule} onClose={() => setLinesSchedule(null)} title={`Fee Schedule Lines — ${linesSchedule?.scheduleCode ?? ""} (${categoryLabel(linesSchedule?.category ?? 0)})`} size="xl">
+      <Modal open={!!linesSchedule} onClose={() => setLinesSchedule(null)} title={`Fee Schedule Lines — ${linesSchedule?.scheduleCode ?? ""} (${categoryLabel(linesSchedule?.category ?? 0)})`} size="lg">
         <div className="mb-4 flex items-center gap-3">
           <Button onClick={handleDownloadTemplate} variant="outline" className="h-9 text-sm gap-1.5">
             <Download className="h-4 w-4" /> Download Template
