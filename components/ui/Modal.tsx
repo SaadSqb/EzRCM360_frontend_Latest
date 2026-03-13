@@ -13,8 +13,8 @@ export interface ModalProps {
   /** Optional footer (e.g. ModalFooter) rendered outside scroll so buttons stay fixed at bottom */
   footer?: React.ReactNode;
   size?: "sm" | "md" | "lg";
-  /** "center" (default), "top-right", or "right" (full-height drawer flush top/right) */
-  position?: "center" | "top-right" | "right";
+  /** "center" (default), "top-right", "right" (full-height drawer), or "left" (full-height drawer from left) */
+  position?: "center" | "top-right" | "right" | "left";
 }
 
 export function Modal({ open, onClose, title, children, footer, size = "md", position = "center" }: ModalProps) {
@@ -38,12 +38,16 @@ export function Modal({ open, onClose, title, children, footer, size = "md", pos
       ? "items-start justify-end pt-14 pb-4 pl-4"
       : position === "right"
         ? "items-stretch justify-end"
-        : "items-center justify-center p-4";
+        : position === "left"
+          ? "items-stretch justify-start"
+          : "items-center justify-center p-4";
 
   const dialogClass =
     position === "right"
       ? "relative h-full w-full max-w-[36rem] flex flex-col border border-r-0 border-card bg-card text-card-foreground shadow-xl animate-in slide-in-from-right duration-300"
-      : `relative w-full ${sizeClass} max-h-[90vh] flex flex-col border bg-card text-card-foreground shadow-xl animate-scale-in`;
+      : position === "left"
+        ? "relative h-full w-full max-w-[36rem] flex flex-col border border-l-0 border-card bg-card text-card-foreground shadow-xl animate-in slide-in-from-left duration-300"
+        : `relative w-full ${sizeClass} max-h-[90vh] flex flex-col border bg-card text-card-foreground shadow-xl animate-scale-in`;
 
   const modalContent = (
     <div className={`fixed inset-0 z-[60] flex ${positionClass} animate-fade-in`}>

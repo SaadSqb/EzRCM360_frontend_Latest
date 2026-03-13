@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Search, ArrowRight, Play } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Search, ArrowRight, Play, ChevronDown } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
 import { Pagination } from "@/components/ui/Pagination";
 import {
   Table,
@@ -18,6 +17,7 @@ import { TableActionsCell } from "@/components/ui/TableActionsCell";
 import { TruncatedWithTooltip } from "@/components/ui/TruncatedWithTooltip";
 import { TooltipProvider } from "@/components/ui/Tooltip";
 import { Modal, ModalFooter } from "@/components/ui/Modal";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { usersApi } from "@/lib/services/users";
 import { lookupsApi } from "@/lib/services/lookups";
@@ -81,6 +81,121 @@ function SortArrows({
         <Play className={`h-2 w-2 shrink-0 rotate-90 ${isDesc ? "fill-[#0066CC] text-[#0066CC]" : "fill-[#E2E8F0] text-[#E2E8F0]"}`} />
       </button>
     </span>
+  );
+}
+
+/** Multi-select for Module Access: trigger "Select Module(s)" + dropdown with search and checkboxes */
+function ModuleAccessMultiSelect({
+  modules,
+  value,
+  onChange,
+}: {
+  modules: { id: string; name: string }[];
+  value: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const filtered = useMemo(
+    () =>
+      modules.filter((m) =>
+        m.name.toLowerCase().includes(searchQuery.trim().toLowerCase()),
+      ),
+    [modules, searchQuery],
+  );
+
+  const allSelected = modules.length > 0 && value.length === modules.length;
+  const toggleAll = () => {
+    if (allSelected) onChange([]);
+    else onChange(modules.map((m) => m.id));
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const handle = (e: MouseEvent) => {
+      if (containerRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [open]);
+
+  const displayLabel =
+    value.length === 0
+      ? "Select Module(s)"
+      : value.length === 1
+        ? modules.find((m) => m.id === value[0])?.name ?? "1 selected"
+        : `${value.length} modules selected`;
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex h-10 w-full items-center justify-between rounded-[5px] border border-[#E2E8F0] bg-background px-3 py-2 font-aileron text-[14px] text-[#202830] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        <span className={value.length === 0 ? "text-[#94A3B8]" : ""}>
+          {displayLabel}
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-[#64748B]" />
+      </button>
+      {open && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[280px] overflow-hidden rounded-[5px] border border-[#E2E8F0] bg-white shadow-lg">
+          <div className="border-b border-[#E2E8F0] p-2">
+            <div className="flex items-center gap-2 rounded border border-[#E2E8F0] bg-background px-3 py-2">
+              <Search className="h-4 w-4 shrink-0 text-[#94A3B8]" />
+              <input
+                type="text"
+                placeholder="Search Module"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="min-w-0 flex-1 bg-transparent font-aileron text-[14px] text-[#202830] placeholder:text-[#94A3B8] focus:outline-none"
+              />
+            </div>
+          </div>
+          <div className="max-h-[220px] overflow-y-auto p-1">
+            {modules.length > 0 && (
+              <label className="flex cursor-pointer items-center gap-3 rounded px-3 py-2 hover:bg-[#F7F8F9]">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={toggleAll}
+                  aria-label="All Modules"
+                />
+                <span className="font-aileron text-[14px] text-[#202830]">
+                  All Modules
+                </span>
+              </label>
+            )}
+            {filtered.map((m) => {
+              const checked = value.includes(m.id);
+              return (
+                <label
+                  key={m.id}
+                  className="flex cursor-pointer items-center gap-3 rounded px-3 py-2 hover:bg-[#F7F8F9]"
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={(c) => {
+                      if (c === true) {
+                        onChange([...value, m.id]);
+                      } else {
+                        onChange(value.filter((id) => id !== m.id));
+                      }
+                    }}
+                    aria-label={m.name}
+                  />
+                  <span className="font-aileron text-[14px] text-[#202830]">
+                    {m.name}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -343,18 +458,23 @@ export default function UsersPage() {
     >
       <TooltipProvider delayDuration={300} skipDelayDuration={0}>
       {/* Toolbar: search + add button */}
-      <div className="mb-6 flex items-center justify-between gap-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex flex-1 min-w-0 items-center gap-0">
-          <Select value="" onValueChange={() => {}}>
-            <SelectTrigger className="w-[130px] h-10 border-[#E2E8F0] rounded-l-[5px] font-aileron text-[14px] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent className="bg-white z-50">
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
+          <select
+            id="status"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-10 min-w-[130px] rounded-l-[5px] border border-[#E2E8F0] bg-background pl-3 pr-8 font-aileron text-[14px] text-[#202830] focus:outline-none focus-visible:outline-none"
+          >
+            {[
+              { value: "", name: "All Status" },
+              ...STATUS_OPTIONS,
+            ].map((o) => (
+              <option key={o.value === "" ? "_all" : o.value} value={o.value === "" ? "" : String(o.value)}>
+                {o.name}
+              </option>
+            ))}
+          </select>
           <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
             <input
@@ -532,6 +652,26 @@ export default function UsersPage() {
         onClose={() => setModalOpen(false)}
         title={editId ? "Edit User" : "Add User"}
         size="md"
+        position="right"
+        footer={
+          <ModalFooter
+            onCancel={() => setModalOpen(false)}
+            submitLabel={
+              editId ? (
+                "Update"
+              ) : (
+                <>
+                  Add User
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </>
+              )
+            }
+            onSubmit={handleSubmit}
+            loading={submitLoading}
+          />
+        }
       >
         <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
           {formError && (
@@ -628,23 +768,11 @@ export default function UsersPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Module Access</label>
-              <select
-                multiple
+              <ModuleAccessMultiSelect
+                modules={modules}
                 value={form.moduleIds ?? []}
-                onChange={(e) => {
-                  const selected = Array.from(e.target.selectedOptions, (o) => o.value);
-                  setForm((f) => ({ ...f, moduleIds: selected }));
-                }}
-                className="input-enterprise"
-                size={5}
-              >
-                {modules.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1 text-xs text-muted-foreground">Hold Ctrl (Windows) or Cmd (Mac) to select multiple.</p>
+                onChange={(ids) => setForm((f) => ({ ...f, moduleIds: ids }))}
+              />
             </div>
             {editId && (
               <div>
@@ -663,23 +791,6 @@ export default function UsersPage() {
               </div>
             )}
           </div>
-          <ModalFooter
-            onCancel={() => setModalOpen(false)}
-            submitLabel={
-              editId ? (
-                "Update"
-              ) : (
-                <>
-                  Add User
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </>
-              )
-            }
-            onSubmit={handleSubmit}
-            loading={submitLoading}
-          />
         </form>
       </Modal>
 

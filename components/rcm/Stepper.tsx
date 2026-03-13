@@ -10,23 +10,21 @@ export interface StepperStep {
 export function Stepper({ steps }: { steps: StepperStep[] }) {
   return (
     <div className="mb-8 w-full animate-fade-in">
-      <div className="w-full rounded-xl border border-[#E2E8F0] bg-[#F5F6F7] px-4 py-6 sm:px-6">
-        <div className="flex w-full items-stretch justify-between gap-0">
-          {steps.map((step, i) => (
-            <div key={step.id} className="flex min-w-0 flex-1 items-center">
-              <div className="flex w-full flex-col items-center">
+      <div className="w-full rounded-xl">
+        <div className="flex w-full items-center">
+          {steps.map((s, i) => (
+            <div key={s.id} className={`flex min-w-0 items-center ${i < steps.length - 1 ? "flex-1" : ""}`}>
+              <div className="flex shrink-0 items-center gap-2 sm:gap-4">
                 <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-[14px] font-['Aileron'] font-semibold transition-all duration-300 ease-out ${
-                    step.completed
-                      ? "border-[#0066CC] bg-[#0066CC] text-white shadow-sm"
-                      : step.active
-                        ? "border-[#0066CC] text-[#0066CC] bg-white shadow-[0_0_0_6px_rgba(0,102,204,0.1)]"
-                        : "border-[#E2E8F0] bg-white text-muted-foreground"
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-[14px] font-['Aileron'] font-semibold cursor-pointer transition-all duration-300 ease-out ${
+                    s.active
+                      ? "border-[#0066CC] bg-transparent text-[#0066CC] shadow-[0_0_0_4px_#0066CC1A]"
+                      : "border-[#E2E8F0] bg-white text-[#64748B]"
                   }`}
                 >
-                  {step.completed ? (
+                  {s.completed ? (
                     <svg
-                      className="h-5 w-5 animate-scale-in"
+                      className="h-5 w-5 text-[#0066CC]"
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -37,30 +35,37 @@ export function Stepper({ steps }: { steps: StepperStep[] }) {
                       />
                     </svg>
                   ) : (
-                    <span>{String(step.id).padStart(2, "0")}</span>
+                    <span>{String(s.id).padStart(2, "0")}</span>
                   )}
                 </div>
                 <span
-                  className={`mt-3 text-center text-[14px] font-['Aileron'] leading-tight ${
-                    step.active
-                      ? "text-foreground font-medium"
-                      : step.completed
-                        ? "text-foreground font-medium"
-                        : "text-muted-foreground"
+                  className={`hidden truncate text-[14px] font-['Aileron'] leading-tight sm:inline ${
+                    s.active ? "font-medium text-[#94A3B8]" : "text-[#94A3B8]"
                   }`}
                 >
-                  {step.label}
+                  {s.label}
                 </span>
               </div>
               {i < steps.length - 1 && (
                 <div
-                  className={`mx-2 mt-5 min-w-[24px] flex-1 self-start sm:mx-4 h-[2px] ${
-                    step.completed ? "bg-[#0066CC]" : "bg-[#E2E8F0]"
-                  }`}
+                  className="min-h-[2px] mx-3 w-[8rem] flex-1 bg-[#E2E8F0]/70 "
                   aria-hidden
                 />
               )}
             </div>
+          ))}
+        </div>
+        {/* Mobile: labels below */}
+        <div className="mt-3 flex justify-between gap-2 sm:hidden">
+          {steps.map((s) => (
+            <span
+              key={s.id}
+              className={`min-w-0 flex-1 text-center text-[12px] font-['Aileron'] leading-tight ${
+                s.active ? "font-medium text-white" : "text-[#94A3B8]"
+              }`}
+            >
+              {s.label}
+            </span>
           ))}
         </div>
       </div>

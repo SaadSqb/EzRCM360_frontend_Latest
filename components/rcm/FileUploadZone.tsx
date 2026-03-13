@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useCallback, useState } from "react";
-import { Upload } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 const ACCEPT = ".xlsx,.xls";
 
@@ -56,16 +56,17 @@ export function FileUploadZone({
         }`}
       >
         <div
-          className={`mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 transition-transform duration-300 ${
+          className={`flex h-16 w-16 items-center justify-center rounded-full  ${
             drag ? "scale-110" : ""
           }`}
         >
-          <Upload className="h-8 w-8 text-primary-600" />
+          <img src="/icons/svg/upload-cloud.svg" alt="" className="h-12 w-12 object-contain" />
         </div>
-        <p className="text-sm font-semibold text-foreground">{label}</p>
-        <p className="mt-1 text-sm text-muted-foreground">or click to browse</p>
-        <span className="mt-3 inline-flex items-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-shadow hover:bg-primary/90">
-          Select File
+        <p className="text-[12px] font-semibold text-foreground">{label}</p>
+        <p className="mt-1 text-[#D1D5DC]">---------- OR ----------</p>
+        <span className="mt-3 inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-shadow hover:bg-primary/90">
+          Browse File
+          <ArrowRight className="h-4 w-4 shrink-0" />
         </span>
         <input
           ref={inputRef}

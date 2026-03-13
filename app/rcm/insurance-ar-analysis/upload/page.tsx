@@ -230,14 +230,14 @@ export default function InsuranceArAnalysisUploadPage() {
         { label: "Upload AR Intake" },
       ]}
       title="Data Upload and AR Analysis Session Creation"
-      description="Upload AR Intake and PM reports to start an analysis session."
+      
     >
       <div className="space-y-8">
         <Stepper steps={steps} />
 
         {step === 1 && (
-          <Card className="animate-fade-in-up overflow-hidden">
-          <div className="space-y-8 p-6 sm:p-8">
+          <Card className="animate-fade-in-up overflow-hidden border-none">
+          <div className="space-y-4">
             <div className="space-y-3">
               <label className="block text-[14px] font-['Aileron'] font-medium text-foreground">Validation Mode</label>
               <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
@@ -275,18 +275,18 @@ export default function InsuranceArAnalysisUploadPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-[14px] font-['Aileron'] font-medium text-foreground">Practice Name</label>
+              <label className="block text-[14px] font-['Aileron'] font-semibold text-foreground">Practice Name</label>
               <input
                 type="text"
                 value={practiceName}
                 onChange={(e) => setPracticeName(e.target.value)}
                 placeholder="e.g., Medical Billing"
-                className="h-11 w-full max-w-md rounded-[5px] border border-[#E2E8F0] bg-background px-4 text-[14px] font-['Aileron'] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="h-11 w-full rounded-[5px] border border-[#E2E8F0] bg-background px-4 text-[14px] font-['Aileron'] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-[14px] font-['Aileron'] font-medium text-foreground">
+            <div className="space-y-1">
+              <label className="block text-[14px] font-['Aileron'] font-semibold text-foreground">
                 Upload AR Intake File
               </label>
               {!intakeFile ? (
