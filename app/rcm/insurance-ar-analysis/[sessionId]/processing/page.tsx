@@ -15,6 +15,7 @@ import {
   type ArAnalysisProcessingStatusDto,
   type ArAnalysisSessionDetailDto,
 } from "@/lib/services/insuranceArAnalysis";
+import { usePipelineSignalR } from "@/lib/hooks/usePipelineSignalR";
 
 const POLL_BASE_MS = 1000; // 1st after 1s, 2nd after 2s, 3rd after 4s, 4th after 8s, 5th after 16s...
 const POLL_MAX_MS = 30000; // Cap at 30s
@@ -294,6 +295,16 @@ export default function InsuranceArAnalysisProcessingPage() {
   const routerRef = useRef(router);
   routerRef.current = router;
 
+  // SignalR: real-time pipeline updates — triggers refreshStatus on each stage change.
+  // When connected, polling is suppressed. When not connected (or fails), polling fallback kicks in.
+  const signalRConnectedRef = useRef(false);
+  const refreshStatusRef = useRef<() => Promise<ArAnalysisProcessingStatusDto | null>>(() => Promise.resolve(null));
+  const { connected: signalRConnected } = usePipelineSignalR(sessionId, () => {
+    // On any stage change from SignalR, immediately fetch the full status
+    refreshStatusRef.current();
+  });
+  signalRConnectedRef.current = signalRConnected;
+
   useEffect(() => {
     if (!sessionId) return;
 
@@ -303,6 +314,8 @@ export default function InsuranceArAnalysisProcessingPage() {
 
     const scheduleNext = () => {
       if (cancelled) return;
+      // When SignalR is connected, skip polling — real-time updates handle it
+      if (signalRConnectedRef.current) return;
       const delay = Math.min(POLL_BASE_MS * Math.pow(2, pollCount), POLL_MAX_MS);
       pollCount += 1;
       timeoutId = setTimeout(() => {
@@ -368,6 +381,9 @@ export default function InsuranceArAnalysisProcessingPage() {
       return null;
     }
   }, [sessionId]);
+
+  // Keep refreshStatusRef in sync so SignalR callback can call it
+  refreshStatusRef.current = refreshStatus;
 
   /** Poll status every 2s until Completed/Failed or max 60s. Use after resolution upload while pipeline runs in background. */
   const pollUntilSettled = useCallback(async () => {
@@ -726,15 +742,23 @@ export default function InsuranceArAnalysisProcessingPage() {
                 {retrying ? "Retrying…" : "Retry Analysis"}
               </Button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefreshStatus}
-              disabled={refreshingStatus}
-              className="shrink-0 border-[#E2E8F0] font-['Aileron'] text-[14px]"
-            >
-              {refreshingStatus ? "Refreshing…" : "Refresh status"}
-            </Button>
+            <div className="flex items-center gap-2 shrink-0">
+              {signalRConnected && (
+                <span className="flex items-center gap-1 text-[11px] text-emerald-600 font-['Aileron']" title="Real-time updates active">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live
+                </span>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefreshStatus}
+                disabled={refreshingStatus}
+                className="border-[#E2E8F0] font-['Aileron'] text-[14px]"
+              >
+                {refreshingStatus ? "Refreshing…" : "Refresh status"}
+              </Button>
+            </div>
           </div>
           </div>
 
