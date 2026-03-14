@@ -53,6 +53,8 @@ const DUMMY_REPORT: ArAnalysisReportDto = {
     { ageBand: "91–180 days", feePct: 30, amount: 1800 },
     { ageBand: "181–365 days", feePct: 35, amount: 1200 },
   ],
+  underbilledClaimCount: 3,
+  totalUnderbilledAmount: 2200,
 };
 
 function formatCurrency(n: number) {
@@ -228,6 +230,22 @@ export default function InsuranceArAnalysisReportPage() {
               <div className="text-[14px] font-['Aileron'] text-muted-foreground">Risk-Adjusted Recovery</div>
             </div>
           </div>
+          {(report.underbilledClaimCount > 0 || report.totalUnderbilledAmount > 0) && (
+            <div className="grid gap-5 sm:grid-cols-2 mt-5">
+              <div className="bg-[#FFFBEB] rounded-lg p-6 text-center border border-[#F59E0B]/30">
+                <div className="text-[32px] font-bold font-['Aileron'] text-[#D97706] mb-1">
+                  {report.underbilledClaimCount.toLocaleString()}
+                </div>
+                <div className="text-[14px] font-['Aileron'] text-muted-foreground">Underbilled Claims</div>
+              </div>
+              <div className="bg-[#FFFBEB] rounded-lg p-6 text-center border border-[#F59E0B]/30">
+                <div className="text-[32px] font-bold font-['Aileron'] text-[#D97706] mb-1">
+                  {formatCurrency(report.totalUnderbilledAmount)}
+                </div>
+                <div className="text-[14px] font-['Aileron'] text-muted-foreground">Total Underbilled Amount</div>
+              </div>
+            </div>
+          )}
         </section>
 
         <Card className="p-6 sm:p-8">

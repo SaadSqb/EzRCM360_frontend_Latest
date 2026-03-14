@@ -166,6 +166,8 @@ export interface ArAnalysisReportDto {
   underpaymentByPriority: UnderpaymentByPriorityDto[];
   recoveryProjectionSummary: RecoveryProjectionSummaryDto;
   contingencyFeeByClaimAge: ContingencyFeeByAgeDto[];
+  underbilledClaimCount: number;
+  totalUnderbilledAmount: number;
 }
 
 export function insuranceArAnalysisApi() {
