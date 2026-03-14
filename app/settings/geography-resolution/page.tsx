@@ -156,7 +156,7 @@ export default function GeographyResolutionPage() {
     try {
       const result = await api.importMappings(importCategory, file);
       if (result.success) {
-        toast.success(`Imported ${result.importedCount} mappings.`);
+        toast.success(`Imported ${result.rowsImported} mappings.`);
         loadList();
       } else {
         toast.error(result.errors?.join("; ") || "Import failed.");
