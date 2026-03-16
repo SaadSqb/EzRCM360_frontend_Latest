@@ -11,15 +11,15 @@ export function AppFooter() {
         Copyright &copy;{currentYear} EzTechMedia, LLC. All Rights Reserved. Unauthorized use or reproduction is prohibited.
       </p>
       <div className="flex items-center gap-1">
-        <Link href="/terms" className="hover:text-foreground transition-colors">
+        <Link href="/terms-of-service" className="hover:text-foreground transition-colors">
           Terms of Service
         </Link>
         <span>&bull;</span>
-        <Link href="/privacy" className="hover:text-foreground transition-colors">
+        <Link href="/privacy-policy" className="hover:text-foreground transition-colors">
           Privacy Policy
         </Link>
         <span>&bull;</span>
-        <Link href="/compliance" className="hover:text-foreground transition-colors">
+        <Link href="/compliance-disclaimer" className="hover:text-foreground transition-colors">
           Compliance Disclaimer
         </Link>
       </div>
