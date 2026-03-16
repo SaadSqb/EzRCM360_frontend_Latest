@@ -17,7 +17,7 @@ export function ModalFooter({
   loading,
 }: ModalFooterProps) {
   return (
-    <div className="flex justify-start gap-3 border-t border-border px-6 py-4">
+    <div className="flex flex-1 justify-start gap-3 border-t border-border px-6 py-4">
       <Button
         type="submit"
         onClick={onSubmit}

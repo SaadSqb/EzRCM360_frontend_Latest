@@ -33,7 +33,10 @@ import type { PlanListItemDto, CreatePlanRequest, UpdatePlanRequest } from "@/li
 import type { PayerLookupDto } from "@/lib/services/lookups";
 
 const MODULE_NAME = "Plans";
-const STATUS_OPTIONS = [{ value: 0, name: "Inactive" }, { value: 1, name: "Active" }];
+const STATUS_OPTIONS = [
+  { value: 0, name: "Inactive" },
+  { value: 1, name: "Active" },
+];
 
 // Plan Category / Type enum values for parent-child dropdown filtering
 const CATEGORY = ENUMS.PlanCategory;
@@ -90,6 +93,7 @@ export default function PlansPage() {
   const [overlayLoading, setOverlayLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
 
   const api = plansApi();
   const toast = useToast();
@@ -268,6 +272,41 @@ export default function PlansPage() {
     }
   };
 
+  const handleStatusChange = async (row: PlanListItemDto, statusValue: number) => {
+    if (!canUpdate) return;
+    setStatusUpdatingId(row.id);
+    try {
+      const detail = await api.getById(row.id);
+      await api.update(row.id, {
+        payerId: detail.payerId,
+        planName: detail.planName,
+        aliases: detail.aliases ?? "",
+        planIdPrefix: detail.planIdPrefix ?? "",
+        planCategory: resolveEnum(detail.planCategory, ENUMS.PlanCategory),
+        planType: resolveEnum(detail.planType, ENUMS.PlanType),
+        marketType: resolveEnumNullable(detail.marketType, ENUMS.MarketType),
+        oonBenefits: detail.oonBenefits,
+        planResponsibilityPct: detail.planResponsibilityPct ?? null,
+        patientResponsibilityPct: detail.patientResponsibilityPct ?? null,
+        typicalDeductible: detail.typicalDeductible ?? null,
+        oopMax: detail.oopMax ?? null,
+        nsaEligible: detail.nsaEligible,
+        nsaCategory: resolveEnumNullable(detail.nsaCategory, ENUMS.NsaCategory),
+        providerParticipationApplicable: detail.providerParticipationApplicable,
+        timelyFilingInitialDays: detail.timelyFilingInitialDays,
+        timelyFilingResubmissionDays: detail.timelyFilingResubmissionDays ?? null,
+        timelyFilingAppealDays: detail.timelyFilingAppealDays,
+        status: statusValue,
+      } as UpdatePlanRequest);
+      await reload();
+      toast.success("Status updated.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update status.");
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  };
+
   const planCategoryLabel = (n: number) => planCategories.find((c) => Number(c.value) === n)?.label ?? String(n);
   const planTypeLabel = (n: number) => planTypes.find((t) => Number(t.value) === n)?.label ?? String(n);
   const statusLabel = (n: number) => STATUS_OPTIONS.find((o) => o.value === n)?.name ?? String(n);
@@ -284,14 +323,14 @@ export default function PlansPage() {
   }
 
   return (
-    <div>
+    <div className="flex min-h-0 flex-1 flex-col">
       <PageHeader title="Plan Configuration" description="Centralized plan registry." />
 
       {/* Toolbar: search + add button */}
       <div className="mb-6 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-1 items-center">
           <Select value="" onValueChange={() => {}}>
-            <SelectTrigger className="w-[130px] h-10 border-[#E2E8F0] rounded-[5px] font-aileron text-[14px]">
+            <SelectTrigger className="w-[130px] h-10 border-[#E2E8F0] rounded-l-[5px] font-aileron text-[14px] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent className="bg-white z-50">
@@ -300,14 +339,14 @@ export default function PlansPage() {
               <SelectItem value="inactive">Inactive</SelectItem>
             </SelectContent>
           </Select>
-          <div className="relative">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
             <input
               type="text"
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-10 w-[300px] rounded-[5px] border border-[#E2E8F0] bg-background pl-9 pr-4 font-aileron text-[14px] placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-10 w-full rounded-r-[5px] border border-[#E2E8F0] bg-background pl-9 pr-4 font-aileron text-[14px] placeholder:text-[#94A3B8] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
             />
           </div>
         </div>
@@ -345,85 +384,162 @@ export default function PlansPage() {
         </div>
       )}
       {data && (
-        <>
-          <Table>
-            <TableHead>
-              <TableRow>
-                {canDelete && (
-                  <TableHeaderCell className="!min-w-[50px] w-[50px]">
-                    <Checkbox
-                      checked={!!data?.items.length && data.items.every((r) => selectedIds.has(r.id))}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHeaderCell>
-                )}
-                <TableHeaderCell>Plan name</TableHeaderCell>
-                <TableHeaderCell>Payer</TableHeaderCell>
-                <TableHeaderCell>Category / Type</TableHeaderCell>
-                <TableHeaderCell>Status</TableHeaderCell>
-                {(canUpdate || canDelete) && <TableHeaderCell>Actions</TableHeaderCell>}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {data.items.map((row) => (
-                <TableRow key={row.id}>
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto rounded-[5px]">
+            <Table className="min-w-[2000px] table-fixed">
+              <TableHead>
+                <TableRow>
                   {canDelete && (
-                    <TableCell>
+                    <TableHeaderCell className="!min-w-[50px] w-[50px]">
                       <Checkbox
-                        checked={selectedIds.has(row.id)}
-                        onCheckedChange={() => toggleSelect(row.id)}
+                        checked={!!data?.items.length && data.items.every((r) => selectedIds.has(r.id))}
+                        onCheckedChange={toggleSelectAll}
                       />
-                    </TableCell>
+                    </TableHeaderCell>
                   )}
-                  <TableCell>{row.planName}</TableCell>
-                  <TableCell>{row.linkedPayerName}</TableCell>
-                  <TableCell>
-                    {planCategoryLabel(row.planCategory)} / {planTypeLabel(row.planType)}
-                  </TableCell>
-                  <TableCell>{statusLabel(row.status)}</TableCell>
+                  <TableHeaderCell className="w-[220px] min-w-[220px]">Plan Name</TableHeaderCell>
+                  <TableHeaderCell className="w-[160px] min-w-[160px]">Plan ID</TableHeaderCell>
+                  <TableHeaderCell className="w-[220px] min-w-[220px]">Linked Payer</TableHeaderCell>
+                  <TableHeaderCell className="w-[160px] min-w-[160px]">Plan Category</TableHeaderCell>
+                  <TableHeaderCell className="w-[200px] min-w-[200px]">Plan Type</TableHeaderCell>
+                  <TableHeaderCell className="w-[190px] min-w-[190px]">Out-of-Network Benefits</TableHeaderCell>
+                  <TableHeaderCell className="w-[130px] min-w-[130px]">NSA Eligible</TableHeaderCell>
+                  <TableHeaderCell className="w-[160px] min-w-[160px]">NSA Category</TableHeaderCell>
+                  <TableHeaderCell className="w-[180px] min-w-[180px]">Status</TableHeaderCell>
                   {(canUpdate || canDelete) && (
-                    <TableCell>
-                      <TableActionsCell
-                        canEdit={canUpdate}
-                        canDelete={canDelete}
-                        onEdit={() => openEdit(row)}
-                        onDelete={() => setDeleteId(row.id)}
-                      />
-                    </TableCell>
+                    <TableHeaderCell className="!w-[120px] min-w-[120px]">Actions</TableHeaderCell>
                   )}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <Pagination
-            pageNumber={data.pageNumber}
-            totalPages={data.totalPages}
-            totalCount={data.totalCount}
-            hasPreviousPage={data.hasPreviousPage}
-            hasNextPage={data.hasNextPage}
-            onPrevious={() => setPage((p) => Math.max(1, p - 1))}
-            onNext={() => setPage((p) => p + 1)}
-            onPageChange={setPage}
-            pageSize={pageSize}
-            onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
-          />
-        </>
+              </TableHead>
+              <TableBody>
+                {data.items.map((row) => (
+                  <TableRow key={row.id}>
+                    {canDelete && (
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(row.id)}
+                          onCheckedChange={() => toggleSelect(row.id)}
+                        />
+                      </TableCell>
+                    )}
+                    <TableCell className="w-[220px] min-w-[220px]">
+                      <div className="max-w-xs truncate">{row.planName}</div>
+                    </TableCell>
+                    <TableCell className="w-[160px] min-w-[160px]">
+                      <div className="max-w-[140px] truncate">{row.planIdPrefix ?? "—"}</div>
+                    </TableCell>
+                    <TableCell className="w-[220px] min-w-[220px]">
+                      <div className="max-w-xs truncate">{row.linkedPayerName}</div>
+                    </TableCell>
+                    <TableCell className="w-[200px] min-w-[200px]">
+                      <div className="max-w-[140px] truncate">
+                        {planCategoryLabel(row.planCategory)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[200px] min-w-[200px]">
+                      <div className="max-w-[140px] truncate">
+                        {planTypeLabel(row.planType)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[220px] min-w-[220px]">
+                      <div className="max-w-[180px] truncate">
+                        {row.oonBenefits ? "Yes" : "No"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[180px] min-w-[180px]">
+                      <div className="max-w-[140px] truncate">
+                        {row.nsaEligible ? "Yes" : "No"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[200px] min-w-[200px]">
+                      <div className="max-w-[180px] truncate">
+                        {(row as any).nsaCategory ?? "—"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[180px] min-w-[180px]">
+                      <select
+                        value={row.status}
+                        onChange={(e) => handleStatusChange(row, Number(e.target.value))}
+                        disabled={!canUpdate || statusUpdatingId === row.id}
+                        className="input-enterprise w-[140px] rounded-l-[5px] rounded-r-0 px-2 py-1.5 text-sm disabled:opacity-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                      >
+                        {STATUS_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.name}
+                          </option>
+                        ))}
+                      </select>
+                    </TableCell>
+                    {(canUpdate || canDelete) && (
+                      <TableCell className="!w-[120px] min-w-[120px]">
+                        <TableActionsCell
+                          canEdit={canUpdate}
+                          canDelete={canDelete}
+                          onEdit={() => openEdit(row)}
+                          onDelete={() => setDeleteId(row.id)}
+                        />
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="shrink-0 pt-4">
+            <Pagination
+              pageNumber={data.pageNumber}
+              totalPages={data.totalPages}
+              totalCount={data.totalCount}
+              hasPreviousPage={data.hasPreviousPage}
+              hasNextPage={data.hasNextPage}
+              onPrevious={() => setPage((p) => Math.max(1, p - 1))}
+              onNext={() => setPage((p) => p + 1)}
+              onPageChange={setPage}
+              pageSize={pageSize}
+              onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+            />
+          </div>
+        </div>
       )}
       {loading && !data && !error && (
         <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>
       )}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editId ? "Edit plan" : "Add plan"} size="lg">
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editId ? "Edit plan" : "Add plan"}
+        size="lg"
+        position="right"
+        footer={
+          <ModalFooter
+            onCancel={() => setModalOpen(false)}
+            submitLabel={
+              <>
+                {editId ? "Update" : "Add Plan"}
+                <ArrowRight className="ml-1 h-4 w-4" aria-hidden />
+              </>
+            }
+            onSubmit={handleSubmit}
+            loading={submitLoading}
+          />
+        }
+      >
         <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
           {formError && (
-          <div className="mb-4">
-            <Alert variant="error">{formError}</Alert>
-          </div>
-        )}
+            <div className="mb-4 rounded-[5px]">
+              <Alert variant="error">{formError}</Alert>
+            </div>
+          )}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label className="mb-1 block text-sm font-medium text-foreground">Payer *</label>
-              <select value={form.payerId} onChange={(e) => setForm((f) => ({ ...f, payerId: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" required>
+              <select
+                value={form.payerId}
+                onChange={(e) => setForm((f) => ({ ...f, payerId: e.target.value }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                required
+              >
                 <option value="">Select payer</option>
                 {payers.map((p) => (
                   <option key={p.id} value={p.id}>{p.payerName}</option>
@@ -432,24 +548,44 @@ export default function PlansPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Plan name *</label>
-              <input type="text" value={form.planName} onChange={(e) => setForm((f) => ({ ...f, planName: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
+              <input
+                type="text"
+                value={form.planName}
+                onChange={(e) => setForm((f) => ({ ...f, planName: e.target.value }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Aliases</label>
-              <input type="text" value={form.aliases ?? ""} onChange={(e) => setForm((f) => ({ ...f, aliases: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" placeholder="Optional" />
+              <input
+                type="text"
+                value={form.aliases ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, aliases: e.target.value }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                placeholder="Optional"
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Plan ID prefix</label>
-              <input type="text" value={form.planIdPrefix ?? ""} onChange={(e) => setForm((f) => ({ ...f, planIdPrefix: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
+              <input
+                type="text"
+                value={form.planIdPrefix ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, planIdPrefix: e.target.value }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Plan category</label>
-              <select value={form.planCategory} onChange={(e) => {
+              <select
+                value={form.planCategory}
+                onChange={(e) => {
                 const newCategory = Number(e.target.value);
                 const allowedTypes = CATEGORY_TO_TYPES[newCategory];
                 const defaultType = allowedTypes?.[0] ?? 0;
                 setForm((f) => ({ ...f, planCategory: newCategory, planType: defaultType }));
-              }} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+              }}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+              >
                 {planCategories.map((c) => (
                   <option key={c.value} value={c.value}>{c.label}</option>
                 ))}
@@ -457,7 +593,11 @@ export default function PlansPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Plan type</label>
-              <select value={form.planType} onChange={(e) => setForm((f) => ({ ...f, planType: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+              <select
+                value={form.planType}
+                onChange={(e) => setForm((f) => ({ ...f, planType: Number(e.target.value) }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+              >
                 {filteredPlanTypes.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
@@ -465,7 +605,11 @@ export default function PlansPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Market type</label>
-              <select value={form.marketType ?? ""} onChange={(e) => setForm((f) => ({ ...f, marketType: e.target.value ? Number(e.target.value) : null }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+              <select
+                value={form.marketType ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, marketType: e.target.value ? Number(e.target.value) : null }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+              >
                 <option value="">—</option>
                 {marketTypes.map((m) => (
                   <option key={m.value} value={m.value}>{m.label}</option>
@@ -474,7 +618,11 @@ export default function PlansPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">NSA category</label>
-              <select value={form.nsaCategory ?? ""} onChange={(e) => setForm((f) => ({ ...f, nsaCategory: e.target.value ? Number(e.target.value) : null }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+              <select
+                value={form.nsaCategory ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, nsaCategory: e.target.value ? Number(e.target.value) : null }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+              >
                 <option value="">—</option>
                 {nsaCategories.map((n) => (
                   <option key={n.value} value={n.value}>{n.label}</option>
@@ -497,42 +645,89 @@ export default function PlansPage() {
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Plan responsibility %</label>
-              <input type="number" step="any" value={form.planResponsibilityPct ?? ""} onChange={(e) => setForm((f) => ({ ...f, planResponsibilityPct: e.target.value === "" ? null : Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" placeholder="—" />
+              <input
+                type="number"
+                step="any"
+                value={form.planResponsibilityPct ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, planResponsibilityPct: e.target.value === "" ? null : Number(e.target.value) }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                placeholder="—"
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Patient responsibility %</label>
-              <input type="number" step="any" value={form.patientResponsibilityPct ?? ""} onChange={(e) => setForm((f) => ({ ...f, patientResponsibilityPct: e.target.value === "" ? null : Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" placeholder="—" />
+              <input
+                type="number"
+                step="any"
+                value={form.patientResponsibilityPct ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, patientResponsibilityPct: e.target.value === "" ? null : Number(e.target.value) }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                placeholder="—"
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Typical deductible</label>
-              <input type="number" step="any" value={form.typicalDeductible ?? ""} onChange={(e) => setForm((f) => ({ ...f, typicalDeductible: e.target.value === "" ? null : Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" placeholder="—" />
+              <input
+                type="number"
+                step="any"
+                value={form.typicalDeductible ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, typicalDeductible: e.target.value === "" ? null : Number(e.target.value) }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                placeholder="—"
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">OOP max</label>
-              <input type="number" step="any" value={form.oopMax ?? ""} onChange={(e) => setForm((f) => ({ ...f, oopMax: e.target.value === "" ? null : Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" placeholder="—" />
+              <input
+                type="number"
+                step="any"
+                value={form.oopMax ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, oopMax: e.target.value === "" ? null : Number(e.target.value) }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                placeholder="—"
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Timely filing initial (days)</label>
-              <input type="number" value={form.timelyFilingInitialDays} onChange={(e) => setForm((f) => ({ ...f, timelyFilingInitialDays: Number(e.target.value) || 0 }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
+              <input
+                type="number"
+                value={form.timelyFilingInitialDays}
+                onChange={(e) => setForm((f) => ({ ...f, timelyFilingInitialDays: Number(e.target.value) || 0 }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Timely filing resubmission (days)</label>
-              <input type="number" value={form.timelyFilingResubmissionDays ?? ""} onChange={(e) => setForm((f) => ({ ...f, timelyFilingResubmissionDays: e.target.value === "" ? null : Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" placeholder="—" />
+              <input
+                type="number"
+                value={form.timelyFilingResubmissionDays ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, timelyFilingResubmissionDays: e.target.value === "" ? null : Number(e.target.value) }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                placeholder="—"
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Timely filing appeal (days)</label>
-              <input type="number" value={form.timelyFilingAppealDays} onChange={(e) => setForm((f) => ({ ...f, timelyFilingAppealDays: Number(e.target.value) || 0 }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
+              <input
+                type="number"
+                value={form.timelyFilingAppealDays}
+                onChange={(e) => setForm((f) => ({ ...f, timelyFilingAppealDays: Number(e.target.value) || 0 }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+              />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-foreground">Status</label>
-              <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+              <select
+                value={form.status}
+                onChange={(e) => setForm((f) => ({ ...f, status: Number(e.target.value) }))}
+                className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+              >
                 {STATUS_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.name}</option>
                 ))}
               </select>
             </div>
           </div>
-          <ModalFooter onCancel={() => setModalOpen(false)} submitLabel={editId ? "Update" : "Create"} onSubmit={handleSubmit} loading={submitLoading} />
         </form>
       </Modal>
 

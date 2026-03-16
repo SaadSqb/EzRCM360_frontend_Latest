@@ -1,7 +1,7 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
 import { DrawerForm } from "@/components/ui/DrawerForm";
-import { DrawerFooter } from "@/components/ui/ModalFooter";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -127,17 +127,33 @@ export function PayerFormModal({
       onOpenChange={(v) => !v && onClose()}
       title={editId ? "Edit Payer" : "Add Payer"}
       footer={
-        <DrawerFooter
-          onCancel={onClose}
-          submitLabel={editId ? "Update" : "Create"}
-          onSubmit={onSubmit}
-          loading={loading}
-        />
+        <div className="flex flex-1 justify-start gap-3">
+          <Button
+            type="submit"
+            onClick={onSubmit}
+            disabled={loading}
+            className="h-10 rounded-[5px] px-[18px] py-3 bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
+          >
+            {loading ? "Saving…" : (
+              <>
+                {editId ? "Update" : "Add Payer"} <ArrowRight className="ml-1 h-4 w-4" />
+              </>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={loading}
+            className="h-10 px-[18px] py-3 rounded-[5px] border-[#E2E8F0] font-aileron text-[14px] text-[#2A2C33]"
+          >
+            Cancel
+          </Button>
+        </div>
       }
     >
       <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
         {error && (
-          <div className="mb-4">
+          <div className="mb-4 rounded-[5px]">
             <Alert variant="error">{error}</Alert>
           </div>
         )}

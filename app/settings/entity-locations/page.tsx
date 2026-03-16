@@ -37,6 +37,10 @@ import type {
 import type { EntityLookupDto } from "@/lib/services/lookups";
 
 const MODULE_NAME = "Entity Locations";
+const STATUS_OPTIONS: { value: boolean; name: string }[] = [
+  { value: true, name: "Active" },
+  { value: false, name: "Inactive" },
+];
 const defaultForm: CreateEntityLocationRequest = {
   entityId: "",
   locationName: "",
@@ -61,6 +65,7 @@ export default function EntityLocationsPage() {
   const [overlayLoading, setOverlayLoading] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
 
   const api = entityLocationsApi();
   const toast = useToast();
@@ -190,6 +195,27 @@ export default function EntityLocationsPage() {
     }
   };
 
+  const handleStatusChange = async (row: EntityLocationListItemDto, isActive: boolean) => {
+    if (!canUpdate) return;
+    setStatusUpdatingId(row.id);
+    try {
+      await api.update(row.id, {
+        entityId: row.entityId,
+        locationName: row.locationName,
+        locationType: row.locationType,
+        physicalAddress: row.physicalAddress ?? null,
+        posCode: row.posCode ?? null,
+        isActive,
+      });
+      await reload();
+      toast.success("Status updated.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update status.");
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  };
+
   if (!canView) {
     return (
       <div>
@@ -202,14 +228,14 @@ export default function EntityLocationsPage() {
   }
 
   return (
-    <div>
+    <div className="flex min-h-0 flex-1 flex-col">
       <PageHeader title="Entity Locations" description="Manage entity locations." />
 
       {/* Toolbar: search + add button */}
       <div className="mb-6 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-1 items-center">
           <Select value="" onValueChange={() => {}}>
-            <SelectTrigger className="w-[130px] h-10 border-[#E2E8F0] rounded-[5px] font-aileron text-[14px]">
+            <SelectTrigger className="w-[130px] h-10 border-[#E2E8F0] rounded-l-[5px] font-aileron text-[14px] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent className="bg-white z-50">
@@ -218,14 +244,14 @@ export default function EntityLocationsPage() {
               <SelectItem value="inactive">Inactive</SelectItem>
             </SelectContent>
           </Select>
-          <div className="relative">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
             <input
               type="text"
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-10 w-[300px] rounded-[5px] border border-[#E2E8F0] bg-background pl-9 pr-4 font-aileron text-[14px] placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-10 w-full rounded-r-[5px] border border-[#E2E8F0] bg-background pl-9 pr-4 font-aileron text-[14px] placeholder:text-[#94A3B8] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
             />
           </div>
         </div>
@@ -263,71 +289,110 @@ export default function EntityLocationsPage() {
         </div>
       )}
       {data && (
-        <>
-          <Table>
-            <TableHead>
-              <TableRow>
-                {canDelete && (
-                  <TableHeaderCell className="!min-w-[50px] w-[50px]">
-                    <Checkbox
-                      checked={!!data?.items.length && data.items.every((r) => selectedIds.has(r.id))}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHeaderCell>
-                )}
-                <TableHeaderCell>Entity</TableHeaderCell>
-                <TableHeaderCell>Location name</TableHeaderCell>
-                <TableHeaderCell>Type</TableHeaderCell>
-                <TableHeaderCell>Physical address</TableHeaderCell>
-                <TableHeaderCell>POS code</TableHeaderCell>
-                <TableHeaderCell>Active</TableHeaderCell>
-                {(canUpdate || canDelete) && <TableHeaderCell>Actions</TableHeaderCell>}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {data.items.map((row) => (
-                <TableRow key={row.id}>
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto rounded-[5px]">
+            <Table className="min-w-[1800px] table-fixed">
+              <TableHead>
+                <TableRow>
                   {canDelete && (
-                    <TableCell>
+                    <TableHeaderCell className="!min-w-[50px] w-[50px]">
                       <Checkbox
-                        checked={selectedIds.has(row.id)}
-                        onCheckedChange={() => toggleSelect(row.id)}
+                        checked={!!data?.items.length && data.items.every((r) => selectedIds.has(r.id))}
+                        onCheckedChange={toggleSelectAll}
                       />
-                    </TableCell>
+                    </TableHeaderCell>
                   )}
-                  <TableCell>{row.entityDisplayName}</TableCell>
-                  <TableCell>{row.locationName}</TableCell>
-                  <TableCell>{row.locationType}</TableCell>
-                  <TableCell>{row.physicalAddress ?? "—"}</TableCell>
-                  <TableCell>{row.posCode ?? "—"}</TableCell>
-                  <TableCell>{row.isActive ? "Yes" : "No"}</TableCell>
+                  <TableHeaderCell className="w-[250px] min-w-[250px]">Entity</TableHeaderCell>
+                  <TableHeaderCell className="w-[250px] min-w-[250px]">Location name</TableHeaderCell>
+                  <TableHeaderCell className="w-[180px] min-w-[180px]">Type</TableHeaderCell>
+                  <TableHeaderCell className="w-[250px] min-w-[250px]">Physical address</TableHeaderCell>
+                  <TableHeaderCell className="w-[110px] min-w-[110px]">POS code</TableHeaderCell>
+                  <TableHeaderCell className="w-[140px] min-w-[140px]">Status</TableHeaderCell>
                   {(canUpdate || canDelete) && (
-                    <TableCell>
-                      <TableActionsCell
-                        canEdit={canUpdate}
-                        canDelete={canDelete}
-                        onEdit={() => openEdit(row)}
-                        onDelete={() => setDeleteId(row.id)}
-                      />
-                    </TableCell>
+                    <TableHeaderCell className="!w-[80px] min-w-[80px]">Actions</TableHeaderCell>
                   )}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <Pagination
-            pageNumber={data.pageNumber}
-            totalPages={data.totalPages}
-            totalCount={data.totalCount}
-            hasPreviousPage={data.hasPreviousPage}
-            hasNextPage={data.hasNextPage}
-            onPrevious={() => setPage((p) => Math.max(1, p - 1))}
-            onNext={() => setPage((p) => p + 1)}
-            onPageChange={setPage}
-            pageSize={pageSize}
-            onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
-          />
-        </>
+              </TableHead>
+              <TableBody>
+                {data.items.map((row) => (
+                  <TableRow key={row.id}>
+                    {canDelete && (
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(row.id)}
+                          onCheckedChange={() => toggleSelect(row.id)}
+                        />
+                      </TableCell>
+                    )}
+                    <TableCell className="w-[250px] min-w-[250px]">
+                      <div className="max-w-xs truncate">
+                        {row.entityDisplayName}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[250px] min-w-[250px]">
+                      <div className="max-w-xs truncate">
+                        {row.locationName}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[250px] min-w-[250px]">
+                      <div className="max-w-[140px] truncate">
+                        {row.locationType}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[250px] min-w-[250px]">
+                      <div className="max-w-xs truncate">
+                        {row.physicalAddress ?? "—"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[250px] min-w-[250px]">
+                      <div className="max-w-[140px] truncate">
+                        {row.posCode ?? "—"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="w-[250px] min-w-[250px]">
+                      <select
+                        value={row.isActive ? "1" : "0"}
+                        onChange={(e) => handleStatusChange(row, e.target.value === "1")}
+                        disabled={!canUpdate || statusUpdatingId === row.id}
+                        className="input-enterprise w-[140px] rounded-l-[5px] rounded-r-0 px-2 py-1.5 text-sm disabled:opacity-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                      >
+                        {STATUS_OPTIONS.map((o) => (
+                          <option key={String(o.value)} value={o.value ? "1" : "0"}>
+                            {o.name}
+                          </option>
+                        ))}
+                      </select>
+                    </TableCell>
+                    {(canUpdate || canDelete) && (
+                      <TableCell className="!w-[120px] min-w-[120px]">
+                        <TableActionsCell
+                          canEdit={canUpdate}
+                          canDelete={canDelete}
+                          onEdit={() => openEdit(row)}
+                          onDelete={() => setDeleteId(row.id)}
+                        />
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="shrink-0 pt-4">
+            <Pagination
+              pageNumber={data.pageNumber}
+              totalPages={data.totalPages}
+              totalCount={data.totalCount}
+              hasPreviousPage={data.hasPreviousPage}
+              hasNextPage={data.hasNextPage}
+              onPrevious={() => setPage((p) => Math.max(1, p - 1))}
+              onNext={() => setPage((p) => p + 1)}
+              onPageChange={setPage}
+              pageSize={pageSize}
+              onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+            />
+          </div>
+        </div>
       )}
       {loading && !data && !error && <Loader variant="inline" />}
 

@@ -27,10 +27,9 @@ export function DrawerForm({
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        <DialogPrimitive.Content
+          <DialogPrimitive.Content
           className={cn(
-            "fixed top-0 right-0 z-50 h-screen w-[480px] bg-background shadow-2xl flex flex-col",
-            "rounded-tl-lg rounded-bl-lg",
+            "fixed top-0 right-0 z-50 h-screen w-[560px] bg-background shadow-2xl flex flex-col",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right",
             "data-[state=open]:duration-300 data-[state=closed]:duration-200",

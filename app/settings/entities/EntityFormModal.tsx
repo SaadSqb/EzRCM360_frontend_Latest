@@ -1,17 +1,11 @@
 "use client";
 
+import { ArrowRight } from "lucide-react";
 import { DrawerForm } from "@/components/ui/DrawerForm";
-import { DrawerFooter } from "@/components/ui/ModalFooter";
 import { Alert } from "@/components/ui/Alert";
 import { Input } from "@/components/ui/Input";
-import { NativeSelect as Select } from "@/components/ui/Select";
+import { Button } from "@/components/ui/Button";
 import type { CreateEntityRequest } from "@/lib/services/entities";
-import type { SelectOption } from "@/components/ui/Select";
-
-const STATUS_OPTIONS: SelectOption<number>[] = [
-  { value: 0, label: "Inactive" },
-  { value: 1, label: "Active" },
-];
 
 export interface EntityFormModalProps {
   open: boolean;
@@ -40,12 +34,28 @@ export function EntityFormModal({
       onOpenChange={(v) => !v && onClose()}
       title={editId ? "Edit Entity" : "Add Entity"}
       footer={
-        <DrawerFooter
-          onCancel={onClose}
-          submitLabel={editId ? "Update" : "Create"}
-          onSubmit={onSubmit}
-          loading={loading}
-        />
+        <div className="flex flex-1 justify-start gap-3">
+          <Button
+            type="submit"
+            onClick={onSubmit}
+            disabled={loading}
+            className="h-10 rounded-[5px] px-[18px] py-3 bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
+          >
+            {loading ? "Saving…" : (
+              <>
+                {editId ? "Update" : "Create"} <ArrowRight className="ml-1 h-4 w-4" />
+              </>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={loading}
+            className="h-10 px-[18px] py-3 rounded-[5px] border-[#E2E8F0] font-aileron text-[14px] text-[#2A2C33]"
+          >
+            Cancel
+          </Button>
+        </div>
       }
     >
       <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }}>
@@ -57,38 +67,40 @@ export function EntityFormModal({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Input
-              label="Legal name"
+              label="Entity Legal Name"
               required
               value={form.legalName}
+              placeholder="e.g., MedixBilling Solutions"
               onChange={(e) => onFormChange({ ...form, legalName: e.target.value })}
             />
           </div>
           <div className="sm:col-span-2">
             <Input
-              label="Display name"
+              label="Entity Display Name"
               required
               value={form.displayName}
+              placeholder="e.g., MedixBilling"
               onChange={(e) => onFormChange({ ...form, displayName: e.target.value })}
             />
           </div>
-          <Input
-            label="Group NPI"
-            required
-            value={form.groupNpi}
-            onChange={(e) => onFormChange({ ...form, groupNpi: e.target.value })}
-          />
-          <Input
-            label="Tax ID"
-            required
-            value={form.taxId}
-            onChange={(e) => onFormChange({ ...form, taxId: e.target.value })}
-          />
-          <Select
-            label="Status"
-            options={STATUS_OPTIONS}
-            value={form.status ?? 1}
-            onChange={(e) => onFormChange({ ...form, status: Number(e.target.value) })}
-          />
+          <div className="sm:col-span-2">
+            <Input
+              label="Entity Group NPI"
+              required
+              value={form.groupNpi}
+              placeholder="e.g., 1987654321"
+              onChange={(e) => onFormChange({ ...form, groupNpi: e.target.value })}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <Input
+              label="Entity Tax ID"
+              required
+              value={form.taxId}
+              placeholder="e.g., 98-7654321"
+              onChange={(e) => onFormChange({ ...form, taxId: e.target.value })}
+            />
+          </div>
         </div>
       </form>
     </DrawerForm>

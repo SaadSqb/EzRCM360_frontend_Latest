@@ -252,7 +252,7 @@ export default function SecurityAccessPage() {
                   <h3 className="font-['Aileron'] text-[18px] font-bold leading-[100%] tracking-normal text-[#202830]">
                     MFA for Account Administrator
                   </h3>
-                  <p className="mt-2 mb-3 border-b border-[#E2E8F0] pb-3 font-['Aileron'] text-[15px] font-normal leading-[150%] tracking-normal text-[#64748B]">
+                  <p className="-mx-6 mt-2 mb-3 border-b border-[#E2E8F0] px-6 pb-3 font-['Aileron'] text-[15px] font-normal leading-[150%] tracking-normal text-[#64748B]">
                     Multi-Factor Authentication is mandatory for all Account Administrators and
                     cannot be disabled.
                   </p>
@@ -267,7 +267,7 @@ export default function SecurityAccessPage() {
                   <h3 className="font-['Aileron'] text-[18px] font-bold leading-[100%] tracking-normal text-[#202830]">
                     MFA Frequency
                   </h3>
-                  <p className="mt-2 mb-3 border-b border-[#E2E8F0] pb-3 font-['Aileron'] text-[15px] font-normal leading-[150%] tracking-normal text-[#64748B]">
+                  <p className="-mx-6 mt-2 mb-3 border-b border-[#E2E8F0] px-6 pb-3 font-['Aileron'] text-[15px] font-normal leading-[150%] tracking-normal text-[#64748B]">
                     Define how often users must re-confirm their identity using MFA
                   </p>
                   <p className="font-['Aileron'] text-[15px] font-normal leading-[150%] tracking-normal text-[#202830]">
@@ -302,7 +302,7 @@ export default function SecurityAccessPage() {
                 <h3 className="font-['Aileron'] text-[18px] font-bold leading-[100%] tracking-normal text-[#202830]">
                   MFA for Users
                 </h3>
-                <p className="mt-2 mb-3 border-b border-[#E2E8F0] pb-3 font-['Aileron'] text-[15px] font-normal leading-[150%] tracking-normal text-[#64748B]">
+                <p className="-mx-6 mt-2 mb-3 border-b border-[#E2E8F0] px-6 pb-3 font-['Aileron'] text-[15px] font-normal leading-[150%] tracking-normal text-[#64748B]">
                   Control whether Multi-Factor Authentication is required for non-administrator
                   users.
                 </p>
@@ -418,7 +418,7 @@ export default function SecurityAccessPage() {
                 <h3 className="font-['Aileron'] text-[18px] font-bold leading-[100%] tracking-normal text-[#202830]">
                   Inactivity Timeout
                 </h3>
-                <p className="mt-2 mb-3 border-b border-[#E2E8F0] pb-3 font-['Aileron'] text-[15px] font-normal leading-[150%] tracking-normal text-[#64748B]">
+                <p className="-mx-6 mt-2 mb-3 border-b border-[#E2E8F0] px-6 pb-3 font-['Aileron'] text-[15px] font-normal leading-[150%] tracking-normal text-[#64748B]">
                   Automatically log users out after a period of inactivity.
                 </p>
                 <p className="font-['Aileron'] text-[15px] font-normal leading-[150%] tracking-normal text-[#202830]">
@@ -451,7 +451,7 @@ export default function SecurityAccessPage() {
                 <h3 className="font-['Aileron'] text-[18px] font-bold leading-[100%] tracking-normal text-[#202830]">
                   Daily Session Reset
                 </h3>
-                <p className="mt-2 mb-3 border-b border-[#E2E8F0] pb-3 font-['Aileron'] text-[15px] font-normal leading-[150%] tracking-normal text-[#64748B]">
+                <p className="-mx-6 mt-2 mb-3 border-b border-[#E2E8F0] px-6 pb-3 font-['Aileron'] text-[15px] font-normal leading-[150%] tracking-normal text-[#64748B]">
                   Require all users to log in again once per day.
                 </p>
                 <p className="font-['Aileron'] text-[15px] font-normal leading-[150%] tracking-normal text-[#202830]">
