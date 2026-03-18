@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Search, ArrowRight, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Search, ArrowRight, Trash2, ChevronDown } from "lucide-react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/Select";
 import { PageHeader } from "@/components/settings/PageHeader";
 import { Card } from "@/components/ui/Card";
@@ -67,6 +67,16 @@ const MER_CALCULATION_SCOPE = [
   { value: 1, name: "No Pay Denial Only" },
   { value: 2, name: "Full MER" },
 ];
+const PLAN_CATEGORIES = [
+  { value: "Commercial", name: "Commercial" },
+  { value: "Medicaid", name: "Medicaid" },
+  { value: "Medicare", name: "Medicare" },
+  { value: "MVA", name: "MVA" },
+  { value: "Tricare", name: "Tricare" },
+  { value: "WC", name: "Workers' Compensation" },
+  { value: "HmoManaged", name: "HMO / Managed Care" },
+  { value: "RailroadMedicare", name: "Railroad Medicare" },
+];
 
 const defaultForm: CreateApplicabilityRuleCommand = {
   sortOrder: 0,
@@ -88,6 +98,88 @@ const defaultForm: CreateApplicabilityRuleCommand = {
   effectiveEndDate: null,
   multiplierPct: null,
 };
+
+function PlanCategoryMultiSelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (csv: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const selected = useMemo(
+    () => (value ? value.split(",").map((s) => s.trim()).filter(Boolean) : []),
+    [value],
+  );
+
+  const toggle = (cat: string) => {
+    const next = selected.includes(cat)
+      ? selected.filter((s) => s !== cat)
+      : [...selected, cat];
+    onChange(next.join(","));
+  };
+
+  const allSelected =
+    PLAN_CATEGORIES.length > 0 && selected.length === PLAN_CATEGORIES.length;
+  const toggleAll = () => {
+    if (allSelected) onChange("");
+    else onChange(PLAN_CATEGORIES.map((c) => c.value).join(","));
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const handle = (e: MouseEvent) => {
+      if (containerRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [open]);
+
+  const displayLabel =
+    selected.length === 0
+      ? "Select Plan Category"
+      : selected.length === 1
+        ? PLAN_CATEGORIES.find((c) => c.value === selected[0])?.name ?? selected[0]
+        : `${selected.length} categories selected`;
+
+  return (
+    <div ref={containerRef} className="relative w-full">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      >
+        <span className={selected.length === 0 ? "text-muted-foreground" : ""}>
+          {displayLabel}
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+      </button>
+      {open && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[280px] overflow-hidden rounded-lg border border-input bg-white shadow-lg">
+          <div className="max-h-[260px] overflow-y-auto p-1">
+            <label className="flex cursor-pointer items-center gap-3 rounded px-3 py-2 hover:bg-muted">
+              <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="All Categories" />
+              <span className="text-sm">All Categories</span>
+            </label>
+            {PLAN_CATEGORIES.map((cat) => (
+              <label key={cat.value} className="flex cursor-pointer items-center gap-3 rounded px-3 py-2 hover:bg-muted">
+                <Checkbox
+                  checked={selected.includes(cat.value)}
+                  onCheckedChange={() => toggle(cat.value)}
+                  aria-label={cat.name}
+                />
+                <span className="text-sm">{cat.name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function toDateInput(value: string | null | undefined): string {
   if (!value) return "";
@@ -547,13 +639,11 @@ export default function ApplicabilityRulesPage() {
               <label className="mb-1 block text-sm font-medium text-foreground">
                 Plan category *
               </label>
-              <input
-                type="text"
+              <PlanCategoryMultiSelect
                 value={form.planCategory}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, planCategory: e.target.value }))
+                onChange={(csv) =>
+                  setForm((f) => ({ ...f, planCategory: csv }))
                 }
-                className="w-full rounded-lg border border-input px-3 py-2 text-sm"
               />
             </div>
             <div>
