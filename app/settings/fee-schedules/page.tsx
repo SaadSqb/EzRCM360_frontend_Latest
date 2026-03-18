@@ -495,6 +495,7 @@ export default function FeeSchedulesPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">State</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Year / Q</th>
                   <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">CPT Fees</th>
                   {(canUpdate || canDelete) && (
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Actions</th>
                   )}
@@ -516,19 +517,19 @@ export default function FeeSchedulesPage() {
                     <td className="px-4 py-3 text-sm">{row.state ?? "—"}</td>
                     <td className="px-4 py-3 text-sm">{row.year} / {row.quarter}</td>
                     <td className="px-4 py-3 text-sm">{statusLabel(row.status)}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <button onClick={() => openLines(row)} className="text-xs text-blue-600 hover:underline" title="Manage CPT Fees">
+                        <FileSpreadsheet className="inline h-4 w-4 mr-0.5" />CPT Fees
+                      </button>
+                    </td>
                     {(canUpdate || canDelete) && (
                       <td className="px-4 py-3 text-sm">
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => openLines(row)} className="text-xs text-blue-600 hover:underline" title="Manage lines">
-                            <FileSpreadsheet className="inline h-4 w-4 mr-0.5" />Lines
-                          </button>
-                          <TableActionsCell
-                            canEdit={canUpdate}
-                            canDelete={canDelete}
-                            onEdit={() => openEdit(row)}
-                            onDelete={() => setDeleteId(row.id)}
-                          />
-                        </div>
+                        <TableActionsCell
+                          canEdit={canUpdate}
+                          canDelete={canDelete}
+                          onEdit={() => openEdit(row)}
+                          onDelete={() => setDeleteId(row.id)}
+                        />
                       </td>
                     )}
                   </tr>
@@ -567,7 +568,7 @@ export default function FeeSchedulesPage() {
                   {wizardStep > s ? "✓" : s}
                 </div>
                 <span className={`text-sm ${wizardStep === s ? "font-medium text-foreground" : "text-muted-foreground"}`}>
-                  {s === 1 ? "Category" : s === 2 ? "Configuration" : "Lines"}
+                  {s === 1 ? "Category" : s === 2 ? "Configuration" : "CPT Fees"}
                 </span>
                 {s < 3 && <div className={`h-0.5 w-8 ${wizardStep > s ? "bg-green-500" : "bg-gray-200"}`} />}
               </div>
@@ -891,7 +892,7 @@ export default function FeeSchedulesPage() {
       />
 
       {/* Lines management modal (from table Actions) */}
-      <Modal open={!!linesSchedule} onClose={() => setLinesSchedule(null)} title={`Fee Schedule Lines — ${linesSchedule?.scheduleCode ?? ""} (${categoryLabel(linesSchedule?.category ?? 0)})`} size="lg">
+      <Modal open={!!linesSchedule} onClose={() => setLinesSchedule(null)} title={`CPT Fees — ${linesSchedule?.scheduleCode ?? ""} (${categoryLabel(linesSchedule?.category ?? 0)})`} size="lg">
         <div className="mb-4 flex items-center gap-3">
           <Button onClick={() => linesSchedule && downloadTemplateForCategory(linesSchedule.category)} variant="outline" className="h-9 text-sm gap-1.5">
             <Download className="h-4 w-4" /> Download Template
