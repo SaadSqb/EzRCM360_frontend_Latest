@@ -75,6 +75,7 @@ const MER_CALCULATION_SCOPE = [
   { value: 1, name: "No Pay Denial Only" },
   { value: 2, name: "Full MER" },
 ];
+const ACTIVE_OPTIONS = [{ value: 1, name: "Yes" }, { value: 0, name: "No" }];
 const PLAN_CATEGORIES = [
   { value: "Commercial", name: "Commercial" },
   { value: "Medicaid", name: "Medicaid" },
