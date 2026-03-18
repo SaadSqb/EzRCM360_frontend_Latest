@@ -642,19 +642,11 @@ export default function FeeSchedulesPage() {
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">Geo type</label>
-                <select value={form.geoType} onChange={(e) => setForm((f) => ({ ...f, geoType: Number(e.target.value) }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
+                <select value={form.geoType} onChange={(e) => setForm((f) => ({ ...f, geoType: Number(e.target.value), geoCode: "", geoName: "" }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm">
                   {lookups?.geoTypes?.map((g) => (
                     <option key={g.value} value={g.value}>{g.name}</option>
                   ))}
                 </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">Geo code</label>
-                <input type="text" value={form.geoCode ?? ""} onChange={(e) => setForm((f) => ({ ...f, geoCode: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" placeholder="e.g. 01, 99" />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">Geo name</label>
-                <input type="text" value={form.geoName ?? ""} onChange={(e) => setForm((f) => ({ ...f, geoName: e.target.value }))} className="w-full rounded-lg border border-input px-3 py-2 text-sm" />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">Billing type</label>
