@@ -3,7 +3,7 @@ import { ComingSoonCard } from "@/components/ui/ComingSoonCard";
 
 export default function DashboardPage() {
   return (
-    <PageShell title="Dashboard" description="Overview and key metrics for EzRCM360.">
+    <PageShell title="Dashboard" description="Overview and key metrics for EzRCM360." className="px-6 mt-4">
       <ComingSoonCard
         icon={
           <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

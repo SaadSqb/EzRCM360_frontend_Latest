@@ -504,10 +504,11 @@ export default function UsersPage() {
       title="Users Access"
       description="Manage user accounts, roles, and module access."
       className="flex min-h-0 flex-1 flex-col overflow-hidden"
+      titleWrapperClassName="px-6"
     >
       <TooltipProvider delayDuration={300} skipDelayDuration={0}>
       {/* Toolbar: search + add button */}
-      <div className="mb-3 flex items-center justify-between gap-3">
+      <div className="mb-3 flex items-center justify-between gap-3 mx-6 mt-3">
         <div className="flex flex-1 min-w-0 items-center gap-0">
           <select
             id="status"
@@ -575,8 +576,8 @@ export default function UsersPage() {
       )}
 
       {data && (
-        <div className="flex flex-1 flex-col min-h-0">
-        <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-[5px]">
+        <div className="flex flex-1 flex-col min-h-0 mx-6">
+        <div className="max-h-[calc(100vh-341px)] flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-[5px]">
           <Table className="min-w-[1500px]">
               <TableHead>
                 <TableRow>

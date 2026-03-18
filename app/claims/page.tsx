@@ -6,6 +6,7 @@ export default function ClaimsPage() {
     <PageShell
       title="Claims"
       description="Manage and track claims across the revenue cycle."
+      className="px-6 mt-4"
     >
       <ComingSoonCard
         icon={
@@ -20,3 +21,4 @@ export default function ClaimsPage() {
     </PageShell>
   );
 }
+ 

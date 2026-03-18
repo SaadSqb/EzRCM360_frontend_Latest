@@ -211,10 +211,10 @@ export default function OrganizationPage() {
     <PageShell
       breadcrumbs={[{ label: "Settings & Configurations", href: "/settings" }, { label: "Organization" }]}
       title="Organization"
-      titleWrapperClassName="mb-5"
+      titleWrapperClassName="mb-4 px-6"
     >
       {/* Organization summary card - light grey bg, avatar light blue circle with dark blue initials */}
-      <Card className="mb-5 overflow-hidden rounded-[5px] border-none bg-[#F8FAFC] shadow-none">
+      <Card className="mb-5 overflow-hidden rounded-[5px] border-none bg-[#F8FAFC] shadow-none mx-6">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4 px-6 py-5">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#DBEAFE] text-2xl font-semibold text-[#0066CC]">
             <span className="flex h-full w-full items-center justify-center">
@@ -236,7 +236,7 @@ export default function OrganizationPage() {
       </Card>
 
       {/* Organization Information */}
-      <Card className="overflow-hidden border-none  shadow-none">
+      <Card className="overflow-auto border-none  shadow-none mx-6 h-[calc(100vh-395px)]">
         <div className="flex items-center gap-2">
           <div className="flex items-center justify-center">
             <OrganizationIcon className="h-5 w-5 text-[#6B7280]" />
@@ -295,8 +295,10 @@ export default function OrganizationPage() {
             </dd>
           </div>
         </div>
-        {canUpdate && (
-          <div className="px-6 py-5">
+
+      </Card>
+      {canUpdate && (
+          <div className="px-6 py-2">
             <Button
               onClick={openEdit}
               className="inline-flex items-center gap-2 rounded-lg bg-[#2563EB] px-4 py-2 text-sm font-medium text-white hover:bg-[#1d4ed8]"
@@ -306,7 +308,6 @@ export default function OrganizationPage() {
             </Button>
           </div>
         )}
-      </Card>
 
       {/* Update Organization modal */}
       <Modal

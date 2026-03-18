@@ -418,7 +418,7 @@ export default function RolesPermissionsPage() {
     <PageShell
       breadcrumbs={[{ label: "Settings & Configurations", href: "/settings" }, { label: "Roles & Permissions" }]}
       title="Roles & Permissions"
-      titleWrapperClassName="items-center"
+      titleWrapperClassName="items-center px-6"
       actions={
         <Button onClick={openCreate} className="inline-flex items-center gap-2 rounded-md bg-[#0066CC] px-4 py-2 text-sm font-medium text-white hover:bg-[#0052a3]">
           Create New Role
@@ -432,7 +432,7 @@ export default function RolesPermissionsPage() {
         </div>
       )}
 
-      <div className="flex flex-col xl:flex-row h-[calc(100vh-225px)] gap-2 bg-white mt-4">
+      <div className="flex flex-col xl:flex-row h-[calc(100vh-228px)] gap-2 bg-white mt-4 px-6">
         {/* Left: Roles list */}
         <div className="w-full xl:w-[220px] shrink-0 border border-[#E2E8F0] bg-[#FFFFFF] rounded-[5px] flex flex-col">
           <div className="border-b border-[#E2E8F0] px-6 py-4">
@@ -498,14 +498,14 @@ export default function RolesPermissionsPage() {
                   </button>
                 </div>
                 {selectedRole.description && (
-                  <p className="mt-1 text-sm text-[#64748B]">{selectedRole.description}</p>
+                  <p className="text-sm text-[#64748B]">{selectedRole.description}</p>
                 )}
               </div>
 
-              <div className="overflow-x-auto h-[calc(100vh-412px)] overflow-y-auto custom-scrollbar">
+              <div className="overflow-x-auto h-[calc(100vh-422px)] overflow-y-auto custom-scrollbar">
                 <table className="w-full table-fixed border-collapse">
                   <colgroup>
-                    <col className="w-auto min-w-[240px]" />
+                    <col className="w-auto max-w-[240px]" />
                     <col className="w-[100px]" />
                     <col className="w-[100px]" />
                     <col className="w-[100px]" />

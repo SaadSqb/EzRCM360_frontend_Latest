@@ -228,11 +228,11 @@ export default function EntityLocationsPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col px-6">
       <PageHeader title="Entity Locations" description="Manage entity locations." />
 
       {/* Toolbar: search + add button */}
-      <div className="mb-6 flex items-center justify-between gap-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex flex-1 items-center">
           <Select value="" onValueChange={() => {}}>
             <SelectTrigger className="w-[130px] h-10 border-[#E2E8F0] rounded-l-[5px] font-aileron text-[14px] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
@@ -290,8 +290,8 @@ export default function EntityLocationsPage() {
       )}
       {data && (
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto rounded-[5px]">
-            <Table className="min-w-[1800px] table-fixed">
+        <div className="max-h-[calc(100vh-316px)] min-h-0 flex-1 overflow-x-auto overflow-y-auto rounded-[5px]">
+          <Table className="min-w-[1800px] table-fixed">
               <TableHead>
                 <TableRow>
                   {canDelete && (

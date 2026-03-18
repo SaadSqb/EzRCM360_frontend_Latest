@@ -144,8 +144,10 @@ export default function InsuranceArAnalysisListPage() {
       breadcrumbs={[{ label: "RCM Intelligence", href: "/rcm" }, { label: "Insurance AR Analysis" }]}
       title="Insurance AR Analysis"
       description="View and manage AR analysis sessions."
+      titleWrapperClassName="px-6"
       className="flex min-h-0 flex-1 flex-col overflow-hidden"
     >
+      <div className="flex min-h-0 flex-1 flex-col px-6 mt-3">
       {/* Toolbar */}
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-0">
@@ -206,7 +208,7 @@ export default function InsuranceArAnalysisListPage() {
 
       {data && (
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto rounded-[5px] border-y border-border bg-card shadow-sm">
+          <div className="max-h-[calc(100vh-340px)] overflow-x-auto overflow-y-auto rounded-[5px] border-y border-border bg-card shadow-sm">
             <Table className="w-[1700px] table-fixed">
                 <TableHead>
                   <TableRow className="bg-[hsl(210,100%,97%)] hover:bg-[hsl(210,100%,97%)]">
@@ -330,6 +332,7 @@ export default function InsuranceArAnalysisListPage() {
           <div className="h-72 animate-shimmer-bg rounded-xl" />
         </div>
       )}
+      </div>
     </PageShell>
   );
 }

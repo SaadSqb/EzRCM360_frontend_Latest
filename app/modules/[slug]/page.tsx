@@ -32,7 +32,7 @@ export default async function ModulePage({ params }: { params: Promise<{ slug: s
   };
 
   return (
-    <PageShell title={meta.title} description={`${meta.title} — Operational Module`}>
+    <PageShell title={meta.title} description={`${meta.title} — Operational Module`} className="px-6 mt-4">
       <ComingSoonCard
         icon={
           <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

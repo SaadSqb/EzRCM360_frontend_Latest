@@ -226,8 +226,9 @@ export default function SecurityAccessPage() {
     <PageShell
       breadcrumbs={[{ label: "Settings & Configurations", href: "/settings" }, { label: "Security Access" }]}
       title="Security Access"
+      titleWrapperClassName="px-6"
       description={
-        <span className="font-['Aileron'] text-[15px] font-normal leading-[150%] tracking-normal text-[#64748B]">
+        <span className="font-['Aileron'] text-[15px] font-normal  tracking-normal text-[#64748B]">
           Manage how users authenticate and how long sessions remain active. These controls help protect your organization while maintaining usability.
         </span>
       }
@@ -239,10 +240,11 @@ export default function SecurityAccessPage() {
       )}
 
       {form && (
-        <div className="space-y-6">
+        <div className="space-y-6 px-6 mt-4 ">
+          <div className="h-[calc(100vh-330px)] overflow-y-auto ">
           {/* Multi-Factor Authentication (MFA) section - two-column grid */}
           <section>
-            <h2 className="mb-4 font-['Aileron'] text-[20px] font-bold leading-[100%] tracking-normal text-[#202830]">
+            <h2 className="mb-3 font-['Aileron'] text-[20px] font-bold leading-[100%] tracking-normal text-[#202830]">
               Multi-Factor Authentication (MFA)
             </h2>
             <div className="grid gap-6 lg:grid-cols-2 items-start">
@@ -340,12 +342,12 @@ export default function SecurityAccessPage() {
                   <Table className="border-b border-[#E2E8F0]">
                     <TableHead>
                       <TableRow className="border-b border-[#E2E8F0] !bg-white">
-                        <TableHeaderCell className="border-none px-0 font-['Aileron'] text-[14px] font-normal leading-[130%] tracking-normal text-[#0066CC]">
+                        <TableHeaderCell className="border-none px-2 font-['Aileron'] text-[14px] font-normal leading-[130%] tracking-normal text-[#0066CC]">
                           User(s)
                         </TableHeaderCell>
                         <TableHeaderCell
                           align="right"
-                          className="border-none px-0 font-['Aileron'] text-[14px] font-normal leading-[130%] tracking-normal text-[#0066CC]"
+                          className="border-none px-2 font-['Aileron'] text-[14px] font-normal leading-[130%] tracking-normal text-[#0066CC]"
                         >
                           MFA Status
                         </TableHeaderCell>
@@ -364,7 +366,7 @@ export default function SecurityAccessPage() {
                       ) : (
                         users.map((u) => (
                           <TableRow key={u.id} className="border-b border-[#E2E8F0]">
-                            <TableCell className="border-none px-0">
+                            <TableCell className="border-none px-2">
                               <div>
                                 <div className="font-['Aileron'] text-[15px] font-normal leading-[130%] tracking-normal text-[#202830]">
                                   {u.userName}
@@ -410,7 +412,7 @@ export default function SecurityAccessPage() {
 
           {/* Session Management section - two-column grid */}
           <section>
-            <h2 className="mb-4 font-['Aileron'] text-[20px] font-bold leading-[100%] tracking-normal text-[#202830]">
+            <h2 className="mb-3 mt-6 font-['Aileron'] text-[20px] font-bold leading-[100%] tracking-normal text-[#202830]">
               Session Management
             </h2>
             <div className="grid gap-6 lg:grid-cols-2">
@@ -479,7 +481,7 @@ export default function SecurityAccessPage() {
               </Card>
             </div>
           </section>
-
+          </div>
           {canUpdate && (
             <div className="flex items-center gap-4">
               <Button onClick={handleSaveSettings} disabled={saving}>

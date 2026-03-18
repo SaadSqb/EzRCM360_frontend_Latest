@@ -9,6 +9,14 @@ import { Button } from "@/components/ui/Button";
 import { Modal, ModalFooter } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { TableActionsCell } from "@/components/ui/TableActionsCell";
+import {
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableHeaderCell,
+  TableCell,
+} from "@/components/ui/Table";
 import { Pagination } from "@/components/ui/Pagination";
 import { BulkImportActions } from "@/components/settings/BulkImportActions";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -60,6 +68,7 @@ export default function FeeSchedulesPage() {
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<CreateFeeScheduleCommand>(defaultForm);
@@ -111,6 +120,39 @@ export default function FeeSchedulesPage() {
       status: statusFilter === "all" ? undefined : Number(statusFilter),
     }).then(setData).catch((err) => setError(err instanceof Error ? err.message : "Failed to load"));
   }, [page, pageSize, statusFilter]);
+
+  const handleStatusChange = async (row: FeeScheduleDto, statusValue: number) => {
+    if (!canUpdate) return;
+    setStatusUpdatingId(row.id);
+    try {
+      const detail = await api.getById(row.id);
+      const payload: CreateFeeScheduleCommand = {
+        scheduleCode: detail.scheduleCode ?? "",
+        category: detail.category,
+        state: detail.state ?? "",
+        geoType: detail.geoType,
+        geoCode: detail.geoCode ?? "",
+        geoName: detail.geoName ?? "",
+        billingType: detail.billingType,
+        year: detail.year,
+        quarter: detail.quarter,
+        calculationModel: detail.calculationModel,
+        adoptFeeScheduleId: detail.adoptFeeScheduleId ?? null,
+        multiplierPct: detail.multiplierPct,
+        fallbackCategory: detail.fallbackCategory ?? null,
+        status: statusValue,
+        source: detail.source ?? "",
+        notes: detail.notes ?? "",
+      };
+      await api.update(row.id, payload);
+      loadList();
+      toast.success("Status updated.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Status update failed.");
+    } finally {
+      setStatusUpdatingId(null);
+    }
+  };
 
   useEffect(() => {
     loadList();
@@ -421,14 +463,14 @@ export default function FeeSchedulesPage() {
   }
 
   return (
-    <div>
+    <div className="px-6">
       <PageHeader title="Fee Schedules" description="Centralized valuation datasets." />
 
       {/* Toolbar */}
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="flex flex-1 items-center">
           <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
-            <SelectTrigger className="w-[130px] h-10 border-[#E2E8F0] rounded-[5px] font-aileron text-[14px]">
+            <SelectTrigger className="w-[130px] h-10 border-[#E2E8F0] rounded-l-[5px] font-aileron text-[14px] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent className="bg-white z-50">
@@ -437,14 +479,14 @@ export default function FeeSchedulesPage() {
               <SelectItem value="1">Inactive</SelectItem>
             </SelectContent>
           </Select>
-          <div className="relative">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
             <input
               type="text"
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-10 w-[300px] rounded-[5px] border border-[#E2E8F0] bg-background pl-9 pr-4 font-aileron text-[14px] placeholder:text-[#94A3B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="h-10 w-full rounded-r-[5px] border border-[#E2E8F0] bg-background pl-9 pr-4 font-aileron text-[14px] placeholder:text-[#94A3B8] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
             />
           </div>
         </div>
@@ -477,79 +519,102 @@ export default function FeeSchedulesPage() {
 
       {error && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
       {data && (
-        <>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border">
-              <thead>
-                <tr>
+        <div className="flex flex-1 flex-col">
+        <div className="h-[calc(100vh-316px)] flex-1 overflow-x-auto overflow-y-auto rounded-[5px]">
+          <Table className="min-w-[1800px] table-fixed">
+              <TableHead>
+                <TableRow>
                   {canDelete && (
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground" style={{ width: 50 }}>
+                    <TableHeaderCell className="!min-w-[50px] w-[50px]">
                       <Checkbox
                         checked={!!data?.items.length && data.items.every((r) => selectedIds.has(r.id))}
                         onCheckedChange={toggleSelectAll}
                       />
-                    </th>
+                    </TableHeaderCell>
                   )}
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Code</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Category</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">State</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Year / Q</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">CPT Fees</th>
+                  <TableHeaderCell className="w-[160px] min-w-[160px]">Code</TableHeaderCell>
+                  <TableHeaderCell className="w-[180px] min-w-[180px]">Category</TableHeaderCell>
+                  <TableHeaderCell className="w-[110px] min-w-[110px]">State</TableHeaderCell>
+                  <TableHeaderCell className="w-[110px] min-w-[110px]">Year / Q</TableHeaderCell>
+                  <TableHeaderCell className="w-[160px] min-w-[160px]">Status</TableHeaderCell>
+                  <TableHeaderCell className="w-[130px] min-w-[130px]">CPT Fees</TableHeaderCell>
                   {(canUpdate || canDelete) && (
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Actions</th>
+                    <TableHeaderCell className="!w-[120px] min-w-[120px]">Actions</TableHeaderCell>
                   )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
+                </TableRow>
+              </TableHead>
+              <TableBody>
                 {filteredItems.map((row) => (
-                  <tr key={row.id} className="hover:bg-muted">
+                  <TableRow key={row.id}>
                     {canDelete && (
-                      <td className="px-4 py-3 text-sm">
+                      <TableCell>
                         <Checkbox
                           checked={selectedIds.has(row.id)}
                           onCheckedChange={() => toggleSelect(row.id)}
                         />
-                      </td>
+                      </TableCell>
                     )}
-                    <td className="px-4 py-3 text-sm">{row.scheduleCode ?? "—"}</td>
-                    <td className="px-4 py-3 text-sm">{categoryLabel(row.category)}</td>
-                    <td className="px-4 py-3 text-sm">{row.state ?? "—"}</td>
-                    <td className="px-4 py-3 text-sm">{row.year} / {row.quarter}</td>
-                    <td className="px-4 py-3 text-sm">{statusLabel(row.status)}</td>
-                    <td className="px-4 py-3 text-sm">
+                    <TableCell className="w-[160px] min-w-[160px]">
+                      <div className="max-w-[140px] truncate">{row.scheduleCode ?? "—"}</div>
+                    </TableCell>
+                    <TableCell className="w-[180px] min-w-[180px]">
+                      <div className="max-w-[160px] truncate">{categoryLabel(row.category)}</div>
+                    </TableCell>
+                    <TableCell className="w-[110px] min-w-[110px]">
+                      <div className="max-w-[90px] truncate">{row.state ?? "—"}</div>
+                    </TableCell>
+                    <TableCell className="w-[110px] min-w-[110px]">
+                      <div className="max-w-[90px] truncate">{row.year} / {row.quarter}</div>
+                    </TableCell>
+                    <TableCell className="w-[160px] min-w-[160px]">
+                      <select
+                        value={row.status}
+                        onChange={(e) => handleStatusChange(row, Number(e.target.value))}
+                        disabled={!canUpdate || statusUpdatingId === row.id}
+                        className="input-enterprise w-[140px] rounded-l-[5px] rounded-r-0 px-2 py-1.5 text-sm disabled:opacity-50 focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+                      >
+                        {STATUS_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value}>
+                            {o.name}
+                          </option>
+                        ))}
+                      </select>
+                    </TableCell>
+                    <TableCell className="w-[130px] min-w-[130px]">
                       <button onClick={() => openLines(row)} className="text-xs text-blue-600 hover:underline" title="Manage CPT Fees">
                         <FileSpreadsheet className="inline h-4 w-4 mr-0.5" />CPT Fees
                       </button>
-                    </td>
+                    </TableCell>
                     {(canUpdate || canDelete) && (
-                      <td className="px-4 py-3 text-sm">
+                      <TableCell className="!w-[120px] min-w-[120px]">
                         <TableActionsCell
                           canEdit={canUpdate}
                           canDelete={canDelete}
                           onEdit={() => openEdit(row)}
                           onDelete={() => setDeleteId(row.id)}
                         />
-                      </td>
+                      </TableCell>
                     )}
-                  </tr>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
-          <Pagination
-            pageNumber={data.pageNumber}
-            totalPages={data.totalPages}
-            totalCount={data.totalCount}
-            hasPreviousPage={data.hasPreviousPage}
-            hasNextPage={data.hasNextPage}
-            onPrevious={() => setPage((p) => Math.max(1, p - 1))}
-            onNext={() => setPage((p) => p + 1)}
-            onPageChange={setPage}
-            pageSize={pageSize}
-            onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
-          />
-        </>
+          <div className="shrink-0 pt-4">
+            <Pagination
+              pageNumber={data.pageNumber}
+              totalPages={data.totalPages}
+              totalCount={data.totalCount}
+              hasPreviousPage={data.hasPreviousPage}
+              hasNextPage={data.hasNextPage}
+              onPrevious={() => setPage((p) => Math.max(1, p - 1))}
+              onNext={() => setPage((p) => p + 1)}
+              onPageChange={setPage}
+              pageSize={pageSize}
+              onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+            />
+          </div>
+        </div>
       )}
       {!data && !error && <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>}
 

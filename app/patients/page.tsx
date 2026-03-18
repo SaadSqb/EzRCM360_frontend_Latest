@@ -3,7 +3,7 @@ import { ComingSoonCard } from "@/components/ui/ComingSoonCard";
 
 export default function PatientsPage() {
   return (
-    <PageShell title="Patients" description="Manage patient records and demographics.">
+    <PageShell title="Patients" description="Manage patient records and demographics." className="px-6 mt-4">
       <ComingSoonCard
         icon={
           <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
