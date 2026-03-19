@@ -686,7 +686,7 @@ export default function FeeSchedulesPage() {
                 onChange={(e) => setForm((f) => ({ ...f, category: Number(e.target.value) }))}
                 className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
               >
-                {lookups?.categories?.filter((c) => c.name !== "Custom").map((c) => (
+                {lookups?.categories?.map((c) => (
                   <option key={c.value} value={c.value}>{c.name}</option>
                 ))}
               </select>
@@ -735,6 +735,42 @@ export default function FeeSchedulesPage() {
                   ))}
                 </select>
               </div>
+              {/* Geo Type = Area (1): show Region input */}
+              {form.geoType === 1 && (
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground">Region</label>
+                  <input type="text" placeholder="e.g. Northern New Jersey" value={form.geoName} onChange={(e) => setForm((f) => ({ ...f, geoName: e.target.value }))} className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0" />
+                </div>
+              )}
+              {/* Geo Type = Zip (2): show mapping type + zip inputs */}
+              {form.geoType === 2 && (
+                <>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-foreground">Mapping type</label>
+                    <select value={form.geoName === "ZipRange" ? "ZipRange" : "ZipExact"} onChange={(e) => setForm((f) => ({ ...f, geoName: e.target.value, geoCode: "" }))} className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
+                      <option value="ZipExact">ZipExact</option>
+                      <option value="ZipRange">ZipRange</option>
+                    </select>
+                  </div>
+                  {form.geoName !== "ZipRange" ? (
+                    <div>
+                      <label className="mb-1 block text-sm font-medium text-foreground">ZIP code</label>
+                      <input type="text" placeholder="e.g. 07040" value={form.geoCode} onChange={(e) => setForm((f) => ({ ...f, geoCode: e.target.value }))} className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0" />
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-foreground">ZIP from</label>
+                        <input type="text" placeholder="e.g. 07000" value={form.geoCode.split("-")[0] ?? ""} onChange={(e) => { const to = form.geoCode.split("-")[1] ?? ""; setForm((f) => ({ ...f, geoCode: `${e.target.value}-${to}` })); }} className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-foreground">ZIP to</label>
+                        <input type="text" placeholder="e.g. 07999" value={form.geoCode.split("-")[1] ?? ""} onChange={(e) => { const from = form.geoCode.split("-")[0] ?? ""; setForm((f) => ({ ...f, geoCode: `${from}-${e.target.value}` })); }} className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0" />
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">Billing type</label>
                 <select value={form.billingType} onChange={(e) => setForm((f) => ({ ...f, billingType: Number(e.target.value) }))} className="w-full rounded-[5px] border border-input px-3 py-2 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
