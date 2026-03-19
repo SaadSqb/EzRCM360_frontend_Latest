@@ -372,7 +372,7 @@ export default function GeographyResolutionPage() {
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto rounded-[5px]">
             <Table className="min-w-[1200px] table-fixed">
-              <TableHead>
+              <TableHead className="sticky top-0 z-20">
                 <TableRow>
                   {canDelete && (
                     <TableHeaderCell className="!min-w-[50px] w-[50px]">

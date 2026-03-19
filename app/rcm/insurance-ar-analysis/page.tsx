@@ -210,8 +210,8 @@ export default function InsuranceArAnalysisListPage() {
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="max-h-[calc(100vh-340px)] overflow-x-auto overflow-y-auto rounded-[5px] border-y border-border bg-card shadow-sm">
             <Table className="w-[1700px] table-fixed">
-                <TableHead>
-                  <TableRow className="bg-[hsl(210,100%,97%)] hover:bg-[hsl(210,100%,97%)]">
+                <TableHead className="sticky top-0 z-20">
+                  <TableRow className="bg-[hsl(210,100%,97%)] ">
                     <TableHeaderCell className="w-[300px] min-w-[300px] first:rounded-bl-[5px] !bg-[hsl(210,100%,97%)] border-border">
                       <div className="flex items-center gap-3 font-['Aileron'] font-bold text-[13px] leading-none text-[#0066CC]">
                         Session Name

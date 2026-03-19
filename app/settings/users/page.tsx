@@ -579,8 +579,8 @@ export default function UsersPage() {
         <div className="flex flex-1 flex-col min-h-0 mx-6">
         <div className="max-h-[calc(100vh-341px)] flex-1 min-h-0 overflow-x-auto overflow-y-auto rounded-[5px]">
           <Table className="min-w-[1500px]">
-              <TableHead>
-                <TableRow>
+              <TableHead className="sticky top-0 z-20">
+                <TableRow >
                   {canDelete && (
                     <TableHeaderCell className="!min-w-[50px] w-[50px]">
                       <Checkbox

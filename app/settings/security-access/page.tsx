@@ -340,7 +340,7 @@ export default function SecurityAccessPage() {
                 </div>
                 <div className="mt-4 max-h-64 overflow-x-auto overflow-y-auto">
                   <Table className="border-b border-[#E2E8F0]">
-                    <TableHead>
+                    <TableHead className="sticky top-0 z-20">
                       <TableRow className="border-b border-[#E2E8F0] !bg-white">
                         <TableHeaderCell className="border-none px-2 font-['Aileron'] text-[14px] font-normal leading-[130%] tracking-normal text-[#0066CC]">
                           User(s)

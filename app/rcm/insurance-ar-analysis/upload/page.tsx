@@ -656,7 +656,7 @@ function ValidationStatus({
                 {String(allErrors.length).padStart(2, "0")} Error(s) Found
               </p>
               <Table>
-                <TableHead>
+                <TableHead className="sticky top-0 z-20">
                   <TableRow>
                     <TableHeaderCell>Row No.</TableHeaderCell>
                     <TableHeaderCell>Column Name</TableHeaderCell>
