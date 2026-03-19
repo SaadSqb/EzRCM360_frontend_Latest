@@ -297,14 +297,14 @@ export default function GeographyResolutionPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col px-6">
       <PageHeader
         title="Geography Resolution"
         description="Zip-to-geography mappings for fee schedule resolution."
       />
 
       {/* Toolbar: search + import + add button */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-1 items-center">
           <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
             <SelectTrigger className="w-[130px] h-10 border-[#E2E8F0] rounded-l-[5px] font-aileron text-[14px] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
@@ -336,22 +336,26 @@ export default function GeographyResolutionPage() {
               <><Trash2 className="mr-1 h-4 w-4" /> Delete ({selectedIds.size})</>
             </Button>
           )}
-          <select value={importCategory} onChange={(e) => setImportCategory(Number(e.target.value))} className="h-9 rounded-lg border border-input px-2 text-sm">
+          <select
+            value={importCategory}
+            onChange={(e) => setImportCategory(Number(e.target.value))}
+            className="h-10 rounded-[5px] border border-input px-3 text-sm focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
+          >
             {lookups?.fsCategories?.map((c) => (
               <option key={c.value} value={c.value}>{c.name}</option>
             ))}
           </select>
-          <Button onClick={handleDownloadTemplate} variant="outline" className="h-9 text-sm gap-1.5">
+          <Button onClick={handleDownloadTemplate} variant="outline" className="h-10 rounded-[5px] text-sm gap-1.5">
             <Download className="h-4 w-4" /> Template
           </Button>
-          <Button onClick={() => fileInputRef.current?.click()} disabled={importLoading} variant="outline" className="h-9 text-sm gap-1.5">
+          <Button onClick={() => fileInputRef.current?.click()} disabled={importLoading} variant="outline" className="h-10 rounded-[5px] text-sm gap-1.5">
             <Upload className="h-4 w-4" /> {importLoading ? "Importing…" : "Import"}
           </Button>
           <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImport(f); }} />
           {canCreate && (
             <Button
               onClick={openCreate}
-              className="h-9 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
+              className="h-10 rounded-[5px] px-[18px] bg-[#0066CC] hover:bg-[#0066CC]/90 text-white font-aileron text-[14px]"
             >
               <>Add <ArrowRight className="ml-1 h-4 w-4" /></>
             </Button>
@@ -444,7 +448,7 @@ export default function GeographyResolutionPage() {
               </TableBody>
             </Table>
           </div>
-          <div className="shrink-0 pt-4">
+          <div className="mt-auto shrink-0 pt-4">
             <Pagination
               pageNumber={data.pageNumber}
               totalPages={data.totalPages}

@@ -62,18 +62,21 @@ export function ModifierFormModal({
             required
             value={form.modifierCode}
             onChange={(e) => onFormChange({ ...form, modifierCode: e.target.value })}
+            inputClassName="rounded-[5px] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
           />
           <Select
             label="Modifier type"
             options={MODIFIER_TYPE_OPTIONS}
             value={form.modifierType}
             onChange={(e) => onFormChange({ ...form, modifierType: Number(e.target.value) })}
+            selectClassName="rounded-[5px] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
           />
           <Input
             label="Description"
             required
             value={form.description}
             onChange={(e) => onFormChange({ ...form, description: e.target.value })}
+            inputClassName="rounded-[5px] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
           />
           <label className="inline-flex w-fit cursor-pointer items-center gap-2 mt-1">
             <input

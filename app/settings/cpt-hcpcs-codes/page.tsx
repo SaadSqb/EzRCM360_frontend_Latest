@@ -239,11 +239,11 @@ export default function CptHcpcsCodesPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col px-6">
       <PageHeader title="CPT / HCPCS Codes" description="Procedure code master." />
 
       {/* Toolbar: search + add button */}
-      <div className="mb-6 flex items-center justify-between gap-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex flex-1 items-center">
           <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
             <SelectTrigger className="w-[130px] h-10 border-[#E2E8F0] rounded-l-[5px] font-aileron text-[14px] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
@@ -297,7 +297,7 @@ export default function CptHcpcsCodesPage() {
       {error && <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}
       {data && (
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto rounded-[5px]">
+          <div className="max-h-[calc(100vh-316px)] min-h-0 flex-1 overflow-x-auto overflow-y-auto rounded-[5px]">
             <Table className="min-w-[900px] table-fixed">
               <TableHead>
                 <TableRow>
@@ -315,7 +315,7 @@ export default function CptHcpcsCodesPage() {
                   <TableHeaderCell className="w-[100px] min-w-[100px]">Add-on</TableHeaderCell>
                   <TableHeaderCell className="w-[160px] min-w-[160px]">Status</TableHeaderCell>
                   {(canUpdate || canDelete) && (
-                    <TableHeaderCell className="!w-[100px] min-w-[100px]">Actions</TableHeaderCell>
+                    <TableHeaderCell className="!w-[120px] min-w-[120px]">Actions</TableHeaderCell>
                   )}
                 </TableRow>
               </TableHead>
@@ -371,7 +371,7 @@ export default function CptHcpcsCodesPage() {
               </TableBody>
             </Table>
           </div>
-          <div className="shrink-0 pt-4">
+          <div className="mt-auto shrink-0 pt-4">
             <Pagination
               pageNumber={data.pageNumber}
               totalPages={data.totalPages}

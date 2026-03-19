@@ -244,14 +244,14 @@ export default function IcdCodesPage() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col px-6">
       <PageHeader
         title="ICD Codes"
         description="Standardized diagnosis codes (e.g. ICD-10)."
       />
 
       {/* Toolbar: search + add button */}
-      <div className="mb-6 flex items-center justify-between gap-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex flex-1 items-center">
           <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
             <SelectTrigger className="w-[130px] h-10 border-[#E2E8F0] rounded-l-[5px] font-aileron text-[14px] focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0">
@@ -309,8 +309,8 @@ export default function IcdCodesPage() {
       )}
       {data && (
         <div className="flex min-h-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto rounded-[5px]">
-            <Table className="min-w-[900px] table-fixed">
+        <div className="max-h-[calc(100vh-316px)] min-h-0 flex-1 overflow-x-auto overflow-y-auto rounded-[5px]">
+          <Table className="min-w-[900px]">
               <TableHead>
                 <TableRow>
                   {canDelete && (
@@ -383,7 +383,7 @@ export default function IcdCodesPage() {
               </TableBody>
             </Table>
           </div>
-          <div className="shrink-0 pt-4">
+          <div className="mt-auto shrink-0 pt-4">
             <Pagination
               pageNumber={data.pageNumber}
               totalPages={data.totalPages}
